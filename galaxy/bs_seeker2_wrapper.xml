@@ -1,0 +1,176 @@
+<tool id="bs_seeker_wrapper" name="Methylation Map with BS Seeker2" version="2.0.0">
+  <requirements><requirement type='package'>bs_seeker2</requirement></requirements>
+  <description></description>
+  <command interpreter="python">
+    bs_seeker2_wrapper.py 
+      ### define exec path
+      ###    --exec-path "/GalaxyUCLA/GalaxyTools/bin"
+          --exec-path "/home/pf/local_temp/BS-Seeker"
+      ### output
+          --align--output $align_output
+
+          --call_methylation--wig $call_methylation_wig
+          --call_methylation--CGmap $call_methylation_CGmap
+          --call_methylation--ATCGmap $call_methylation_ATCGmap
+
+      ### aligner
+
+          --align--aligner bowtie
+
+      #if $singlePaired.sPaired == "paired"
+          --align--input_1 $input1
+          --align--input_2 $singlePaired.input2
+      #end if
+
+      ### genome for build and mapping
+      #if $refGenomeSource.genomeSource == "history"
+          --build--file $refGenomeSource.ownFile
+          --build--aligner bowtie
+        #if $rrbsFragments.Fragmented == "Yes"
+            --build--rrbs
+            --build--low $rrbsFragments.lowerBound
+            --build--up $rrbsFragments.upperBound
+            --align--rrbs
+            --align--rrbs-tag CGG/TGG
+            --align--low $rrbsFragments.lowerBound
+            --align--up $rrbsFragments.upperBound
+         #end if
+          --align-g $refGenomeSource.ownFile
+          --align--db $refGenomeSource.ownFile
+      #end if
+
+      #if $refGenomeSource.genomeSource == "indexed"
+           --align--db ${refGenomeSource.index.fields.path}
+           --align-g ${refGenomeSource.index.fields.path}/${refGenomeSource.index.fields.dbkey}.fa
+      #end if
+
+      ### Inputs
+      #if $singlePaired.sPaired == "single"
+          --align-i $input1
+      #end if
+
+      ### Library type
+          --align-t $tag
+
+      ### other general options
+      #if $sParams.sSettingsType == "preSet" 
+          --align--start_base 1
+          --align--end_base 200
+          --align--mis 4
+      #end if
+
+      ### adapter information
+      #if $adapterInfo.useAdapter == "Yes"
+          --align--adapter $adapterInfo.adapter_file
+      #end if
+
+      #if $sParams.sSettingsType == "full" 
+          --align--start_base $sParams.start_base
+          --align--end_base $sParams.end_base
+          --align--mis $sParams.num_mismatch
+      #end if
+
+  </command>
+  <inputs>
+     <param format="fastq,fasta,qseq" name="input1" type="data" label="Input your read file" help="read file in Illumina fastq, qseq, or fasta format" />
+     <conditional name="singlePaired">
+        <param name="sPaired" type="select" label="Is this library mate-paired?">
+          <option value="single">Single-end</option>
+          <option value="paired">Paired-end</option>
+        </param>
+        <when value="paired">
+          <param format="fastq,fasta,qseq" name="input2" type="data" label="Input your read file 2" help="read file in Illumina fastq, qseq, or fasta format" />
+          <param name="min_ins_distance" type="integer" value="-1" label=" Minimum insert size for valid paired-end alignments" />
+          <param name="max_ins_distance" type="integer" value="400" label="Maximum insert size for valid paired-end alignments" />
+        </when>
+     </conditional> 
+     <param name="tag" type="select" label="Type of libraries">
+        <option value="Y">undirectional libraries</option>
+        <option value="N">directional libraries</option>
+     </param>
+     <conditional name="rrbsFragments">
+        <param name="Fragmented" type="select" label="RRBS-seq reads" help="RRBS-seq reads">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </param>
+        <when value="Yes">
+          <param name="lowerBound" type="integer" value="1" label="The lower bound for RRBS fragments" help="The lower bound for RRBS fragments" />
+          <param name="upperBound" type="integer" value="200" label="The upper bound for RRBS fragments" help="The upper bound for RRBS fragments" />
+        </when>
+     </conditional>
+     <conditional name="refGenomeSource">
+        <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="Built-ins were indexed using default options">
+           <option value="indexed">Use a built-in index</option>
+           <option value="history">Use one from the history</option>
+        </param>
+        <when value="indexed">
+          <param name="index" type="select" label="Select a reference genome">
+            <options from_data_table="bs_seeker2_indexes">
+              <filter type="sort_by" column="2"/>
+              <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+            </options>
+          </param>
+        </when>
+        <when value="history">
+          <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
+        </when>
+     </conditional>
+
+     <conditional name="adapterInfo">
+        <param name="useAdapter" type="select" label="adapter sequence">
+           <option value="noAdapter">No</option>
+           <option value="withAdapter">Yes</option>
+        </param>
+        <when value="withAdapter">
+           <param format="txt" name="adapter_file" type="data" label="Input file of your adaptor sequences" help="Input text file of your adaptor sequences" />
+        </when>
+     </conditional>
+
+     <conditional name="sParams">
+       <param name="sSettingsType" type="select" label="BS Seeker2 settings to use" help="You can use the default settings or set customer values for the BS Seeker2 parameters.">
+         <option value="preSet">User Defaults</option>
+         <option value="full">Full parameter list</option>
+       </param>
+       <when value="preSet" /> 
+         <when value="full">
+           <param name="start_base" type="integer" value="1" label="The start base of the read to be mapped" help="The first base of your read to be mapped" />
+           <param name="end_base" type="integer" value="200" label="The end base of the read to be mapped" help="The last cycle number of your read to be mapped" />
+<!--           <param format="txt" name="adapter_file" type="data" label="Input file of your adaptor sequences" help="Input text file of your adaptor sequences" />
+-->
+           <param name="num_mismatch" type="integer" value="4" label="Number of mismatches" help="Number of mismatches (0,1,...,read length)" />
+       </when>   
+     </conditional>
+<!--  
+     <conditional name="GenomeSource">
+        <param name="genome" type="select" label="Will you select a genome from your history or use a built-in?">
+           <option value="builtin">Use a built-in genome</option>
+           <option value="historyFile">Use one from the history</option>
+        </param>
+        <when value="builtin">
+          <param name="genome" type="select" label="Select a genome">
+            <options from_data_table="all_fasta">
+              <filter type="sort_by" column="2"/>
+              <validator type="no_options" message="No genomes are available for the selected input dataset"/>
+            </options>
+          </param>
+        </when>
+        <when value="historyFile">
+          <param name="ownSeqFile" type="data" format="fasta" metadata_name="dbkey" label="Select a reference sequence file" />
+        </when>
+     </conditional>
+-->
+</inputs>
+
+  <outputs>
+    <data format="bam" name="align_output"  label="BAM Alignments"> </data>
+
+
+    <data format="wig" name="call_methylation_wig"  label="Methylation Levels"> </data>
+    <data format="tabular" name="call_methylation_CGmap"  label="CGmap file"> </data>
+    <data format="tabular" name="call_methylation_ATCGmap"  label="ATCGmap file"> </data>
+
+  </outputs>
+  <help>
+
+  </help>
+</tool>
