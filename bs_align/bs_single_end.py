@@ -594,6 +594,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     # the not-uniqued read occurrs at least twice in sigle file
                     # should report multiple hits if it holds the least value
                 mini=min(_list)
+                #print _list
                 if _list.count(mini)==1:
                     mini_index=_list.index(mini)
                     if mini_index==0:

@@ -86,7 +86,8 @@ def mcounts(mseq, mlst, ulst):
 
 def process_aligner_output(filename, pair_end = False):
 
-    m = re.search(r'-('+'|'.join(supported_aligners) +')-TMP', filename)
+    #m = re.search(r'-('+'|'.join(supported_aligners) +')-TMP', filename)
+    m = re.search(r'-('+'|'.join(supported_aligners) +')-.*TMP', filename)
     if m is None:
         error('The temporary folder path should contain the name of one of the supported aligners: ' + filename)
 
@@ -102,14 +103,20 @@ def process_aligner_output(filename, pair_end = False):
 
         # skip reads that are not mapped
         # skip reads that have probability of being non-unique higher than 1/10
-        if flag & 0x4 or int(buf[MAPQ]) < 10:
+        if flag & 0x4 : # or int(buf[MAPQ]) < 10:
             return None, None, None, None, None, None
+        # print "format = ", format
         if format == BOWTIE:
             mismatches = int([buf[i][5:] for i in xrange(11, len(buf)) if buf[i][:5] == 'NM:i:'][0]) # get the edit distance
         # --- bug fixed ------
         elif format == BOWTIE2:
-            mismatches = 1-int([buf[i][5:] for i in xrange(11, len(buf)) if buf[i][:5] == 'AS:i:'][0])
-            ## bowtie2 use AS tag (score) to evaluate the mapping. The higher, the better.
+            if re.search(r'(.)*-e2e-TMP(.*)', filename) is None : # local model
+                mismatches = 1-int([buf[i][5:] for i in xrange(11, len(buf)) if buf[i][:5] == 'AS:i:'][0])
+                # print "====local=====\n"
+                ## bowtie2 use AS tag (score) to evaluate the mapping. The higher, the better.
+            else : # end-to-end model
+                # print "end-to-end\n"
+                mismatches = int([buf[i][5:] for i in xrange(11, len(buf)) if buf[i][:5] == 'XM:i:'][0])
         # --- Weilong ---------
         else:
             mismatches = 1-buf[MAPQ]

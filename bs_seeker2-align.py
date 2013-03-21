@@ -156,15 +156,15 @@ if __name__ == '__main__':
                                             '-p'              : 2
                                 },
                                 BOWTIE2 : {
-                                         #   '-M'              : 5,
+                                            #'-M'              : 5,
                                             '--norc'          : True,
                                             '--quiet'         : True,
                                             '-p'              : 2,
                                             '--sam-nohead'    : True,
                                             # run bowtie2 in local mode by default
-                                            '--local' : '--end-to-end' not in aligner_options
-#                                            , '--mm'            : True
-
+                                            '--local' : '--end-to-end' not in aligner_options,
+                                            #'--mm'            : True,
+                                            '-k'              : 2
                                 },
                                 SOAP    : { '-v' : int_no_mismatches,
                                             '-p' : 2
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     if '--end-to-end' not in aligner_options:
         aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-R': 3, '-N': 0, '-L': 15, '-i' : 'S,1,0.50'})
     else:
-        aligner_options_defaults[BOWTIE2]['--very-sensitive'] = True
+        aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15, '--score-min': 'L,-0.6,-0.6' })
 
     aligner_options = dict(aligner_options_defaults[options.aligner], **aligner_options)
 
@@ -209,7 +209,14 @@ if __name__ == '__main__':
 
     open_log(logfilename+'.bs_seeker2_log')
 
-    tmp_path = tempfile.mkdtemp(prefix='bs_seeker2_%s_-%s-TMP-' % (os.path.split(outfilename)[1], options.aligner), dir = options.temp_dir)
+    aligner_title = options.aligner
+    if options.aligner == BOWTIE2 :
+        if '--end-to-end' in aligner_options :
+            aligner_title = aligner_title + "-e2e"
+        else:
+            aligner_title = aligner_title + "-local"
+
+    tmp_path = tempfile.mkdtemp(prefix='bs_seeker2_%s_-%s-TMP-' % (os.path.split(outfilename)[1], aligner_title ), dir = options.temp_dir)
 
 
     (XS_x, XS_y) = options.XS_filter.split(",")
@@ -254,7 +261,7 @@ if __name__ == '__main__':
                             db_path,
                             tmp_path,
                             outfile,
-                    XS_pct, XS_count
+                            XS_pct, XS_count
                             )
     else:
         logm('Pair end')
