@@ -22,37 +22,38 @@ if __name__ == '__main__':
     opt_group = OptionGroup(parser, "For pair end reads")
     opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input your read file end 1 (FORMAT: sequences, illumina qseq, fasta, fastq)", metavar="FILE")
     opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input your read file end 2 (FORMAT: sequences, illumina qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [%default]", default = -1)
-    opt_group.add_option("--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [%default]", default = 400)
+    opt_group.add_option("--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [Default: %default]", default = -1)
+    opt_group.add_option("--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 400)
     parser.add_option_group(opt_group)
 
     # option group 3
     opt_group = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options")
     opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Process reads from Reduced Representation Bisulfite Sequencing experiments')
     opt_group.add_option("--rrbs-tag", type="string",dest="rrbs_taginfo",help="Msp-I tag: CGG TGG CGA or CGG/TGG (both)", metavar="TAG", default = "CGG/TGG")
-    opt_group.add_option("-L", "--low",type = "int", dest="rrbs_low_bound",help="lower bound [%default]", default = 50)
-    opt_group.add_option("-U", "--up",type = "int", dest="rrbs_up_bound",help="upper bound [%default]", default = 300)
+    opt_group.add_option("-L", "--low",type = "int", dest="rrbs_low_bound",help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 40)
+    opt_group.add_option("-U", "--up",type = "int", dest="rrbs_up_bound",help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 300)
     parser.add_option_group(opt_group)
 
     # option group 4
     opt_group = OptionGroup(parser, "General options")
-    opt_group.add_option("-t", "--tag", type="string", dest="taginfo",help="[Y]es for undirectional lib, [N]o for directional [%default]", metavar="TAG", default = 'N')
-    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first base of your read to be mapped [%default]", default = 1)
-    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle number of your read to be mapped [%default]", default = 200)
+    opt_group.add_option("-t", "--tag", type="string", dest="taginfo",help="[Y]es for undirectional lib, [N]o for directional [Default: %default]", metavar="TAG", default = 'N')
+    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first base of your read to be mapped [Default: %default]", default = 1)
+    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle number of your read to be mapped [Default: %default]", default = 200)
     opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",help="Input text file of your adaptor sequences (to be trimed from the 3'end of the reads). Input 1 seq for dir. lib., 2 seqs for undir. lib. One line per sequence", metavar="FILE", default = '')
+    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adaptor [Default: %default]", default = 1)
     opt_group.add_option("-g", "--genome", type="string", dest="genome",help="Name of the reference genome (the same as the reference genome file in the preprocessing step) [ex. chr21_hg18.fa]")
-    opt_group.add_option("-m", "--mismatches",type = "int", dest="int_no_mismatches",help="Number of mismatches (0,1,...,read length) [%default]", default = 4)
-    opt_group.add_option("--aligner", dest="aligner",help="Aligner program to perform the analisys: " + ', '.join(supported_aligners) + " [%default]", metavar="ALIGNER", default = BOWTIE2)
+    opt_group.add_option("-m", "--mismatches",type = "int", dest="int_no_mismatches",help="Number of mismatches in one read [Default: %default]", default = 4)
+    opt_group.add_option("--aligner", dest="aligner",help="Aligner program to perform the analisys: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE2)
     opt_group.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Defaults: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
         metavar="PATH"
     )
-    opt_group.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [%default]" , metavar="DBPATH", default = reference_genome_path)
-    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [%default]", default = 4000000)
+    opt_group.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
+    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [Default: %default]", default = 4000000)
     opt_group.add_option("-o", "--output", type="string", dest="outfilename",help="The name of output file [INFILE.bs(se|pe|rrbs)]", metavar="OUTFILE")
-    opt_group.add_option("-f", "--output-format", type="string", dest="output_format",help="Output format: "+', '.join(output.formats)+" [%default]", metavar="FORMAT", default = output.BAM)
-    opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [%default]", default = False)
-    opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [%default]", metavar="PATH", default = tempfile.gettempdir())
-    opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [%default]", default = "0.5,5") # added by weilong
+    opt_group.add_option("-f", "--output-format", type="string", dest="output_format",help="Output format: "+', '.join(output.formats)+" [Default: %default]", metavar="FORMAT", default = output.BAM)
+    opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
+    opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Default: %default]", metavar="PATH", default = tempfile.gettempdir())
+    opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
     parser.add_option_group(opt_group)
 
     # option group 5
@@ -247,7 +248,9 @@ if __name__ == '__main__':
                     db_path,
                     tmp_path,
                     outfile,
-                    XS_pct, XS_count
+                    XS_pct,
+                    XS_count,
+                    options.adapter_mismatch
                     )
         else: # Normal single end scan
             bs_single_end(  options.infilename,
@@ -282,7 +285,6 @@ if __name__ == '__main__':
                                 SOAP: {
                                         '-x' : options.max_insert_size,
                                         '-m' : options.min_insert_size if options.min_insert_size > 0 else 100
-
                                 }}[options.aligner],
                                 **aligner_options)
 

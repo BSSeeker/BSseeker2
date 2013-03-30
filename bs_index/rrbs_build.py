@@ -1,4 +1,4 @@
-﻿import os
+import os
 from bs_utils.utils import *
 
 

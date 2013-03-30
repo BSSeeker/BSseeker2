@@ -1,4 +1,4 @@
-﻿import fileinput, os, time, random, math
+import fileinput, os, time, random, math
 from bs_utils.utils import *
 from bs_align_utils import *
 

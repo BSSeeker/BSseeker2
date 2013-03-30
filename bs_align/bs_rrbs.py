@@ -29,9 +29,69 @@ def my_mapable_region(chr_regions, mapped_location, FR): # start_position (first
 
 
 
+"""
+Exmaple:
+========
+Read :       ACCGCGTTGATCGAGTACGTACGTGGGTC
+Adaptor :    ....................ACGTGGGTCCCG
+========
+
+no_mismatch : the maximum number allowed for mismatches
+
+Algorithm: (allowing 1 mismatch)
+========
+-Step 1: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+  ||XX
+  ACGTGGGTCCCG
+-Step 2: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+   X||X
+  .ACGTGGGTCCCG
+-Step 3: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+    XX
+  ..ACGTGGGTCCCG
+-Step ...
+-Step N: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+                      |||||||||
+  ....................ACGTGGGTCCCG
+Success & return!
+========
+
+"""
+
+def RemoveAdaptor( read, adaptor, no_mismatch ):
+    lr = len(read)
+    la = len(adaptor)
+    for i in xrange( lr - no_mismatch ) :
+        read_pos = i
+        adaptor_pos = 0
+        count_no_mis = 0
+        while (adaptor_pos < la) and (read_pos < lr) :
+            if (read[read_pos] == adaptor[adaptor_pos]) :
+                read_pos = read_pos + 1
+                adaptor_pos = adaptor_pos + 1
+            else :
+                count_no_mis = count_no_mis + 1
+                if count_no_mis > no_mismatch :
+                    break
+                else :
+                    read_pos = read_pos + 1
+                    adaptor_pos = adaptor_pos + 1
+        # while_end
+
+        if adaptor_pos == la or read_pos == lr :
+            return read[:i]
+    # for_end
+    return read
+
+
+
 #----------------------------------------------------------------
 
-def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count):
+def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch):
     #----------------------------------------------------------------
     # output files
 
@@ -182,14 +242,23 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
                         seq=seq[i:]
 
                         #-- Trimming adapter sequence ---
-                        if adapter_seq !="":
-                            small_adapter=adapter_seq[:6]
-                            if small_adapter in seq:
-                                adapter_index=seq.index(small_adapter)
-                                res_seq=seq[adapter_index:]
-                                if res_seq in adapter_seq or adapter_seq in res_seq:
-                                    all_tagged_trimed+=1
-                                    seq=seq[:adapter_index+1]
+                        # New way to remove the adaptor
+                        if adapter_seq != "":
+                            new_read = RemoveAdaptor(seq, adapter_seq, adapter_mismatch)
+                           # new_read = RemoveAdaptor(seq, adapter_seq, 1)
+                            if len(new_read) < len(seq) :
+                                all_tagged_trimed += 1
+                            seq = new_read
+
+#                        if adapter_seq !="":
+#                            small_adapter=adapter_seq[:6]
+#                            if small_adapter in seq:
+#                                adapter_index=seq.index(small_adapter)
+#                                res_seq=seq[adapter_index:]
+#                                if res_seq in adapter_seq or adapter_seq in res_seq:
+#                                    all_tagged_trimed+=1
+#                                    seq=seq[:adapter_index+1]
+
                         if len(seq)<=4:
                             seq = "N" * cut2
 

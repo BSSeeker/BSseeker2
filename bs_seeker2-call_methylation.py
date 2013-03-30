@@ -46,7 +46,7 @@ def context_calling(seq, position):
 if __name__ == '__main__':
 
     parser = OptionParser()
-    parser.add_option("-i", "--input", type="string", dest="infilename",help="BAM output from bs_seeker2.py", metavar="INFILE")
+    parser.add_option("-i", "--input", type="string", dest="infilename",help="BAM output from bs_seeker2-align.py", metavar="INFILE")
     parser.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
     parser.add_option("-o", "--output-prefix", type="string", dest="output_prefix",help="The output prefix to create ATCGmap and wiggle files [INFILE]", metavar="OUTFILE")
 
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_option("--CGmap", type="string", dest="CGmap_file",help="The output .CGmap file [INFILE.CGmap]", metavar="OUTFILE")
     parser.add_option("--ATCGmap", type="string", dest="ATCGmap_file",help="The output .ATCGmap file [INFILE.ATCGmap]", metavar="OUTFILE")
 
-    parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment", default = False)
+    parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
 
     parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1) 
 

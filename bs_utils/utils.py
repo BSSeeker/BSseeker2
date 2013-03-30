@@ -205,10 +205,16 @@ def serialize(obj, filename):
 def deserialize(filename):
     """ Be careful what you serialize and deseriazlize! marshal.load is not secure!
     """
-    input = open(filename+'.data')
+    try:
+        input = open(filename+'.data')
+    except IOError:
+        print "\n[Error]:\n\t Cannot fine file: %s.data" % filename
+        exit(-1)
+
     obj = marshal.load(input)
     input.close()
-    return obj
+    return obj   
+
 
 
 def run_in_parallel(commands):

@@ -1,4 +1,4 @@
-﻿from bs_utils.utils import *
+from bs_utils.utils import *
 
 
 def wg_build(fasta_file, build_command, ref_path, aligner):

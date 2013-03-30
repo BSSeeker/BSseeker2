@@ -1,5 +1,3 @@
-__author__ = 'pf'
-
 from bs_utils.utils import *
 import re
 
