@@ -33,7 +33,7 @@ def FilterFastq (infile, outfile) :
         line4 = INFILE.readline()
         total += 1
  #       print line2
-        if ( line2 in Dict.keys() ) :
+        if ( line2 in Dict ) :
             Dict[line2] += 1
         else :
             Dict[line2] = 1
@@ -69,7 +69,7 @@ def FilterSequence (infile, outfile) :
     for line in INFILE:
         line = line.strip()
         total += 1
-        if ( line in Dict.keys() ) :
+        if ( line in Dict ) :
             Dict[line] += 1
         else :
             Dict[line] = 1
@@ -107,7 +107,7 @@ def FilterQseq (infile, outfile, keepquality) :
         tokens = line.strip().split()
         total += 1
         if ( (not keepquality and tokens[10] == "1") or keepquality ) :
-            if ( tokens[8] in Dict.keys() ) :
+            if ( tokens[8] in Dict ) :
                 Dict[tokens[8]] += 1
             else :
                 Dict[tokens[8]] = 1
@@ -145,7 +145,7 @@ def FilterFasta (infile, outfile) :
         if (line[0] == '>') :
             total += 1
             if ( name != "" ) :
-                if ( read in Dict.keys() ) :
+                if ( read in Dict ) :
                     Dict[read] += 1
                 else :
                     Dict[read] = 1
@@ -157,7 +157,7 @@ def FilterFasta (infile, outfile) :
         else :
             read = read + line
     if (name != "") :
-        if ( read in Dict.keys() ) :
+        if ( read in Dict ) :
             Dict[read] += 1
         else :
             Dict[read] = 1
@@ -213,8 +213,9 @@ from optparse import OptionParser
 def main():
     usage = "Usage: %prog -i <input> -o <output> [-k]\n" \
             "Author : Guo, Weilong; guoweilong@gmail.com; 2012-11-10\n" \
-            "Unique reads for qseq/fastq/fasta/sequencce, and filter \n" \
-            "low quality file in qseq file."
+            "Last Update: 2013-04-01" \
+            "Description: Unique reads for qseq/fastq/fasta/sequencce,\n" \
+            "       and filter low quality reads in qseq file."
     parser = OptionParser(usage)
     parser.add_option("-i", dest="infile", 
                   help="Name of the input qseq/fastq/fasta/sequence file", metavar="FILE")
