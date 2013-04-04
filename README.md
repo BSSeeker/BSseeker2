@@ -364,10 +364,10 @@ Sample:
 Format description:
 
         (1) chromosome 
-        (2) nucleotide 
+        (2) nucleotide on Watson (+) strand
         (3) position 
-        (4) context 
-        (5) dinucleotide-context 
+        (4) context (CG/CHG/CHH)
+        (5) dinucleotide-context (CA/CC/CG/CT) 
         (6) methyltion-level = #-of-C / (#-of-C + #-of-T)
         (7) #-of-C (methylated)
         (8) (#-ofC + #-of-T) (all cytosines)
@@ -385,10 +385,10 @@ Sample:
 Format description:
 
         (1) chromosome
-        (2) nucleotide
+        (2) nucleotide on Watson (+) strand
         (3) position
-        (4) context
-        (5) dinucleotide-context
+        (4) context (CG/CHG/CHH)
+        (5) dinucleotide-context (CA/CC/CG/CT)
 
         (6) - (10) plus strand
         (6) # of reads from Watson strand mapped here, support A on Watson strand
@@ -406,6 +406,13 @@ Format description:
 
         (16) methylation_level = #C/(#C+#T); "nan" means none reads support C/T at this position.
 
+
+
+5. Tips
+============
+(1) Speed-up your alignment 
+Q: "It takes me days to do the alignment for one lane" ...
+A: Yes, alignment is a time-costing work, expecially the sequencing depth is increasing. An efficient to do the alignment is cut the sequence file into multiple small pieces and then align them parallely. Afterward, merge all the BAM files before running "bs-seeker2_call-methylation.py".
 
 
 Contact Information

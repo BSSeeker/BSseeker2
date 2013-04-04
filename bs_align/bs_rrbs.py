@@ -109,7 +109,11 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
     #----------------------------------------------------------------
     adapter_seq=""
     if adapter_file:
-        adapter_inf = open(adapter_file,"r")
+        try :
+            adapter_inf = open(adapter_file,"r")
+        except IOError:
+            print "[Error] Cannot find adapter file : %s !" % adapter_file
+            exit(-1)
         adapter_seq = adapter_inf.readline().strip()
         adapter_inf.close()
 
