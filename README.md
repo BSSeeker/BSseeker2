@@ -410,8 +410,11 @@ Format description:
 
 5. Tips
 ============
+
 (1) Speed-up your alignment 
+
 Q: "It takes me days to do the alignment for one lane" ...
+
 A: Yes, alignment is a time-costing work, expecially the sequencing depth is increasing. An efficient to do the alignment is cut the sequence file into multiple small pieces and then align them parallely. Afterward, merge all the BAM files before running "bs-seeker2_call-methylation.py".
 
 
