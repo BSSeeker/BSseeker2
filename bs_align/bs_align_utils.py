@@ -181,7 +181,7 @@ def process_aligner_output(filename, pair_end = False):
     QNAME, FLAG, RNAME, POS, MAPQ, CIGAR, RNEXT, PNEXT, TLEN, SEQ, QUAL = range(11)
     def parse_SAM(line):
         buf = line.split()
-        print buf
+        # print buf
         flag = int(buf[FLAG])
 
         # skip reads that are not mapped

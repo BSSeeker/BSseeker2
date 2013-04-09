@@ -597,7 +597,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 for d in [FW_C2T_R,RC_C2T_R]:
                     mis=d.get(x,99)
                     _list.append(mis)
-                    # the not-uniqued read occurrs at least twice in sigle file
+                    # the not-unique read occurs at least twice in single file
                     # should report multiple hits if it holds the least value
                 mini=min(_list)
                 #print _list
@@ -697,12 +697,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             logm(" ---- %7d FW reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
             logm(" ---- %7d RC reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[1]) )
             logm(" ---- %7d FW reads mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[2]) )
-            logm(" ---- %7d RC hreads mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[3]) )
+            logm(" ---- %7d RC reads mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[3]) )
         elif asktag=="N":
             logm(" ---- %7d FW reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
             logm(" ---- %7d FW reads mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
 
-        logm("Post-filtering %d uniqlely aligned reads with mismatches <= %s"%(all_mapped_passed, indexname) )
+        logm("Post-filtering %d uniquely aligned reads with mismatches <= %s"%(all_mapped_passed, indexname) )
         if asktag=="Y":
             logm(" ---- %7d FW reads mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm(" ---- %7d RC reads mapped to Watson strand"%(numbers_mapped_lst[1]) )

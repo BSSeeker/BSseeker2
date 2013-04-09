@@ -373,7 +373,7 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
         logm("O Number of unique-hits reads for post-filtering: %d"%all_mapped)
 
         logm("O ------ %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, indexname))
-        logm("O Mapability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads))
+        logm("O Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads))
 
         n_CG=mC_lst[0]+uC_lst[0]
         n_CHG=mC_lst[1]+uC_lst[1]

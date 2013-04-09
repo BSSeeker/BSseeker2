@@ -1019,7 +1019,7 @@ def bs_pair_end(main_read_file_1,
             logm("O ----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm("O ----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[1]) )
 
-        logm("O Mapability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
+        logm("O Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
         logm("O Unmapped read pairs: %d"% all_unmapped+"\n")
 
 
