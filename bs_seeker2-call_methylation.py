@@ -2,7 +2,13 @@
 
 from optparse import OptionParser, OptionGroup
 from bs_utils.utils import *
-import pysam
+
+try :
+    import pysam
+except ImportError :
+    print "[Error] Cannot import \"pysam\" package. Have you installed it?"
+    exit(-1)
+
 import gzip
 
 def context_calling(seq, position):

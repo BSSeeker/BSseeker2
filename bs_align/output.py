@@ -1,4 +1,9 @@
-import pysam
+try :
+    import pysam
+except ImportError :
+    print "[Error] It seems that you haven't install \"pysam\" package.. Please do it before you run this script."
+    exit(-1)
+
 import sys
 from bs_align_utils import *
 

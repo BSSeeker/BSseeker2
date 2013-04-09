@@ -112,7 +112,12 @@ def bs_pair_end(main_read_file_1,
     adapterA=""
     adapterB=""
     if adapter_file !="":
-        adapter_inf=open(adapter_file,"r")
+        try :
+            adapter_inf=open(adapter_file,"r")
+        except IOError :
+            print "[Error] Cannot find adapter file : %s" % adapter_file
+            exit(-1)
+
         if asktag=="N": #<--- directional library
             adapter=adapter_inf.readline()
             adapter_inf.close()
@@ -212,7 +217,11 @@ def bs_pair_end(main_read_file_1,
             outfile_2FCT = tmp_d('Trimed_FCT_2.fa'+random_id)
             outfile_2RCT = tmp_d('Trimed_RCT_2.fa'+random_id)
 
-            read_inf = open(tmp_d(read_file_1),"r")
+            try :
+                read_inf = open(tmp_d(read_file_1),"r")
+            except IOError :
+                print "[Error] Cannot open file : %s", tmp_d(read_file_1)
+                exit(-1)
             oneline = read_inf.readline()
             l = oneline.split()
             input_format = ""
@@ -639,7 +648,12 @@ def bs_pair_end(main_read_file_1,
             outfile_1FCT= tmp_d('Trimed_FCT_1.fa'+random_id)
             outfile_2FCT= tmp_d('Trimed_FCT_2.fa'+random_id)
 
-            read_inf=open(tmp_d(read_file_1),"r")
+            try :
+                read_inf=open(tmp_d(read_file_1),"r")
+            except IOError :
+                print "[Error] Cannot open file : %s", tmp_d(read_file_1)
+                exit(-1)
+
             oneline=read_inf.readline()
             l=oneline.split()
             input_format=""

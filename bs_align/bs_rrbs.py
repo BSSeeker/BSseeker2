@@ -28,82 +28,16 @@ def my_mapable_region(chr_regions, mapped_location, FR): # start_position (first
 
 
 
-
-"""
-Exmaple:
-========
-Read :       ACCGCGTTGATCGAGTACGTACGTGGGTC
-Adaptor :    ....................ACGTGGGTCCCG
-========
-
-no_mismatch : the maximum number allowed for mismatches
-
-Algorithm: (allowing 1 mismatch)
-========
--Step 1: 
-  ACCGCGTTGATCGAGTACGTACGTGGGTC
-  ||XX
-  ACGTGGGTCCCG
--Step 2: 
-  ACCGCGTTGATCGAGTACGTACGTGGGTC
-   X||X
-  .ACGTGGGTCCCG
--Step 3: 
-  ACCGCGTTGATCGAGTACGTACGTGGGTC
-    XX
-  ..ACGTGGGTCCCG
--Step ...
--Step N: 
-  ACCGCGTTGATCGAGTACGTACGTGGGTC
-                      |||||||||
-  ....................ACGTGGGTCCCG
-Success & return!
-========
-
-"""
-
-def RemoveAdaptor( read, adaptor, no_mismatch ):
-    lr = len(read)
-    la = len(adaptor)
-    for i in xrange( lr - no_mismatch ) :
-        read_pos = i
-        adaptor_pos = 0
-        count_no_mis = 0
-        while (adaptor_pos < la) and (read_pos < lr) :
-            if (read[read_pos] == adaptor[adaptor_pos]) :
-                read_pos = read_pos + 1
-                adaptor_pos = adaptor_pos + 1
-            else :
-                count_no_mis = count_no_mis + 1
-                if count_no_mis > no_mismatch :
-                    break
-                else :
-                    read_pos = read_pos + 1
-                    adaptor_pos = adaptor_pos + 1
-        # while_end
-
-        if adaptor_pos == la or read_pos == lr :
-            return read[:i]
-    # for_end
-    return read
-
-
-
 #----------------------------------------------------------------
 
 def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch):
     #----------------------------------------------------------------
-    # output files
-
-#    outfile=outfilename
-#    outf=open(outfile,'w')
 
     mytag_lst = mytag.split("/")
     #----------------------------------------------------------------
 
     # helper method to join fname with tmp_path
     tmp_d = lambda fname: os.path.join(tmp_path, fname)
-
     db_d = lambda fname:  os.path.join(db_path, fname)
 
     #----------------------------------------------------------------
@@ -164,7 +98,12 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
         outf2=open(outfile2,'w')
 
         #--- Checking input format ------------------------------------------
-        read_inf=open(read_file,"r")
+        try :
+            read_inf=open(read_file,"r")
+        except IOError:
+            print "[Error] Cannot open input file : %s" % read_file
+            exit(-1)
+
         oneline=read_inf.readline()
         l=oneline.split()
         input_format=""
@@ -248,34 +187,24 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
                         #-- Trimming adapter sequence ---
                         # New way to remove the adaptor
                         if adapter_seq != "":
-                            new_read = RemoveAdaptor(seq, adapter_seq, adapter_mismatch)
-                           # new_read = RemoveAdaptor(seq, adapter_seq, 1)
+                            new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch)
+                           # new_read = RemoveAdapter(seq, adapter_seq, 1)
                             if len(new_read) < len(seq) :
                                 all_tagged_trimed += 1
                             seq = new_read
-
-#                        if adapter_seq !="":
-#                            small_adapter=adapter_seq[:6]
-#                            if small_adapter in seq:
-#                                adapter_index=seq.index(small_adapter)
-#                                res_seq=seq[adapter_index:]
-#                                if res_seq in adapter_seq or adapter_seq in res_seq:
-#                                    all_tagged_trimed+=1
-#                                    seq=seq[:adapter_index+1]
-
                         if len(seq)<=4:
                             seq = "N" * cut2
 
                         break
-
-
+                    #print "seq=", seq
                 if has_tag=="Y":
                     #---------  trimmed_raw_BS_read and qscore ------------------
                     original_bs_reads[id] = seq
 
                     #---------  FW_C2T  ------------------
                     outf2.write('>%s\n%s\n'%(id, seq.replace('C', 'T')))
-
+                #print seq
+        # for_end
         fileinput.close()
 
         outf2.close()
@@ -351,14 +280,10 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
 
         nn=0
         for ali_unique_lst, ali_dic in [(FW_uniq_lst, FW_C2T_U), (RC_uniq_lst, RC_C2T_U)]:
-
             nn += 1
-
             mapped_chr0 = ""
             for header in ali_unique_lst:
-
                 _, mapped_chr, mapped_location, cigar = ali_dic[header]
-
                 original_BS = original_bs_reads[header]
                 #-------------------------------------
                 if mapped_chr != mapped_chr0:
@@ -366,11 +291,8 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
                     RC_chr_regions = deserialize(db_d(REV_MAPPABLE_REGIONS(mapped_chr)))
                     my_gseq = deserialize(db_d(mapped_chr))
                     chr_length = len(my_gseq)
-
                     mapped_chr0=mapped_chr
-
                 r_start, r_end, g_len = get_read_start_end_and_genome_length(cigar)
-
                 all_mapped+=1
 
 #                checking_first_C = False
@@ -389,7 +311,6 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
 #                    origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
 #                    origin_genome_long = reverse_compl_seq(origin_genome_long)
 #                    checking_first_C = (origin_genome_long[1:5] == "CCGG")
-
 #                    origin_genome = origin_genome_long[2:-2]
 
 
@@ -421,7 +342,7 @@ def bs_rrbs(main_read_file, mytag, adapter_file, cut1, cut2, no_small_lines, ind
                         #---XS FILTER----------------
                         #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                         XS = 0
-			nCH = methy.count('y') + methy.count('z')
+                        nCH = methy.count('y') + methy.count('z')
                         nmCH = methy.count('Y') + methy.count('Z')
                         # print nCH, nmCH
                         if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :

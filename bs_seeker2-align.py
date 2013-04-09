@@ -114,7 +114,7 @@ if __name__ == '__main__':
     # mismatch allowed: bowtie 1,build-in paramter '-m'; bowtie 2, post-filter paramter
     # mismatch should no greater than the read length
     int_no_mismatches=min(options.int_no_mismatches, options.cutnumber2-options.cutnumber1)
-    indexname=str(int_no_mismatches)
+    str_no_mismatches=str(int_no_mismatches)
     # -g
     if options.genome is None:
         error('-g is a required option')
@@ -173,6 +173,7 @@ if __name__ == '__main__':
                                 }
 
     if '--end-to-end' not in aligner_options:
+        #aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15})
         aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-R': 3, '-N': 0, '-L': 15, '-i' : 'S,1,0.50'})
     else:
         aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15, '--score-min': 'L,-0.6,-0.6' })
@@ -243,7 +244,7 @@ if __name__ == '__main__':
                     options.cutnumber1,
                     options.cutnumber2,
                     options.no_split,
-                    indexname,
+                    str_no_mismatches,
                     aligner_command,
                     db_path,
                     tmp_path,
@@ -259,12 +260,14 @@ if __name__ == '__main__':
                             options.cutnumber1,
                             options.cutnumber2,
                             options.no_split,
-                            indexname,
+                            str_no_mismatches,
                             aligner_command,
                             db_path,
                             tmp_path,
                             outfile,
-                            XS_pct, XS_count
+                            XS_pct,
+                            XS_count,
+                            options.adapter_mismatch
                             )
     else:
         logm('Pair end')
@@ -301,12 +304,13 @@ if __name__ == '__main__':
                     options.cutnumber1,
                     options.cutnumber2,
                     options.no_split,
-                    indexname,
+                    str_no_mismatches,
                     aligner_command,
                     db_path,
                     tmp_path,
                     outfile,
-                    XS_pct, XS_count
+                    XS_pct,
+                    XS_count
              )
 
     outfile.close()

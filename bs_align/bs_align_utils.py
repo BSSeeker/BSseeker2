@@ -21,6 +21,88 @@ def N_MIS(r,g):
 
 #----------------------------------------------------------------
 
+"""
+Exmaple:
+========
+Read :       ACCGCGTTGATCGAGTACGTACGTGGGTC
+Adapter :    ....................ACGTGGGTCCCG
+========
+
+no_mismatch : the maximum number allowed for mismatches
+
+Algorithm: (allowing 1 mismatch)
+========
+-Step 1: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+  ||XX
+  ACGTGGGTCCCG
+-Step 2: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+   X||X
+  .ACGTGGGTCCCG
+-Step 3: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+    XX
+  ..ACGTGGGTCCCG
+-Step ...
+-Step N: 
+  ACCGCGTTGATCGAGTACGTACGTGGGTC
+                      |||||||||
+  ....................ACGTGGGTCCCG
+Success & return!
+========
+
+"""
+
+def RemoveAdapter ( read, adapter, no_mismatch ) :
+    lr = len(read)
+    la = len(adapter)
+    for i in xrange( lr - no_mismatch ) :
+        read_pos = i
+        adapter_pos = 0
+        count_no_mis = 0
+        while (adapter_pos < la) and (read_pos < lr) :
+            if (read[read_pos] == adapter[adapter_pos]) :
+                read_pos = read_pos + 1
+                adapter_pos = adapter_pos + 1
+            else :
+                count_no_mis = count_no_mis + 1
+                if count_no_mis > no_mismatch :
+                    break
+                else :
+                    read_pos = read_pos + 1
+                    adapter_pos = adapter_pos + 1
+        # while_end
+
+        if adapter_pos == la or read_pos == lr :
+            return read[:i]
+    # for_end
+    return read
+
+
+def Remove_5end_Adapter ( read, adapter, no_mismatch) :
+    lr = len(read)
+    la = len(adapter)
+    for i in xrange (la - no_mismatch) :
+        read_pos = 0
+        adapter_pos = i
+        count_no_mis = 0
+        while (adapter_pos < la) and (read_pos < lr) :
+            if (read[read_pos] == adapter[adapter_pos]) :
+                adapter_pos = adapter_pos + 1
+                read_pos = read_pos + 1
+            else :
+                count_no_mis = count_no_mis + 1
+                if count_no_mis > no_mismatch :
+                    break
+                else : 
+                    read_pos = read_pos + 1
+                    adapter_pos = adapter_pos + 1
+        # while_end
+        if adapter_pos == la :
+            return read[(la-i):]
+
+
 def next_nuc(seq, pos, n):
     """ Returns the nucleotide that is n places from pos in seq. Skips gap symbols.
     """
@@ -90,13 +172,16 @@ def process_aligner_output(filename, pair_end = False):
         error('The temporary folder path should contain the name of one of the supported aligners: ' + filename)
 
     format = m.group(1)
-
-    input = open(filename)
+    try :
+        input = open(filename)
+    except IOError:
+        print "[Error] Cannot open file %s" % filename
+        exit(-1)
 
     QNAME, FLAG, RNAME, POS, MAPQ, CIGAR, RNEXT, PNEXT, TLEN, SEQ, QUAL = range(11)
     def parse_SAM(line):
         buf = line.split()
-
+        print buf
         flag = int(buf[FLAG])
 
         # skip reads that are not mapped

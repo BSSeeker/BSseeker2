@@ -47,14 +47,18 @@ def extract_mapping(ali_file):
     return unique_hits, non_unique_hits
 
 
-def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count):
+def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch):
     #----------------------------------------------------------------
     # adapter : strand-specific or not
     adapter=""
     adapter_fw=""
     adapter_rc=""
     if adapter_file !="":
-        adapter_inf=open(adapter_file,"r")
+        try :
+            adapter_inf=open(adapter_file,"r")
+        except IOError:
+            print "[Error] Cannot open adapter file : %s" % adapter_file
+            exit(-1)
         if asktag == "N": #<--- directional library
             adapter=adapter_inf.readline()
             adapter_inf.close()
@@ -139,7 +143,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
             #----------------------------------------------------------------
             # detect format of input file
-            read_inf=open(read_file,"r")
+            try :
+                read_inf=open(read_file,"r")
+            except IOError :
+                print "[Error] Cannot open input file : %s" % read_file
+                exit(-1)
+
             oneline=read_inf.readline()
             l=oneline.split()
             input_format=""
@@ -211,26 +220,19 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                 #----------------------------------------------------------------
                 if seq_ready=="Y":
-                    seq=seq[cut1-1:cut2] #<----------------------selecting 0..52 from 1..72  -e 52
+                    seq=seq[cut1-1:cut2] #<---- selecting 0..52 from 1..72  -e 52
                     seq=seq.upper()
                     seq=seq.replace(".","N")
 
-                    #--striping BS adapter from 3' read --------------------------------------------------------------
-                    if (adapter_fw !="") and (adapter_rc !=""):
-                        signature=adapter_fw[:6]
-                        if signature in seq:
-                            signature_pos=seq.index(signature)
-                            if seq[signature_pos:] in adapter_fw:
-                                seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                all_trimed+=1
-                        else:
-                            signature=adapter_rc[:6]
-                            if signature in seq:
-                                #print id,seq,signature
-                                signature_pos=seq.index(signature)
-                                if seq[signature_pos:] in adapter_rc:
-                                    seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                    all_trimed+=1
+                    # striping BS adapter from 3' read
+                    if (adapter_fw !="") and (adapter_rc !="") :
+                        new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch)
+                        new_read = Remove_5end_Adapter(new_read, adapter_rc)
+                        if len(new_read) < len(seq) :
+                            all_trimed += 1
+                        seq = new_read
+
+
 
                     if len(seq)<=4:
                         seq=''.join(["N" for x in xrange(cut2-cut1+1)])
@@ -429,7 +431,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                             #---XS FILTER----------------
                             XS = 0
-			    nCH = condense_seq.count('y') + condense_seq.count('z')
+                            nCH = condense_seq.count('y') + condense_seq.count('z')
                             nmCH = condense_seq.count('Y') + condense_seq.count('Z')
                             if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
                                 XS = 1
@@ -453,7 +455,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
             n=0
             #----------------------------------------------------------------
-            read_inf=open(read_file,"r")
+            try :
+                read_inf=open(read_file,"r")
+            except IOError :
+                print "[Error] Cannot open input file : %s" % read_file
+                exit(-1)
+
             oneline=read_inf.readline()
             l=oneline.split()
             input_format=""
@@ -521,20 +528,19 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     else:
                         seq=""
 
-                #----------------------------------------------------------------
+                #--------------------------------
                 if seq_ready=="Y":
-                    seq=seq[cut1-1:cut2] #<----------------------selecting 0..52 from 1..72  -e 52
+                    seq=seq[cut1-1:cut2] #<---selecting 0..52 from 1..72  -e 52
                     seq=seq.upper()
                     seq=seq.replace(".","N")
 
                     #--striping adapter from 3' read -------
-                    if adapter !="":
-                        signature=adapter[:6]
-                        if signature in seq:
-                            signature_pos=seq.index(signature)
-                            if seq[signature_pos:] in adapter:
-                                seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                all_trimed+=1
+                    if adapter != "":
+                        new_read = RemoveAdapter(seq, adapter, adapter_mismatch)
+                        if len(new_read) < len(seq) :
+                            all_trimed += 1
+                        seq = new_read
+
                     if len(seq)<=4:
                         seq = "N" * (cut2-cut1+1)
 
@@ -657,7 +663,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                     if len(r_aln) == len(g_aln):
                         N_mismatch = N_MIS(r_aln, g_aln) #+ original_BS_length - (r_end - r_start) # mismatches in the alignment + soft clipped nucleotides
-
                         if N_mismatch <= int(indexname):
                             numbers_mapped_lst[nn-1] += 1
                             all_mapped_passed += 1
@@ -667,11 +672,10 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                             #---XS FILTER----------------
                             #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                             XS = 0
-			    nCH = methy.count('y') + methy.count('z')
+                            nCH = methy.count('y') + methy.count('z')
                             nmCH = methy.count('Y') + methy.count('Z')
                             if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
                                 XS = 1
-
 
                             outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand, mapped_location, cigar, original_BS, methy, XS, output_genome = output_genome)
 
@@ -707,7 +711,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         elif asktag=="N":
             logm(" ---- %7d FW reads mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm(" ---- %7d FW reads mapped to Crick strand"%(numbers_mapped_lst[1]) )
-        logm("Mapability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
+        logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
 
         n_CG=mC_lst[0]+uC_lst[0]
         n_CHG=mC_lst[1]+uC_lst[1]
@@ -720,8 +724,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         logm(" mCHG %1.3f%%"%((100*float(mC_lst[1])/n_CHG) if n_CHG != 0 else 0))
         logm(" mCHH %1.3f%%"%((100*float(mC_lst[2])/n_CHH) if n_CHH != 0 else 0))
 
-        
-#    logm("----------------------------------------------" )
     logm("------------------- END --------------------" )
     elapsed("=== END %s ===" % main_read_file)
 
