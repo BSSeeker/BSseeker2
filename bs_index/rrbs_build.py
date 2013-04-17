@@ -8,7 +8,7 @@ REV_MAPPABLE_REGIONS = lambda chrom_id: chrom_id+'.rev_mappable_regions'
 
 
 def rrbs_build(fasta_file, build_command, ref_path, low_bound, up_bound, aligner):
-    # ref_path is a string that containts the directory where the reference genomes are stored with
+    # ref_path is a string that contains the directory where the reference genomes are stored with
     # the input fasta filename appended
     ref_path = os.path.join(ref_path,
         os.path.split(fasta_file)[1] + '_rrbs_%d_%d' % (low_bound, up_bound) +'_' + aligner)
@@ -54,9 +54,9 @@ def rrbs_build(fasta_file, build_command, ref_path, low_bound, up_bound, aligner
                 CCGG_sites.append(i)
             i += 1
 
-        #-- find "CCGG" pairs that are within the length of fragment ---------------------------------
+        #-- find "CCGG" pairs that are within the length of fragment ----
         for j in xrange(len(CCGG_sites) - 1):
-            DD = (CCGG_sites[j+1] - CCGG_sites[j]) - 4 # NOT including both CCGG
+            DD = (CCGG_sites[j+1] - CCGG_sites[j]) - 4 # NOT including both CCGG; DD: fragment length
             if  low_bound <= DD <= up_bound:
                 CCGG_CCGG.append([CCGG_sites[j], CCGG_sites[j+1] + 3]) # leftmost <--> rightmost
                 mapable_seq = chrom_seq[CCGG_sites[j] : CCGG_sites[j+1] + 4]
@@ -67,11 +67,13 @@ def rrbs_build(fasta_file, build_command, ref_path, low_bound, up_bound, aligner
 
                 # start_position, end_position, serial, sequence
                 mappable_regions_output_file.write("%s\t%d\t%d\t%d\t%s\n"%(chrom_id, no_mappable_region, CCGG_sites[j], CCGG_sites[j+1]+3, mapable_seq))
-
+        # storing region information to file
+        # format: A[left_CCGG_pos]=[right_CCGG_pos, number_of_mappable_region]
         serialize(fwd_chr_regions, ref_p(FWD_MAPPABLE_REGIONS(chrom_id)))
         serialize(rev_chr_regions, ref_p(REV_MAPPABLE_REGIONS(chrom_id)))
 
         #-----------------------------------
+        # mask the genome
         _map_seq = []
         mappable_length = 0
         unmappable_length = 0
@@ -80,8 +82,8 @@ def rrbs_build(fasta_file, build_command, ref_path, low_bound, up_bound, aligner
         while m < L:
             if len(CCGG_CCGG) > 0:
                 pair = CCGG_CCGG[0]
-                p1 = pair[0]
-                p2 = pair[1]
+                p1 = pair[0]  # left end of fragment
+                p2 = pair[1]  # right end of fragment
                 if p1 <= m < p2 + 1:
                     _map_seq.append(chrom_seq[m])
                     mappable_length+=1

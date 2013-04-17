@@ -54,6 +54,9 @@ if __name__ == '__main__':
     opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
     opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Default: %default]", metavar="PATH", default = tempfile.gettempdir())
     opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
+
+    opt_group.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
+
     parser.add_option_group(opt_group)
 
     # option group 5
@@ -94,6 +97,12 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         print parser.print_help()
         exit(0)
+
+    if options.version :
+        show_version()
+        exit (-1)
+    else :
+        show_version()
 
     # check parameters
     # input read files
@@ -173,8 +182,8 @@ if __name__ == '__main__':
                                 }
 
     if '--end-to-end' not in aligner_options:
-        #aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15})
-        aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-R': 3, '-N': 0, '-L': 15, '-i' : 'S,1,0.50'})
+        aligner_options_defaults[BOWTIE2].update({'-D' : 50})
+        #aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-R': 3, '-N': 0, '-L': 15, '-i' : 'S,1,0.50'})
     else:
         aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15, '--score-min': 'L,-0.6,-0.6' })
 
@@ -239,6 +248,7 @@ if __name__ == '__main__':
         # single end reads
         if options.rrbs: # RRBS scan
             bs_rrbs(options.infilename,
+                    asktag,
                     options.rrbs_taginfo,
                     options.adapter_file,
                     options.cutnumber1,

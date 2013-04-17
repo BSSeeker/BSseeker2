@@ -304,7 +304,9 @@ def get_read_start_end_and_genome_length(cigar):
         elif edit_op == BAM_DEL:
             g_len += count
     return r_start, r_end, g_len # return the start and end in the read and the length of the genomic sequence
-
+    # r_start : start position on the read
+    # r_end   : end position on the read
+    # g_len   : length of the mapped region on genome
 
 
 def cigar_to_alignment(cigar, read_seq, genome_seq):
@@ -337,6 +339,9 @@ def cigar_to_alignment(cigar, read_seq, genome_seq):
 
 
 def get_genomic_sequence(genome, start, end, strand = '+'):
+    if strand != '+' and strand != '-' :
+        print "[Bug] get_genomic_sequence input should be \'+\' or \'-\'."
+        exit(-1)
     if start > 1:
         prev = genome[start-2:start]
     elif start == 1:
@@ -358,3 +363,4 @@ def get_genomic_sequence(genome, start, end, strand = '+'):
         prev, origin_genome, next = revc[:2], revc[2:-2], revc[-2:]
 
     return origin_genome, next, '%s_%s_%s' % (prev, origin_genome, next)
+    # next : next two nucleotides

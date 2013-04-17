@@ -17,6 +17,7 @@ if __name__ == '__main__':
                   metavar="PATH")
     parser.add_option("-d", "--db", type="string", dest="dbpath", help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]", metavar="DBPATH", default = reference_genome_path)
 
+    parser.add_option("-v", "--version", action="store_true", dest="version", help="show version of BS-Seeker2", default=False)
 
     # RRBS options
     rrbs_opts = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options",
@@ -33,6 +34,12 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         print parser.print_help()
         exit(0)
+
+    if options.version :
+        show_version()
+        exit (-1)
+    else :
+        show_version()
 
     rrbs = options.rrbs
 

@@ -226,16 +226,13 @@ def bs_pair_end(main_read_file_1,
             l = oneline.split()
             input_format = ""
 
-            #if len(l)==5: # old solexa format
-            #	input_format="old Solexa Seq file"
-
             if oneline[0]=="@":	# Illumina GAII FastQ (Lister et al Nature 2009)
-                input_format="FastQ"
+                input_format="fastq"
                 n_fastq=0
             elif len(l)==1 and oneline[0]!=">": 	# pure sequences
-                input_format="list of sequences"
+                input_format="seq"
             elif len(l)==11:	# Illumina GAII qseq file
-                input_format="Illumina GAII qseq file"
+                input_format="qseq"
             elif oneline[0]==">":	# fasta
                 input_format="fasta"
                 n_fasta=0
@@ -262,19 +259,13 @@ def bs_pair_end(main_read_file_1,
                 seq_ready = "N"
                 for line in fileinput.input(tmp_d(read_file)):
                     l=line.split()
-                    if input_format=="old Solexa Seq file":
-                        n+=1
-                        id=str(n)
-                        id=id.zfill(12)
-                        seq=l[4]
-                        seq_ready="Y"
-                    elif input_format=="list of sequences":
+                    if input_format=="seq":
                         n+=1
                         id=str(n)
                         id=id.zfill(12)
                         seq=l[0]
                         seq_ready="Y"
-                    elif input_format=="FastQ":
+                    elif input_format=="fastq":
                         m_fastq=math.fmod(n_fastq,4)
                         n_fastq+=1
                         seq_ready="N"
@@ -288,7 +279,7 @@ def bs_pair_end(main_read_file_1,
                             seq_ready="Y"
                         else:
                             seq=""
-                    elif input_format=="Illumina GAII qseq file":
+                    elif input_format=="qseq":
                         n+=1
                         id=str(n)
                         id=id.zfill(12)
@@ -310,7 +301,7 @@ def bs_pair_end(main_read_file_1,
                             seq=""
                     #----------------------------------------------------------------
                     if seq_ready=="Y":
-                        seq=seq[cut1-1:cut2] #<----------------------selecting 0..52 from 1..72  -e 52
+                        seq=seq[cut1-1:cut2] #------- selecting 0..52 from 1..72  -e 52
                         seq=seq.upper()
                         seq=seq.replace(".","N")
 
@@ -609,17 +600,6 @@ def bs_pair_end(main_read_file_1,
                         nmCH_2 = methy_2.count('Y') + methy_2.count('Z')
                         if( (nmCH_2>XS_count) and nmCH_2/float(nCH_2+nmCH_2)>XS_pct ) :
                             XS_2 = 1
-
- #                       #---STEVE FILTER----------------
- #                       condense_seq_1 = methy_1.replace('-','')
- #                       STEVE_1 = 0
- #                       if "ZZZ" in condense_seq_1:
- #                           STEVE_1=1
- #
- #                       condense_seq_2 = methy_2.replace('-','')
- #                       STEVE_2 = 0
- #                       if "ZZZ" in condense_seq_2:
- #                           STEVE_2=1
 
 
                         outfile.store(header, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
@@ -954,16 +934,6 @@ def bs_pair_end(main_read_file_1,
                         if( (nmCH_2>XS_count) and nmCH_2/float(nCH_2+nmCH_2)>XS_pct ) :
                             XS_2 = 1
 
-#                        #---STEVE FILTER----------------
-#                        condense_seq_1 = methy_1.replace('-','')
-#                        STEVE_1=0
-#                        if "ZZZ" in condense_seq_1:
-#                            STEVE_1=1
-#
-#                        condense_seq_2 = methy_2.replace('-','')
-#                        STEVE_2=0
-#                        if "ZZZ" in condense_seq_2:
-#                            STEVE_2=1
 
                         outfile.store(header, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
                                       output_genome = output_genome_1, rnext = mapped_chr, pnext = mapped_location_2)

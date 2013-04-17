@@ -47,7 +47,9 @@ def extract_mapping(ali_file):
     return unique_hits, non_unique_hits
 
 
-def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines, indexname, aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch):
+def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines,
+                  max_mismatch_no, aligner_command, db_path, tmp_path, outfile,
+                  XS_pct, XS_count, adapter_mismatch):
     #----------------------------------------------------------------
     # adapter : strand-specific or not
     adapter=""
@@ -82,7 +84,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
     logm("Max. lines per mapping: %d"% no_small_lines)
     logm("Aligner: %s" % aligner_command)
     logm("Reference genome library path: %s" % db_path )
-    logm("Number of mismatches allowed: %s" % indexname )
+    logm("Number of mismatches allowed: %s" % max_mismatch_no )
     if adapter_file !="":
         if asktag=="N":
             logm("Adapter to be removed from 3' reads: %s"%(adapter.rstrip("\n")))
@@ -152,13 +154,13 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             oneline=read_inf.readline()
             l=oneline.split()
             input_format=""
-            if oneline[0]=="@":	# Illumina GAII FastQ (Lister et al Nature 2009)
-                input_format="FastQ"
+            if oneline[0]=="@":	# fastq
+                input_format="fastq"
                 n_fastq=0
-            elif len(l)==1 and oneline[0]!=">": 	# pure sequences
-                input_format="list of sequences"
-            elif len(l)==11:	# Illumina GAII qseq file
-                input_format="Illumina GAII qseq file"
+            elif len(l)==1 and oneline[0]!=">": # pure sequences
+                input_format="seq"
+            elif len(l)==11: # qseq
+                input_format="qseq"
             elif oneline[0]==">":	# fasta
                 input_format="fasta"
                 n_fasta=0
@@ -166,41 +168,36 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
             #----------------------------------------------------------------
             # read sequence, remove adapter and convert 
-            id=""
+            read_id=""
             seq=""
             seq_ready="N"
             for line in fileinput.input(read_file):
                 l=line.split()
-                if input_format=="Old Solexa Seq file":
+
+                if input_format=="seq":
                     all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
-                    seq=l[4]
-                    seq_ready="Y"
-                elif input_format=="list of sequences":
-                    all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
+                    read_id=str(all_raw_reads)
+                    read_id=read_id.zfill(12)
                     seq=l[0]
                     seq_ready="Y"
-                elif input_format=="FastQ":
+                elif input_format=="fastq":
                     m_fastq=math.fmod(n_fastq,4)
                     n_fastq+=1
                     seq_ready="N"
                     if m_fastq==0:
                         all_raw_reads+=1
-                        id=str(all_raw_reads)
-                        id=id.zfill(12)
+                        read_id=str(all_raw_reads)
+                        read_id=read_id.zfill(12)
                         seq=""
                     elif m_fastq==1:
                         seq=l[0]
                         seq_ready="Y"
                     else:
                         seq=""
-                elif input_format=="Illumina GAII qseq file":
+                elif input_format=="qseq":
                     all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
+                    read_id=str(all_raw_reads)
+                    read_id=read_id.zfill(12)
                     seq=l[8]
                     seq_ready="Y"
                 elif input_format=="fasta":
@@ -209,8 +206,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     seq_ready="N"
                     if m_fasta==0:
                         all_raw_reads+=1
-                        #id=str(all_raw_reads)
-                        id=l[0][1:]
+                        #read_id=str(all_raw_reads)
+                        read_id=l[0][1:]
                         seq=""
                     elif m_fasta==1:
                         seq=l[0]
@@ -232,18 +229,16 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                             all_trimed += 1
                         seq = new_read
 
-
-
                     if len(seq)<=4:
                         seq=''.join(["N" for x in xrange(cut2-cut1+1)])
 
                     #---------  trimmed_raw_BS_read  ------------------
-                    original_bs_reads[id] = seq
+                    original_bs_reads[read_id] = seq
 
                     #---------  FW_C2T  ------------------
-                    outf2.write('>%s\n%s\n' % (id, seq.replace("C","T")))
+                    outf2.write('>%s\n%s\n' % (read_id, seq.replace("C","T")))
                     #---------  RC_G2A  ------------------
-                    outf3.write('>%s\n%s\n' % (id, seq.replace("G","A")))
+                    outf3.write('>%s\n%s\n' % (read_id, seq.replace("G","A")))
 
             fileinput.close()
 
@@ -255,15 +250,15 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
            #--------------------------------------------------------------------------------
             # Bowtie mapping
             #-------------------------------------------------------------------------------
-            WC2T=tmp_d("W_C2T_m"+indexname+".mapping"+random_id)
-            CC2T=tmp_d("C_C2T_m"+indexname+".mapping"+random_id)
-            WG2A=tmp_d("W_G2A_m"+indexname+".mapping"+random_id)
-            CG2A=tmp_d("C_G2A_m"+indexname+".mapping"+random_id)
+            WC2T=tmp_d("W_C2T_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T=tmp_d("C_C2T_m"+max_mismatch_no+".mapping"+random_id)
+            WG2A=tmp_d("W_G2A_m"+max_mismatch_no+".mapping"+random_id)
+            CG2A=tmp_d("C_G2A_m"+max_mismatch_no+".mapping"+random_id)
 
-            print aligner_command % {'int_no_mismatches' : int_no_mismatches,
-                                     'reference_genome' : os.path.join(db_path,'W_C2T'),
-                                     'input_file' : outfile2,
-                                     'output_file' : WC2T}
+        #    print aligner_command % {'int_no_mismatches' : int_no_mismatches,
+        #                             'reference_genome' : os.path.join(db_path,'W_C2T'),
+        #                             'input_file' : outfile2,
+        #                             'output_file' : WC2T}
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                    'input_file' : outfile2,
@@ -315,8 +310,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 for d in [FW_C2T_R, RC_G2A_R, FW_G2A_R, RC_C2T_R]:
                     mis=d.get(x,99) 
                     _list.append(mis)
-                    # the not-uniqued read occurrs at least twice in sigle file
-                    # should report multiple hits if it holds the least value
                 mini=min(_list)
                 if _list.count(mini) == 1:
                     mini_index=_list.index(mini)
@@ -328,7 +321,13 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                         Unique_FW_G2A.add(x)
                     elif mini_index == 3:
                         Unique_RC_C2T.add(x)
+                    # if mini_index = 4,5,6,7, indicating multiple hits
 
+            del Union_set
+            del FW_C2T_R
+            del FW_G2A_R
+            del RC_C2T_R
+            del RC_G2A_R
 
             FW_C2T_uniq_lst=[[FW_C2T_U[u][1],u] for u in Unique_FW_C2T]
             FW_G2A_uniq_lst=[[FW_G2A_U[u][1],u] for u in Unique_FW_G2A]
@@ -343,6 +342,11 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             FW_G2A_uniq_lst=[x[1] for x in FW_G2A_uniq_lst]
             RC_G2A_uniq_lst=[x[1] for x in RC_G2A_uniq_lst]
 
+            del Unique_FW_C2T
+            del Unique_FW_G2A
+            del Unique_RC_C2T
+            del Unique_RC_G2A
+
             #----------------------------------------------------------------
             numbers_premapped_lst[0] += len(Unique_FW_C2T)
             numbers_premapped_lst[1] += len(Unique_RC_G2A)
@@ -353,23 +357,24 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             #----------------------------------------------------------------
 
             nn=0
+            gseq = dict()
+            chr_length = dict()
             for ali_unique_lst, ali_dic in [(FW_C2T_uniq_lst,FW_C2T_U),
                                             (RC_G2A_uniq_lst,RC_G2A_U),
                                             (FW_G2A_uniq_lst,FW_G2A_U),
                                             (RC_C2T_uniq_lst,RC_C2T_U)]:
                 nn += 1
                 mapped_chr0 = ""
+
                 for header in ali_unique_lst:
 
                     _, mapped_chr, mapped_location, cigar = ali_dic[header]
 
                     original_BS = original_bs_reads[header]
                     #-------------------------------------
-                    if mapped_chr != mapped_chr0:
-                        my_gseq = deserialize(db_d(mapped_chr))
-                        chr_length = len(my_gseq)
-                        mapped_chr0 = mapped_chr
-                    #-------------------------------------
+                    if mapped_chr not in gseq:
+                        gseq[mapped_chr] =  deserialize(db_d(mapped_chr))
+                        chr_length[mapped_chr] = len(gseq[mapped_chr])
 
                     if nn == 2 or nn == 3:
                         cigar = list(reversed(cigar))
@@ -380,50 +385,32 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                     if nn == 1: # +FW mapped to + strand:
                         FR = "+FW"
-#                        mapped_location += 1
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
                         mapped_strand="+"
-#                        origin_genome=origin_genome_long[2:-2]
 
                     elif nn == 2:  # +RC mapped to + strand:
                         FR = "+RC" # RC reads from -RC reflecting the methylation status on Watson strand (+)
-
-                        mapped_location = chr_length - mapped_location - g_len
-
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
+                        mapped_location = chr_length[mapped_chr] - mapped_location - g_len
                         mapped_strand = "+"
-#                        origin_genome = origin_genome_long[2:-2]
-
                         original_BS = reverse_compl_seq(original_BS)  # for RC reads
 
                     elif nn == 3:  						# -RC mapped to - strand:
                         mapped_strand = "-"
                         FR = "-RC" # RC reads from +RC reflecting the methylation status on Crick strand (-)
-
-#                        mapped_location += 1
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
-#                        origin_genome_long = reverse_compl_seq(origin_genome_long)
-#                        origin_genome = origin_genome_long[2:-2]
                         original_BS = reverse_compl_seq(original_BS)  # for RC reads
 
                     elif nn == 4: 						# -FW mapped to - strand:
                         mapped_strand = "-"
                         FR = "-FW"
-                        mapped_location = chr_length - mapped_location - g_len
+                        mapped_location = chr_length[mapped_chr] - mapped_location - g_len
 
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
-#                        origin_genome_long = reverse_compl_seq(origin_genome_long)
-#                        origin_genome = origin_genome_long[2:-2]
-
-
-                    origin_genome, next, output_genome = get_genomic_sequence(my_gseq, mapped_location, mapped_location + g_len, mapped_strand)
+                    origin_genome, next, output_genome = get_genomic_sequence(gseq[mapped_chr], mapped_location, mapped_location + g_len, mapped_strand)
 
                     r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
 
                     if len(r_aln)==len(g_aln):
                         N_mismatch = N_MIS(r_aln, g_aln)
-                        if N_mismatch <= int(indexname):
+                        if N_mismatch <= int(max_mismatch_no):
                             numbers_mapped_lst[nn-1] += 1
                             all_mapped_passed += 1
                             methy = methy_seq(r_aln, g_aln + next)
@@ -464,54 +451,48 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             oneline=read_inf.readline()
             l=oneline.split()
             input_format=""
-            if oneline[0]=="@":	# Illumina GAII FastQ (Lister et al Nature 2009)
-                input_format="Illumina GAII FastQ"
+            if oneline[0]=="@":	# FastQ
+                input_format="fastq"
                 n_fastq=0
-            elif len(l)==1 and oneline[0]!=">": 	# pure sequences
-                input_format="list of sequences"
-            elif len(l)==11:	# Illumina GAII qseq file
-                input_format="Illumina GAII qseq file"
+            elif len(l)==1 and oneline[0]!=">": # pure sequences
+                input_format="seq"
+            elif len(l)==11: # Illumina GAII qseq file
+                input_format="qseq"
             elif oneline[0]==">":	# fasta
                 input_format="fasta"
                 n_fasta=0
             read_inf.close()
             #print "detected data format: %s"%(input_format)
             #----------------------------------------------------------------
-            id=""
+            read_id=""
             seq=""
             seq_ready="N"
             for line in fileinput.input(read_file):
                 l=line.split()
-                if input_format=="Old Solexa Seq file":
+                if input_format=="seq":
                     all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
-                    seq=l[4]
-                    seq_ready="Y"
-                elif input_format=="list of sequences":
-                    all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
+                    read_id=str(all_raw_reads)
+                    read_id=read_id.zfill(12)
                     seq=l[0]
                     seq_ready="Y"
-                elif input_format=="Illumina GAII FastQ":
+                elif input_format=="fastq":
                     m_fastq=math.fmod(n_fastq,4)
                     n_fastq+=1
                     seq_ready="N"
                     if m_fastq==0:
                         all_raw_reads+=1
-                        id=str(all_raw_reads)
-                        id=id.zfill(12)
+                        read_id=str(all_raw_reads)
+                        read_id=read_id.zfill(12)
                         seq=""
                     elif m_fastq==1:
                         seq=l[0]
                         seq_ready="Y"
                     else:
                         seq=""
-                elif input_format=="Illumina GAII qseq file":
+                elif input_format=="qseq":
                     all_raw_reads+=1
-                    id=str(all_raw_reads)
-                    id=id.zfill(12)
+                    read_id=str(all_raw_reads)
+                    read_id=read_id.zfill(12)
                     seq=l[8]
                     seq_ready="Y"
                 elif input_format=="fasta":
@@ -520,7 +501,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     seq_ready="N"
                     if m_fasta==0:
                         all_raw_reads+=1
-                        id=l[0][1:]
+                        read_id=l[0][1:]
                         seq=""
                     elif m_fasta==1:
                         seq=l[0]
@@ -545,11 +526,11 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                         seq = "N" * (cut2-cut1+1)
 
                     #---------  trimmed_raw_BS_read  ------------------
-                    original_bs_reads[id] = seq
+                    original_bs_reads[read_id] = seq
 
 
                     #---------  FW_C2T  ------------------
-                    outf2.write('>%s\n%s\n' % (id, seq.replace("C","T")))
+                    outf2.write('>%s\n%s\n' % (read_id, seq.replace("C","T")))
 
             fileinput.close()
 
@@ -559,8 +540,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T=tmp_d("W_C2T_m"+indexname+".mapping"+random_id)
-            CC2T=tmp_d("C_C2T_m"+indexname+".mapping"+random_id)
+            WC2T=tmp_d("W_C2T_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T=tmp_d("C_C2T_m"+max_mismatch_no+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                   'input_file' : outfile2,
@@ -597,8 +578,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 for d in [FW_C2T_R,RC_C2T_R]:
                     mis=d.get(x,99)
                     _list.append(mis)
-                    # the not-unique read occurs at least twice in single file
-                    # should report multiple hits if it holds the least value
                 mini=min(_list)
                 #print _list
                 if _list.count(mini)==1:
@@ -625,6 +604,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             #----------------------------------------------------------------
 
             nn = 0
+            gseq = dict()
+            chr_length = dict()
             for ali_unique_lst, ali_dic in [(FW_C2T_uniq_lst,FW_C2T_U),(RC_C2T_uniq_lst,RC_C2T_U)]:
                 nn += 1
                 mapped_chr0 = ""
@@ -632,10 +613,13 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     _, mapped_chr, mapped_location, cigar = ali_dic[header]
                     original_BS = original_bs_reads[header]
                     #-------------------------------------
-                    if mapped_chr != mapped_chr0:
-                        my_gseq = deserialize(db_d(mapped_chr))
-                        chr_length = len(my_gseq)
-                        mapped_chr0 = mapped_chr
+                    if mapped_chr not in gseq :
+                        gseq[mapped_chr] = deserialize(db_d(mapped_chr))
+                        chr_length[mapped_chr] = len(gseq[mapped_chr])
+                    #if mapped_chr != mapped_chr0:
+                    #    my_gseq = deserialize(db_d(mapped_chr))
+                    #    chr_length = len(my_gseq)
+                    #    mapped_chr0 = mapped_chr
                     #-------------------------------------
 
                     r_start, r_end, g_len = get_read_start_end_and_genome_length(cigar)
@@ -643,34 +627,25 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     all_mapped+=1
                     if nn == 1: 	# +FW mapped to + strand:
                         FR = "+FW"
-#                        mapped_location += 1
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
                         mapped_strand = "+"
-#                        origin_genome = origin_genome_long[2:-2]
-
-
                     elif nn == 2: 	# -FW mapped to - strand:
                         mapped_strand = "-"
                         FR = "-FW"
-                        mapped_location = chr_length - mapped_location - g_len
-#                        origin_genome_long = my_gseq[mapped_location - 2 - 1 : mapped_location + g_len + 2 - 1]
-#                        origin_genome_long = reverse_compl_seq(origin_genome_long)
-#                        origin_genome = origin_genome_long[2:-2]
+                        mapped_location = chr_length[mapped_chr] - mapped_location - g_len
 
 
-                    origin_genome, next, output_genome = get_genomic_sequence(my_gseq, mapped_location, mapped_location + g_len, mapped_strand)
+                    origin_genome, next, output_genome = get_genomic_sequence(gseq[mapped_chr], mapped_location, mapped_location + g_len, mapped_strand)
                     r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
                     if len(r_aln) == len(g_aln):
                         N_mismatch = N_MIS(r_aln, g_aln) #+ original_BS_length - (r_end - r_start) # mismatches in the alignment + soft clipped nucleotides
-                        if N_mismatch <= int(indexname):
+                        if N_mismatch <= int(max_mismatch_no):
                             numbers_mapped_lst[nn-1] += 1
                             all_mapped_passed += 1
                             methy = methy_seq(r_aln, g_aln+next)
                             mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
 
                             #---XS FILTER----------------
-                            #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                             XS = 0
                             nCH = methy.count('y') + methy.count('z')
                             nmCH = methy.count('Y') + methy.count('Z')
@@ -702,7 +677,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             logm(" ---- %7d FW reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
             logm(" ---- %7d FW reads mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
 
-        logm("Post-filtering %d uniquely aligned reads with mismatches <= %s"%(all_mapped_passed, indexname) )
+        logm("Post-filtering %d uniquely aligned reads with mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
         if asktag=="Y":
             logm(" ---- %7d FW reads mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm(" ---- %7d RC reads mapped to Watson strand"%(numbers_mapped_lst[1]) )

@@ -417,6 +417,12 @@ Q: "It takes me days to do the alignment for one lane" ...
 
 A: Yes, alignment is a time-costing work, expecially the sequencing depth is increasing. An efficient way for aligning is : first cut the original sequence file into multiple small pieces; and then align them parallely; afterward, merge all the BAM files into a single one before running "bs-seeker2_call-methylation.py".
 
+(2) read in BAM/SAM
+Q: Is the read sequence in BAM/SAM file is same with my original one?
+A: NO. They are different for a lot of reasons.
+
+    - For rrbs, some reads are short because trimming of adapter
+    - For read mapping on Crick (-) strand, the reads are in fact the antisense version of the original sequence, opposite both in nucleotides and direction
 
 Contact Information
 ============

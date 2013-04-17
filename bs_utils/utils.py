@@ -21,6 +21,11 @@ def reverse_compl_seq(strseq):
 
 
 
+def show_version() :
+    print ""
+    print "     BS-Seeker2 v2.0.1 - April 16, 2013     "
+    print ""
+
 #-------------------------------------------------------------------------------------
 
 # set a reasonable defaults
@@ -40,7 +45,7 @@ SOAP = 'soap'
 supported_aligners = [
                       BOWTIE,
                       BOWTIE2,
-                     SOAP
+                      SOAP
                     ]
 
 aligner_options_prefixes = { BOWTIE : '--bt-',
@@ -123,9 +128,9 @@ def split_file(filename, output_prefix, nlines):
     """ Splits a file (equivalend to UNIX split -l ) """
     fno = 0
     lno = 0
-    input = open(filename, 'r')
+    INPUT = open(filename, 'r')
     output = None
-    for l in input:
+    for l in INPUT:
         if lno == 0:
             fno += 1
             if output is not None: output.close()
@@ -134,7 +139,7 @@ def split_file(filename, output_prefix, nlines):
         output.write(l)
         lno -= 1
     output.close()
-    input.close()
+    INPUT.close()
 
 def isplit_file(filename, output_prefix, nlines):
     """ Splits a file (equivalend to UNIX split -l ) """
@@ -221,7 +226,7 @@ def run_in_parallel(commands):
 
     commands = [(cmd[0], open(cmd[1], 'w')) if type(cmd) is tuple else (cmd, None) for cmd in commands]
 
-    logm('Starting:\n' + '\n'.join([cmd for cmd, stdout in commands]))
+    logm('Starting commands:\n' + '\n'.join([cmd for cmd, stdout in commands]))
     for i, proc in enumerate([subprocess.Popen(args = shlex.split(cmd), stdout = stdout) for cmd, stdout in commands]):
         return_code = proc.wait()
         logm('Finished: ' + commands[i][0])

@@ -62,7 +62,8 @@ if __name__ == '__main__':
 
     parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
 
-    parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1) 
+    parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1)
+    parser.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
 
     (options, args) = parser.parse_args()
 
@@ -71,6 +72,13 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         print parser.print_help()
         exit(0)
+
+    if options.version :
+        show_version()
+        exit (-1)
+    else :
+        show_version()
+
 
     if options.infilename is None:
         error('-i option is required')
