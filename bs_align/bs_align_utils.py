@@ -112,7 +112,10 @@ def next_nuc(seq, pos, n):
             n -= 1
             if n == 0: break
         i += 1
-    return seq[i]
+    if i < len(seq) :
+        return seq[i]
+    else :
+        return 'N'
 
 
 
@@ -337,7 +340,7 @@ def cigar_to_alignment(cigar, read_seq, genome_seq):
 
 
 
-
+# return sequence is [start, end), not include 'end'
 def get_genomic_sequence(genome, start, end, strand = '+'):
     if strand != '+' and strand != '-' :
         print "[Bug] get_genomic_sequence input should be \'+\' or \'-\'."

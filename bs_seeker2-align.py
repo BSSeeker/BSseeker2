@@ -29,7 +29,8 @@ if __name__ == '__main__':
     # option group 3
     opt_group = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options")
     opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Process reads from Reduced Representation Bisulfite Sequencing experiments')
-    opt_group.add_option("--rrbs-tag", type="string",dest="rrbs_taginfo",help="Msp-I tag: CGG TGG CGA or CGG/TGG (both)", metavar="TAG", default = "CGG/TGG")
+#    opt_group.add_option("--rrbs-tag", type="string",dest="rrbs_taginfo",help="Msp-I tag: CGG TGG CGA or CGG/TGG (both)", metavar="TAG", default = "CGG/TGG")
+    opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format",help="Cutting sites of restriction enzyme", metavar="pattern", default = "C-CGG")
     opt_group.add_option("-L", "--low",type = "int", dest="rrbs_low_bound",help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 40)
     opt_group.add_option("-U", "--up",type = "int", dest="rrbs_up_bound",help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 300)
     parser.add_option_group(opt_group)
@@ -133,13 +134,16 @@ if __name__ == '__main__':
     # try to guess the location of the reference genome for RRBS
     if options.rrbs:
         if options.rrbs_low_bound and options.rrbs_up_bound:
-            genome_subdir += '_rrbs_%d_%d'  % (options.rrbs_low_bound, options.rrbs_up_bound)
+            if options.cut_format == "C-CGG" :
+                genome_subdir += '_rrbs_%d_%d'  % (options.rrbs_low_bound, options.rrbs_up_bound)
+            else :
+                genome_subdir += '_rrbs_%s_%d_%d'  % (options.cut_format, options.rrbs_low_bound, options.rrbs_up_bound)
         else:
             possible_refs = filter(lambda dir: dir.startswith(genome+'_rrbs_'), os.listdir(options.dbpath))
             if len(possible_refs) == 1:
                 genome_subdir = possible_refs[0]
             else:
-                error('Cannot localize unambiguosly the reference genome for RRBS. '
+                error('Cannot localize unambiguously the reference genome for RRBS. '
                       'Please, specify the --low and --up options that you used at the preprocessing step.\n'
                       'Possible choices are:\n' + '\n'.join([pr.split('_rrbs_')[-1].replace('_',', ') for pr in possible_refs]))
 
@@ -249,7 +253,7 @@ if __name__ == '__main__':
         if options.rrbs: # RRBS scan
             bs_rrbs(options.infilename,
                     asktag,
-                    options.rrbs_taginfo,
+            #        options.rrbs_taginfo,
                     options.adapter_file,
                     options.cutnumber1,
                     options.cutnumber2,
@@ -261,7 +265,8 @@ if __name__ == '__main__':
                     outfile,
                     XS_pct,
                     XS_count,
-                    options.adapter_mismatch
+                    options.adapter_mismatch,
+                    options.cut_format
                     )
         else: # Normal single end scan
             bs_single_end(  options.infilename,

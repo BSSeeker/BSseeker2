@@ -25,6 +25,7 @@ if __name__ == '__main__':
     rrbs_opts.add_option("-r", "--rrbs", action="store_true", dest="rrbs", help = 'Build index specially for Reduced Representation Bisulfite Sequencing experiments. Genome other than certain fragments will be masked. [Default: %default]', default = False)
     rrbs_opts.add_option("-l", "--low",type= "int", dest="low_bound", help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 50)
     rrbs_opts.add_option("-u", "--up", type= "int", dest="up_bound", help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 300)
+    rrbs_opts.add_option("-c", "--cut-site", type= "string", dest="cut_format", help="Cut sites of restriction enzyme [Default: %default]", default = "C-CGG")
     parser.add_option_group(rrbs_opts)
 
 
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         os.mkdir(ref_path)
 
     if rrbs: # RRBS preprocessing
-        rrbs_build(fasta_file, build_command, ref_path, options.low_bound, options.up_bound, options.aligner)
+        rrbs_build(fasta_file, build_command, ref_path, options.low_bound, options.up_bound, options.aligner, options.cut_format)
     else: # Whole genome preprocessing
         wg_build(fasta_file, build_command, ref_path, options.aligner)
 

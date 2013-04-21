@@ -10,8 +10,9 @@ def my_mappable_region(chr_regions, mapped_location, FR): # start_position (firs
     out_serial=0
     out_start=-1
     out_end=-1
-    if FR == "+FW":
-        my_location=str(mapped_location-2)
+    #print "mapped_location:", mapped_location
+    if FR == "+FW" or FR == "-RC":
+        my_location=str(mapped_location)
         if my_location in chr_regions:
             my_lst = chr_regions[my_location]
             out_start = int(my_location)
@@ -20,8 +21,8 @@ def my_mappable_region(chr_regions, mapped_location, FR): # start_position (firs
         #else :
         #    print "[For debug]: +FW location %s cannot be found" % my_location
 
-    elif FR == "-FW":
-        my_location = str(mapped_location-1)
+    elif FR == "-FW" or FR == "+RC":
+        my_location = str(mapped_location)
         if my_location in chr_regions:
             my_lst = chr_regions[my_location]
             out_end = int(my_location)
@@ -33,14 +34,40 @@ def my_mappable_region(chr_regions, mapped_location, FR): # start_position (firs
     return out_serial, out_start, out_end
 
 
+from itertools import product, izip
+
+# example: cut3_context="CGG"
+# return generator for : ["CGG","TGG"]
+def EnumerateTags ( cut3_context ) :
+    tag_list = []
+    for m in product(*[i if (i is not 'C') else ('C','T') for i in list(cut3_context)]) :
+        tag_list.append(''.join(m))
+    return tag_list
 
 #----------------------------------------------------------------
 
-def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_lines, max_mismatch_no,
-            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch):
+def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, max_mismatch_no,
+            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch, cut_format="C-CGG"):
     #----------------------------------------------------------------
+    cut_context = re.sub("-", "", cut_format)
+    cut5_context = re.match( r'(.*)\-(.*)', cut_format).group(1) # 5' end
+    cut3_context = re.match( r'(.*)\-(.*)', cut_format).group(2) # 3' end
+    cut_len = len(cut_context)
+    cut5_len = len(cut5_context)
+    cut3_len = len(cut3_context)
+    mytag_lst = EnumerateTags(cut3_context)
 
-    mytag_lst = mytag.split("/")
+    # set region[gx,gy] for checking_genome_context
+    gx = 0
+    gy = 3+ cut3_len
+    if cut5_len < 3 :
+        gx = 2 - cut5_len
+    else :
+        gx = 0
+    check_pattern = re.sub("-","_", cut_format)
+    if cut5_len > 2 :
+        check_pattern = check_pattern[(cut5_len-2):]
+
     #----------------------------------------------------------------
 
     # helper method to join fname with tmp_path
@@ -59,7 +86,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             exit(-1)
 
     logm("I Read filename: %s" % main_read_file)
-    logm("I Starting Msp-1 tag: %s" % mytag )
+#    logm("I Starting tag: %s" % mytag )
     logm("I The last cycle (for mapping): %d" % cut_e )
     logm("I Bowtie path: %s" % aligner_command )
     logm("I Reference genome library path: %s" % db_path )
@@ -70,7 +97,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
     #----------------------------------------------------------------
     all_raw_reads=0
     all_tagged=0
-    all_tagged_trimed=0
+    all_tagged_trimmed=0
     all_mapped=0
     all_mapped_passed=0
     n_mytag_lst={}
@@ -102,7 +129,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             original_bs_reads = {}
             no_my_files+=1
             random_id = ".tmp-"+str(random.randint(1000000,9999999))
-            outfile2=tmp_d('Trimed_C2T.fa'+random_id)
+            outfile2=tmp_d('Trimmed_C2T.fa'+random_id)
 
             outf2=open(outfile2,'w')
 
@@ -120,14 +147,12 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             input_format=""
             if oneline[0]=="@":	# FastQ
                 input_format="fastq"
-            #    n_fastq=0
             elif len(l)==1 and oneline[0]!=">": # pure sequences
                 input_format="seq"
             elif len(l)==11: # Illumina qseq
                 input_format="qseq"
             elif oneline[0]==">": # fasta
                 input_format="fasta"
-            #    n_fasta=0
             read_inf.close()
 
             #----------------------------------------------------------------
@@ -181,9 +206,9 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     # Normalize the characters
                     seq=seq.upper().replace(".","N")
 
-                    if seq[0:3] in mytag_lst :
+                    if seq[0:cut3_len] in mytag_lst :
                         all_tagged+=1
-                        n_mytag_lst[seq[0:3]]+=1
+                        n_mytag_lst[seq[0:cut3_len]]+=1
 
                     seq = seq[(cut_s-1):cut_e] # cut_s start from 1 cycle by default
 
@@ -191,7 +216,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     if adapter_seq != "" :
                         new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch)
                         if len(new_read) < len(seq) :
-                            all_tagged_trimed += 1
+                            all_tagged_trimmed += 1
                         seq = new_read
                     if len(seq) <= 4 :
                         seq = "N" * (cut_e - cut_s)
@@ -275,12 +300,14 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
 
             #----------------------------------------------------------------
             # Post-filtering reads
+
             # ---- FW  ----
             FW_regions = dict()
             gseq = dict()
             chr_length = dict()
             for header in FW_uniq_lst :
                 _, mapped_chr, mapped_location, cigar = FW_C2T_U[header]
+                #print "Read: %d\tcigar:%s", (mapped_location, cigar)
                 original_BS = original_bs_reads[header]
                 if mapped_chr not in FW_regions :
                     FW_regions[mapped_chr] = deserialize(db_d(FWD_MAPPABLE_REGIONS(mapped_chr)))
@@ -296,24 +323,26 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location,
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
                 if len(r_aln) == len(g_aln) :
-                    my_region_serail = 0
-                    if checking_first_C :
+                    my_region_serial = 0
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                                                         mapped_location + 1,
+                                                                                         mapped_location - cut5_len ,
                                                                                          FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
-                        # print "[For debug]: FW read has no tags"
+                        # for some cases, read has no tags; searching the upstream sequence for tags
+                        #print "[For debug]: FW read has no tags"
+
                         upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 500,
-                                                              mapped_location + 4, '-')
-                        # print "[For debug]: upstream=", upstream
-                        # print "[For debug]: mapped_locaiton: %d, CCGG_pos: %d" %(mapped_location, upstream.find('CCGG'))
+                                                              mapped_location + cut3_len + 1, '-')
+                        #print "[For debug]: upstream=", upstream
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                              mapped_location + 2 - upstream.find('CCGG'), FR)
+                                                              mapped_location - cut5_len - upstream.find(cut_context) + 1, FR)
+
+
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
                         #    print "[For debug]: +FW read still can not find fragment serial"
@@ -363,24 +392,22 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location,
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
-                if len(r_aln) == len(g_aln) : # and checking_first_C:
+                if len(r_aln) == len(g_aln) : # and checking_genome_context:
                     my_region_serial = 0
-                    if checking_first_C :
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                                                                         mapped_location + g_len + 1,
-                                                                                         FR)
+                                                                mapped_location + g_len - 1 + cut5_len, FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
-                        # print "[For debug]: RC Read has no tags"
-                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 3,
+                        # for some cases, read has no tags; searching the upstream sequence for tags
+                        #print "[For debug]: RC Read has no tags"
+                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location + g_len - cut3_len - 1,
                                                               mapped_location + 500, '+')
                         #print "[For debug]: upstream = ", upstream
-                        #print "[For debug]: mapped_location = %d, CCGG_pos: %d" % (mapped_location, upstream.find('CCGG'))
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                        mapped_location + 1 + upstream.find('CCGG'), FR)
+                                        mapped_location + g_len + upstream.find(cut_context) + cut5_len - 2, FR)
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
                         #    print "[For debug]: -FW read still cannot find fragment serial"
@@ -419,7 +446,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
 
 
     # ====================================================
-    #  directional library
+    #  un-directional library
     # ====================================================
 
     elif asktag=="Y" :
@@ -433,8 +460,8 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             original_bs_reads = {}
             no_my_files+=1
             random_id = ".tmp-"+str(random.randint(1000000,9999999))
-            outfile2=tmp_d('Trimed_C2T.fa'+random_id)
-            outfile3=tmp_d('Trimed_G2A.fa'+random_id)
+            outfile2=tmp_d('Trimmed_C2T.fa'+random_id)
+            outfile3=tmp_d('Trimmed_G2A.fa'+random_id)
 
             outf2=open(outfile2,'w')
             outf3=open(outfile3,'w')
@@ -462,13 +489,13 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             read_inf.close()
 
             #----------------------------------------------------------------
-            seq_id=""
-            seq=""
+            seq_id = ""
+            seq = ""
             seq_ready=0
             for line in fileinput.input(read_file):
                 l=line.split()
 
-                if input_format=="seq":
+                if input_format == "seq":
                     all_raw_reads+=1
                     seq_id=str(all_raw_reads)
                     seq_id=seq_id.zfill(12)
@@ -512,9 +539,9 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     # Normalize the characters
                     seq=seq.upper().replace(".","N")
 
-                    if seq[0:3] in mytag_lst :
+                    if seq[0:cut3_len] in mytag_lst :
                         all_tagged+=1
-                        n_mytag_lst[seq[0:3]]+=1
+                        n_mytag_lst[seq[0:cut3_len]]+=1
 
                     seq = seq[(cut_s-1):cut_e] # cut_s start from 1 cycle by default
 
@@ -522,7 +549,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     if adapter_seq != "" :
                         new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch)
                         if len(new_read) < len(seq) :
-                            all_tagged_trimed += 1
+                            all_tagged_trimmed += 1
                         seq = new_read
                     if len(seq) <= 4 :
                         seq = "N" * (cut_e - cut_s)
@@ -576,11 +603,10 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
             FW_G2A_U,FW_G2A_R=extract_mapping(WG2A)
             RC_C2T_U,RC_C2T_R=extract_mapping(CC2T)
 
-
             logm("Extracting alignments is done")
 
             #----------------------------------------------------------------
-            # get uniq-hit reads
+            # get unique-hit reads
             #----------------------------------------------------------------
             Union_set=set(FW_C2T_U.iterkeys()) | set(RC_G2A_U.iterkeys()) | set(FW_G2A_U.iterkeys()) | set(RC_C2T_U.iterkeys())
 
@@ -610,8 +636,6 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     elif mini_index == 3:
                         Unique_RC_C2T.add(x)
 
-
-
             del Union_set
             del FW_C2T_R
             del FW_G2A_R
@@ -639,7 +663,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
 
             #----------------------------------------------------------------
             # Post-filtering reads
-            # ---- FW_C2T  ----
+            # ---- FW_C2T  ---- undirectional
             FW_regions = dict()
             gseq = dict()
             chr_length = dict()
@@ -660,28 +684,25 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location,
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
                 if len(r_aln) == len(g_aln) :
                     my_region_serial = 0
-                    if checking_first_C :
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                                                              mapped_location + 1,
-                                                                                              FR)
+                                                                            mapped_location - cut5_len, FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
-                        # print "[For debug]: FW read has no tags"
+                        # for some cases, read has no tags; searching the upstream sequence for tags
+                        #print "[For debug]: FW_C2T read has no tags"
                         upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 500,
-                                                              mapped_location + 4, '-')
-                        # print "[For debug]: upstream=", upstream
-                        # print "[For debug]: mapped_locaiton: %d, CCGG_pos: %d" %(mapped_location, upstream.find('CCGG'))
+                                                              mapped_location + cut3_len + 1, '-')
+                        #print "[For debug]: upstream=", upstream
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                                                              mapped_location + 2 - upstream.find('CCGG'), FR)
+                                                    mapped_location - cut5_len - upstream.find(cut_context) + 1, FR)
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
-                        #    print "[For debug]: +FW read still can not find fragment serial"
-                        # Tip: sometimes "my_region_serial" is still 0 ...
+                        #    print "[For debug]: FW_C2T read still can not find fragment serial"
 
 
                     N_mismatch = N_MIS(r_aln, g_aln)
@@ -707,7 +728,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     print "[For debug]: reads not in same lengths"
 
 
-            # ---- RC_C2T ----
+            # ---- RC_C2T ---- undirectional
             RC_regions = dict()
             for header in RC_C2T_uniq_lst :
                 _, mapped_chr, mapped_location, cigar = RC_C2T_U[header]
@@ -727,27 +748,25 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location,
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
-                if len(r_aln) == len(g_aln) : # and checking_first_C:
+                if len(r_aln) == len(g_aln) : # and checking_genome_context:
                     my_region_serial = 0
-                    if checking_first_C :
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                                                                              mapped_location + g_len + 1,
-                                                                                              FR)
+                                                                        mapped_location + g_len - 1 + cut5_len, FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
+                        # for some cases, read has no tags; searching the upstream sequence for tags
                         # print "[For debug]: RC Read has no tags"
-                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 3,
+                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location + g_len - cut3_len - 1,
                                                               mapped_location + 500, '+')
                         #print "[For debug]: upstream = ", upstream
-                        #print "[For debug]: mapped_location = %d, CCGG_pos: %d" % (mapped_location, upstream.find('CCGG'))
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                                                                              mapped_location + 1 + upstream.find('CCGG'), FR)
+                                                mapped_location + g_len + upstream.find(cut_context) + cut5_len - 2, FR)
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
-                        #    print "[For debug]: -FW read still cannot find fragment serial"
+                        #    print "[For debug]: RC_C2T read still cannot find fragment serial"
 
 
                     N_mismatch = N_MIS(r_aln, g_aln)
@@ -773,7 +792,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     print "[For debug]: reads not in same lengths"
 
 
-            # ---- FW_G2A  ----
+            # ---- FW_G2A  ---- undirectional
             FW_regions = dict()
             gseq = dict()
             chr_length = dict()
@@ -796,27 +815,25 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
                 original_BS = reverse_compl_seq(original_BS)  # for RC reads
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
                 if len(r_aln) == len(g_aln) :
                     my_region_serial = 0
-                    if checking_first_C :
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                                                              mapped_location + 1,
-                                                                                              FR)
+                                                                        mapped_location - cut5_len, FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
-                        # print "[For debug]: FW read has no tags"
+                        # for some cases, read has no tags; searching the upstream sequence for tags
+                        #print "[For debug]: FW read has no tags"
                         upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 500,
-                                                              mapped_location + 4, '-')
-                        # print "[For debug]: upstream=", upstream
-                        # print "[For debug]: mapped_locaiton: %d, CCGG_pos: %d" %(mapped_location, upstream.find('CCGG'))
+                                                              mapped_location + cut3_len + 1, '-')
+                        #print "[For debug]: upstream=", upstream
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(FW_regions[mapped_chr],
-                                                                                              mapped_location + 2 - upstream.find('CCGG'), FR)
+                                            mapped_location - cut5_len - upstream.find(cut_context) + 1, FR)
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
-                        #    print "[For debug]: +FW read still can not find fragment serial"
+                        #    print "[For debug]: FW_G2A read still can not find fragment serial"
                         # Tip: sometimes "my_region_serial" is still 0 ...
 
 
@@ -843,7 +860,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                     print "[For debug]: reads not in same lengths"
 
 
-            # ---- RC_G2A ----
+            # ---- RC_G2A ---- undirectional
             RC_regions = dict()
             for header in RC_G2A_uniq_lst :
                 _, mapped_chr, mapped_location, cigar = RC_G2A_U[header]
@@ -865,27 +882,25 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
                                                                              mapped_location + g_len,
                                                                              mapped_strand)
                 original_BS = reverse_compl_seq(original_BS)  # for RC reads
-                checking_first_C = (output_genome[1:6] == "C_CGG")
+                checking_genome_context = (output_genome[gx:gy] == check_pattern)
                 r_aln, g_aln = cigar_to_alignment(cigar, original_BS, origin_genome)
 
-                if len(r_aln) == len(g_aln) : # and checking_first_C:
+                if len(r_aln) == len(g_aln) : # and checking_genome_context:
                     my_region_serial = 0
-                    if checking_first_C :
+                    if checking_genome_context :
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                                                                              mapped_location + g_len + 1,
-                                                                                              FR)
+                                                                    mapped_location + g_len + cut5_len -1, FR)
                     if my_region_serial == 0 : # still be 0
-                        # for some cases, read has no tags; searching the upstream sequence for CCGG tags
-                        # print "[For debug]: RC Read has no tags"
-                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location - 3,
+                        # for some cases, read has no tags; searching the upstream sequence for tags
+                        #print "[For debug]: RC Read has no tags"
+                        upstream, _, _ = get_genomic_sequence(gseq[mapped_chr], mapped_location + g_len - cut3_len - 1,
                                                               mapped_location + 500, '+')
                         #print "[For debug]: upstream = ", upstream
-                        #print "[For debug]: mapped_location = %d, CCGG_pos: %d" % (mapped_location, upstream.find('CCGG'))
                         my_region_serial, my_region_start, my_region_end = my_mappable_region(RC_regions[mapped_chr],
-                                                                                              mapped_location + 1 + upstream.find('CCGG'), FR)
+                                                    mapped_location + g_len + cut5_len - 2 + upstream.find(cut_context), FR)
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
-                        #    print "[For debug]: -FW read still cannot find fragment serial"
+                        #    print "[For debug]: RC_C2A read still cannot find fragment serial"
 
 
                     N_mismatch = N_MIS(r_aln, g_aln)
@@ -930,7 +945,7 @@ def bs_rrbs(main_read_file, asktag, mytag, adapter_file, cut_s, cut_e, no_small_
         logm("O Number of CGG/TGG tagged reads: %d (%1.3f)"%(all_tagged,float(all_tagged)/all_raw_reads))
         for kk in range(len(n_mytag_lst)):
             logm("O Number of raw reads with %s tag: %d (%1.3f)"%(mytag_lst[kk],n_mytag_lst[mytag_lst[kk]],float(n_mytag_lst[mytag_lst[kk]])/all_raw_reads))
-        logm("O Number of CGG/TGG reads having adapter removed: %d "%all_tagged_trimed)
+        logm("O Number of CGG/TGG reads having adapter removed: %d "%all_tagged_trimmed)
         logm("O Number of unique-hits reads for post-filtering: %d"%all_mapped)
 
         logm("O ------ %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))
