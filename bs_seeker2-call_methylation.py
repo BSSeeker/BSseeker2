@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_option("--ATCGmap", type="string", dest="ATCGmap_file",help="The output .ATCGmap file [INFILE.ATCGmap]", metavar="OUTFILE")
 
     parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
+    parser.add_option("--txt", action="store_true", dest="text",help="Show CGmap and ATCGmap in .gz [Default: %default]", default = False)
 
     parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1)
     parser.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
@@ -96,11 +97,18 @@ if __name__ == '__main__':
     pysam.index(sorted_input_filename)
 
     logm('calculating methylation levels')
-    ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap.gz')
-    ATCGmap = gzip.open(ATCGmap_fname, 'wb')
+    if options.text :
+        ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap')
+        ATCGmap = open(ATCGmap_fname, 'w')
 
-    CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap.gz')
-    CGmap = gzip.open(CGmap_fname, 'wb')
+        CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap')
+        CGmap = open(CGmap_fname, 'w')
+    else :
+        ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap.gz')
+        ATCGmap = gzip.open(ATCGmap_fname, 'wb')
+
+        CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap.gz')
+        CGmap = gzip.open(CGmap_fname, 'wb')
 
     wiggle_fname = options.wig_file or ((options.output_prefix or options.infilename) + '.wig')
     wiggle = open(wiggle_fname, 'w')
@@ -185,6 +193,9 @@ if __name__ == '__main__':
             else :
                 wiggle.write('%d\t-%f\n' % (pos, meth_level))
             CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
+    ATCGmap.close()
+    CGmap.close()
+    wiggle.close()
 
     logm('Wiggle: %s'% wiggle_fname)
     logm('ATCGMap: %s' % ATCGmap_fname)

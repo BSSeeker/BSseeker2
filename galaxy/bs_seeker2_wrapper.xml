@@ -1,21 +1,21 @@
 <tool id="bs_seeker_wrapper" name="BS-Seeker2" version="2.0.0">
   <requirements><requirement type='package'>bs_seeker2</requirement></requirements>
-  <description></description>
+  <description>Versatile aligner for bisulfite sequencing data</description>
   <command interpreter="python">
     bs_seeker2_wrapper.py 
       ### define exec path
-      ###    --exec-path "/GalaxyUCLA/GalaxyTools/bin"
-          --exec-path "/home/pf/local_temp/BS-Seeker"
+      ###    --exec-path "/local/path/for/BS-Seeker2"
+          --exec-path "/Users/weilong/Documents/program/BSseeker2"
       ### output
           --align--output $align_output
-
           --call_methylation--wig $call_methylation_wig
           --call_methylation--CGmap $call_methylation_CGmap
           --call_methylation--ATCGmap $call_methylation_ATCGmap
+          --call_methylation--txt
 
       ### aligner
 
-          --align--aligner bowtie
+          --align--aligner $aligner
 
       #if $singlePaired.sPaired == "paired"
           --align--input_1 $input1
@@ -25,13 +25,12 @@
       ### genome for build and mapping
       #if $refGenomeSource.genomeSource == "history"
           --build--file $refGenomeSource.ownFile
-          --build--aligner bowtie
+          --build--aligner $aligner
         #if $rrbsFragments.Fragmented == "Yes"
             --build--rrbs
             --build--low $rrbsFragments.lowerBound
             --build--up $rrbsFragments.upperBound
             --align--rrbs
-            --align--rrbs-tag CGG/TGG
             --align--low $rrbsFragments.lowerBound
             --align--up $rrbsFragments.upperBound
          #end if
@@ -72,21 +71,25 @@
 
   </command>
   <inputs>
-     <param format="fastq,fasta,qseq" name="input1" type="data" label="Input your read file" help="read file in Illumina fastq, qseq, or fasta format" />
+     <param format="fastq,fasta,qseq" name="input1" type="data" label="Input your read file" help="reads file in fastq, qseq or fasta format" />
      <conditional name="singlePaired">
         <param name="sPaired" type="select" label="Is this library mate-paired?">
           <option value="single">Single-end</option>
           <option value="paired">Paired-end</option>
         </param>
         <when value="paired">
-          <param format="fastq,fasta,qseq" name="input2" type="data" label="Input your read file 2" help="read file in Illumina fastq, qseq, or fasta format" />
+          <param format="fastq,fasta,qseq" name="input2" type="data" label="Input your read file 2" help="reads in fastq, qseq or fasta format" />
           <param name="min_ins_distance" type="integer" value="-1" label=" Minimum insert size for valid paired-end alignments" />
           <param name="max_ins_distance" type="integer" value="400" label="Maximum insert size for valid paired-end alignments" />
         </when>
      </conditional> 
      <param name="tag" type="select" label="Type of libraries">
-        <option value="Y">undirectional libraries</option>
         <option value="N">directional libraries</option>
+        <option value="Y">undirectional libraries</option>
+     </param>
+     <param name="aligner" type="select" label="Short reads aligner">
+        <option value="bowtie">bowtie</option>
+        <option value="bowtie2">bowtie2</option>
      </param>
      <conditional name="rrbsFragments">
         <param name="Fragmented" type="select" label="RRBS-seq reads" help="RRBS-seq reads">
@@ -94,8 +97,8 @@
           <option value="Yes">Yes</option>
         </param>
         <when value="Yes">
-          <param name="lowerBound" type="integer" value="1" label="The lower bound for RRBS fragments" help="The lower bound for RRBS fragments" />
-          <param name="upperBound" type="integer" value="200" label="The upper bound for RRBS fragments" help="The upper bound for RRBS fragments" />
+          <param name="lowerBound" type="integer" value="40" label="The lower bound for RRBS fragments" help="The lower bound for RRBS fragments" />
+          <param name="upperBound" type="integer" value="500" label="The upper bound for RRBS fragments" help="The upper bound for RRBS fragments" />
         </when>
      </conditional>
      <conditional name="refGenomeSource">
@@ -163,8 +166,6 @@
 
   <outputs>
     <data format="bam" name="align_output"  label="BAM Alignments"> </data>
-
-
     <data format="wig" name="call_methylation_wig"  label="Methylation Levels"> </data>
     <data format="tabular" name="call_methylation_CGmap"  label="CGmap file"> </data>
     <data format="tabular" name="call_methylation_ATCGmap"  label="ATCGmap file"> </data>

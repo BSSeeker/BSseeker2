@@ -13,7 +13,6 @@ CALL_METHYLATION = 'call_methylation'
 
 EXEC = 'exec'
 EXEC_PATH = EXEC+'-path'
-EXEC_ALIGNER = EXEC+'-aligner'
 ARG_TYPES = [BUILD, ALIGN, CALL_METHYLATION, EXEC]
 
 USAGE = """
@@ -22,8 +21,7 @@ The script takes command line parameters and runs bs_seeker2-align.py and bs_see
 
 The parameters that are related to bs_seeker2-build.py must be prefixed with --%(build_tag)s.
 The parameters that are related to bs_seeker2-align.py must be prefixed with --%(align_tag)s.
-Additionally, the path to BS-Seeker2 has to be specified via the --%(exec_path)s option,
-the short reads aligner has to be specified via the --%(exec_aligner)s option.
+Additionally, the path to BS-Seeker2 has to be specified via the --%(exec_path)s option.
 
 For example:
 
@@ -43,7 +41,7 @@ The temporary directory will be deleted after the wrapper exits.
 If no options related to bs_seeker2-build are passed, no genome index will be built and the corresponding pre-built genome index will be used
 instead. No temporary files and directories will be created.
 
-""" % { 'script' : os.path.split(__file__)[1], 'build_tag' :BUILD, 'align_tag' : ALIGN, 'exec_path' : EXEC_PATH, 'exec_aligner' : EXEC_ALIGNER}
+""" % { 'script' : os.path.split(__file__)[1], 'build_tag' :BUILD, 'align_tag' : ALIGN, 'exec_path' : EXEC_PATH }
 
 
 def error(msg):
@@ -80,8 +78,6 @@ if __name__ == '__main__':
     if path_to_bs_seeker is None:
         error('You have to specify the path to BS-Seeker2 via --%s\n\n' % EXEC_PATH + USAGE)
 
-    short_read_aligner = args.get('exec', {'-aligner' : "bowtie"})['-aligner']
-
     tempdir = None
     def run_prog(prog, params):
         cwd, _ = os.path.split(__file__)
@@ -100,27 +96,23 @@ if __name__ == '__main__':
 
     # bs_seeker2-build
     if BUILD in args:
-#        tempdir = tempfile.mkdtemp(dir = '/home/pf/local_temp/BS-Seeker/test/temp')
         args[BUILD]['--db'] = tempdir
         args[ALIGN]['--db'] = tempdir
         run_prog(os.path.join(path_to_bs_seeker, 'bs_seeker2-build.py'), args[BUILD])
 
     # bs_seeker2-align
-
-#    args[ALIGN]['--temp_dir'] = '/home/pf/local_temp/BS-Seeker/test/temp'
     args[ALIGN]['--temp_dir'] = tempdir
-
     run_prog(os.path.join(path_to_bs_seeker, 'bs_seeker2-align.py'), args[ALIGN])
 
-    # bs_seeker2-call_methylation
+
     def getopt(h, k1, k2, default):
         return h.get(k1, h.get(k2, default))
-
+    # bs_seeker2-call_methylation
     args[CALL_METHYLATION].update({  '-i'    : args[ALIGN]['--output'],
                                      '--db'  : os.path.join(args[ALIGN]['--db'],
-                    os.path.split(  getopt(args[ALIGN],'-g', '--genome', None))[1] +
-                                    ('_rrbs_%s_%s' % (getopt(args[ALIGN], '-l', '--low', '75'),
-                                                      getopt(args[ALIGN], '-u', '--up', '280'))
+                                    os.path.split(  getopt(args[ALIGN],'-g', '--genome', None))[1] +
+                                    ('_rrbs_%s_%s' % (getopt(args[ALIGN], '-l', '--low', '40'),
+                                                      getopt(args[ALIGN], '-u', '--up', '500'))
                                      if len(set(['-r', '--rrbs']) & set(args[ALIGN])) > 0 else '') +
 
                                     '_' + args[ALIGN]['--aligner'])
