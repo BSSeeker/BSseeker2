@@ -23,9 +23,9 @@ if __name__ == '__main__':
     rrbs_opts = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options",
                                 "Use this options with conjuction of -r [--rrbs]")
     rrbs_opts.add_option("-r", "--rrbs", action="store_true", dest="rrbs", help = 'Build index specially for Reduced Representation Bisulfite Sequencing experiments. Genome other than certain fragments will be masked. [Default: %default]', default = False)
-    rrbs_opts.add_option("-l", "--low",type= "int", dest="low_bound", help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 50)
-    rrbs_opts.add_option("-u", "--up", type= "int", dest="up_bound", help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 300)
-    rrbs_opts.add_option("-c", "--cut-site", type= "string", dest="cut_format", help="Cut sites of restriction enzyme [Default: %default]", default = "C-CGG")
+    rrbs_opts.add_option("-l", "--low",type= "int", dest="low_bound", help="lower bound of fragment length (excluding recognition sequence such as C-CGG) [Default: %default]", default = 40)
+    rrbs_opts.add_option("-u", "--up", type= "int", dest="up_bound", help="upper bound of fragment length (excluding recognition sequence such as C-CGG ends) [Default: %default]", default = 500)
+    rrbs_opts.add_option("-c", "--cut-site", type= "string", dest="cut_format", help="Cut sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", default = "C-CGG")
     parser.add_option_group(rrbs_opts)
 
 
@@ -57,7 +57,9 @@ if __name__ == '__main__':
     builder_exec = os.path.join(options.aligner_path or aligner_path[options.aligner],
                                 {BOWTIE   : 'bowtie-build',
                                  BOWTIE2  : 'bowtie2-build',
-                                 SOAP     : '2bwt-builder'}[options.aligner])
+                                 SOAP     : '2bwt-builder',
+                                 RMAP     : '' # do nothing
+                                }[options.aligner])
 
     build_command = builder_exec + { BOWTIE   : ' -f %(fname)s.fa %(fname)s',
                                      BOWTIE2  : ' -f %(fname)s.fa %(fname)s',

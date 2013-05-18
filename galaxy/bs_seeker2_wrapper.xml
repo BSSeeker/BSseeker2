@@ -1,4 +1,4 @@
-<tool id="bs_seeker_wrapper" name="Methylation Map with BS Seeker2" version="2.0.0">
+<tool id="bs_seeker_wrapper" name="BS-Seeker2" version="2.0.0">
   <requirements><requirement type='package'>bs_seeker2</requirement></requirements>
   <description></description>
   <command interpreter="python">

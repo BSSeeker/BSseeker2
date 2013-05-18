@@ -98,13 +98,13 @@ def bs_pair_end(main_read_file_1,
                 asktag,
                 adapter_file,
                 cut1,
-                cut2,
+                cut2, # add cut3 and cut4?
                 no_small_lines,
-                indexname,
+                max_mismatch_no,
                 aligner_command,
                 db_path,
                 tmp_path,
-                outfile, XS_pct, XS_count):
+                outfile, XS_pct, XS_count, show_multiple_hit=False):
 
 
     #----------------------------------------------------------------
@@ -114,20 +114,20 @@ def bs_pair_end(main_read_file_1,
     if adapter_file !="":
         try :
             adapter_inf=open(adapter_file,"r")
+            if asktag=="N": #<--- directional library
+                adapter=adapter_inf.readline()
+                adapter_inf.close()
+                adapter=adapter.rstrip("\n")
+            elif asktag=="Y":#<--- un-directional library
+                adapterA=adapter_inf.readline()
+                adapterB=adapter_inf.readline()
+                adapter_inf.close()
+                adapterA=adapterA.rstrip("\n")
+                adapterB=adapterB.rstrip("\n")
         except IOError :
             print "[Error] Cannot find adapter file : %s" % adapter_file
             exit(-1)
 
-        if asktag=="N": #<--- directional library
-            adapter=adapter_inf.readline()
-            adapter_inf.close()
-            adapter=adapter.rstrip("\n")
-        elif asktag=="Y":#<--- undirectional library
-            adapterA=adapter_inf.readline()
-            adapterB=adapter_inf.readline()
-            adapter_inf.close()
-            adapterA=adapterA.rstrip("\n")
-            adapterB=adapterB.rstrip("\n")
 
     #----------------------------------------------------------------
 
@@ -137,10 +137,10 @@ def bs_pair_end(main_read_file_1,
     logm("The last base (for mapping): %d"% cut2  )
 
     logm("-------------------------------- " )
-    logm("Undirectional library: %s" % asktag  )
-    logm("Bowtie path: %s"% aligner_command + '\n')
+    logm("Un-directional library: %s" % asktag  )
+    logm("Path for short reads aligner: %s"% aligner_command + '\n')
     logm("Reference genome library path: %s"% db_path  )
-    logm("Number of mismatches allowed: %s"% indexname  )
+    logm("Number of mismatches allowed: %s"% max_mismatch_no  )
 
     if adapter_file !="":
         if asktag=="Y":
@@ -158,7 +158,7 @@ def bs_pair_end(main_read_file_1,
     # helper method to join fname with tmp_path
     tmp_d = lambda fname: os.path.join(tmp_path, fname)
 
-    db_d = lambda fname:  os.path.join(db_path, fname)
+    db_d = lambda fname: os.path.join(db_path, fname)
 
 
     #----------------------------------------------------------------
@@ -179,7 +179,7 @@ def bs_pair_end(main_read_file_1,
 
     #---- Stats ------------------------------------------------------------
     all_raw_reads=0
-    all_trimed=0
+    all_trimmed=0
     all_mapped=0
     all_mapped_passed=0
 
@@ -192,8 +192,6 @@ def bs_pair_end(main_read_file_1,
     uC_lst=[0,0,0]
 
     no_my_files=0
-
-
 
     #----------------------------------------------------------------
     print "== Start mapping =="
@@ -209,13 +207,13 @@ def bs_pair_end(main_read_file_1,
         original_bs_reads_lst= [original_bs_reads_1, original_bs_reads_2]
 
 
-        if asktag=="Y":
+        if asktag == "Y" :
 
             #----------------------------------------------------------------
-            outfile_1FCT = tmp_d('Trimed_FCT_1.fa'+random_id)
-            outfile_1RCT = tmp_d('Trimed_RCT_1.fa'+random_id)
-            outfile_2FCT = tmp_d('Trimed_FCT_2.fa'+random_id)
-            outfile_2RCT = tmp_d('Trimed_RCT_2.fa'+random_id)
+            outfile_1FCT = tmp_d('Trimmed_FCT_1.fa'+random_id)
+            outfile_1RCT = tmp_d('Trimmed_RCT_1.fa'+random_id)
+            outfile_2FCT = tmp_d('Trimmed_FCT_2.fa'+random_id)
+            outfile_2RCT = tmp_d('Trimmed_RCT_2.fa'+random_id)
 
             try :
                 read_inf = open(tmp_d(read_file_1),"r")
@@ -254,15 +252,15 @@ def bs_pair_end(main_read_file_1,
                 original_bs_reads = original_bs_reads_lst[f]
                 n = n_list[f]
 
-                id = ""
+                seq_id = ""
                 seq = ""
                 seq_ready = "N"
                 for line in fileinput.input(tmp_d(read_file)):
                     l=line.split()
                     if input_format=="seq":
                         n+=1
-                        id=str(n)
-                        id=id.zfill(12)
+                        seq_id=str(n)
+                        seq_id=seq_id.zfill(12)
                         seq=l[0]
                         seq_ready="Y"
                     elif input_format=="fastq":
@@ -271,8 +269,8 @@ def bs_pair_end(main_read_file_1,
                         seq_ready="N"
                         if m_fastq==0:
                             n+=1
-                            id=str(n)
-                            id=id.zfill(12)
+                            seq_id=str(n)
+                            seq_id=seq_id.zfill(12)
                             seq=""
                         elif m_fastq==1:
                             seq=l[0]
@@ -281,8 +279,8 @@ def bs_pair_end(main_read_file_1,
                             seq=""
                     elif input_format=="qseq":
                         n+=1
-                        id=str(n)
-                        id=id.zfill(12)
+                        seq_id=str(n)
+                        seq_id=seq_id.zfill(12)
                         seq=l[8]
                         seq_ready="Y"
                     elif input_format=="fasta":
@@ -291,8 +289,8 @@ def bs_pair_end(main_read_file_1,
                         seq_ready="N"
                         if m_fasta==0:
                             n+=1
-                            id=l[0][1:]
-                            id=id.zfill(17)
+                            seq_id=l[0][1:]
+                            seq_id=seq_id.zfill(17)
                             seq=""
                         elif m_fasta==1:
                             seq=l[0]
@@ -312,25 +310,25 @@ def bs_pair_end(main_read_file_1,
                                 signature_pos=seq.index(signature)
                                 if seq[signature_pos:] in adapterA:
                                     seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                    all_trimed+=1
+                                    all_trimmed+=1
                             else:
                                 signature=adapterB[:6]
                                 if signature in seq:
-                                    #print id,seq,signature;
+                                    #print seq_id,seq,signature;
                                     signature_pos=seq.index(signature)
                                     if seq[signature_pos:] in adapterB:
                                         seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                        all_trimed+=1
+                                        all_trimmed+=1
 
                         if len(seq) <= 4:
                             seq = "N" * (cut2-cut1+1)
                         #---------  trimmed_raw_BS_read  ------------------
-                        original_bs_reads[id] = seq
+                        original_bs_reads[seq_id] = seq
 
                         #---------  FW_C2T  ------------------
-                        outf_FCT.write('>%s\n%s\n' % (id, seq.replace("C","T")))
+                        outf_FCT.write('>%s\n%s\n' % (seq_id, seq.replace("C","T")))
                         #---------  RC_G2A  ------------------
-                        outf_RCT.write('>%s\n%s\n' % (id, seq.replace("G","A")))
+                        outf_RCT.write('>%s\n%s\n' % (seq_id, seq.replace("G","A")))
 
                 n_list[f]=n
 
@@ -346,10 +344,10 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr=tmp_d("W_C2T_fr_m"+indexname+".mapping"+random_id)
-            WC2T_rf=tmp_d("W_C2T_rf_m"+indexname+".mapping"+random_id)
-            CC2T_fr=tmp_d("C_C2T_fr_m"+indexname+".mapping"+random_id)
-            CC2T_rf=tmp_d("C_C2T_rf_m"+indexname+".mapping"+random_id)
+            WC2T_fr=tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_rf=tmp_d("W_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T_fr=tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T_rf=tmp_d("C_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
 
             run_in_parallel([aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                       'input_file_1' : outfile_1FCT,
@@ -396,20 +394,21 @@ def bs_pair_end(main_read_file_1,
             Unique_FW_rf_C2T=set() # +
             Unique_RC_fr_C2T=set() # -
             Unique_RC_rf_C2T=set() # -
+            Multiple_hits=set()
 
 
             for x in Union_set:
-                list=[]
+                _list=[]
                 for d in [FW_C2T_fr_U, FW_C2T_rf_U, RC_C2T_fr_U, RC_C2T_rf_U]:
                     mis_lst=d.get(x,[99])
                     mis=int(mis_lst[0])
-                    list.append(mis)
+                    _list.append(mis)
                 for d in [FW_C2T_fr_R, FW_C2T_rf_R, RC_C2T_fr_R, RC_C2T_rf_R]:
                     mis=d.get(x,99)
-                    list.append(mis)
-                mini=min(list)
-                if list.count(mini)==1:
-                    mini_index=list.index(mini)
+                    _list.append(mis)
+                mini=min(_list)
+                if _list.count(mini)==1:
+                    mini_index=_list.index(mini)
                     if mini_index==0:
                         Unique_FW_fr_C2T.add(x)
                     elif mini_index==1:
@@ -418,6 +417,18 @@ def bs_pair_end(main_read_file_1,
                         Unique_RC_fr_C2T.add(x)
                     elif mini_index==3:
                         Unique_RC_rf_C2T.add(x)
+                    else :
+                        Multiple_hits.add(x)
+                else :
+                    Multiple_hits.add(x)
+
+            # write reads rejected by Multiple Hits to file
+            if show_multiple_hit :
+                outf_MH=open("Multiple_hit.fa",'w')
+                for i in Multiple_hits :
+                    outf_MH.write(">%s\n" % i)
+                    outf_MH.write("%s\n" % original_bs_reads[i])
+                outf_MH.close()
 
             del Union_set
             del FW_C2T_fr_R
@@ -449,16 +460,6 @@ def bs_pair_end(main_read_file_1,
             del Unique_FW_rf_C2T
             del Unique_RC_fr_C2T
             del Unique_RC_rf_C2T
-
-            #logm("U -- %d FW-RC strand bs-unique pairs (mapped to Watson)"%(n1) )
-            #logm("U -- %d RC-FW strand bs-unique pairs (mapped to Crick)"%(n2) )
-            #logm("U -- %d bs-unique pairs"%(n12) )
-            #logm("-------------------------------- " )
-
-            #print "# %10d FW-RC bs-unique reads (mapped to Watson)"%(n1);
-            #print "# %10d RC-FW bs-unique reads (mapped to Watson)"%(n2);
-            #print "# %10d FW-RC bs-unique reads (mapped to Crick)"%(n3);
-            #print "# %10d RC-FW bs-unique reads (mapped to Crick)"%(n4);
 
             #----------------------------------------------------------------
 
@@ -568,7 +569,7 @@ def bs_pair_end(main_read_file_1,
                     N_mismatch_2 = N_MIS(r_aln_2, g_aln_2) #+ original_BS_length_2 - (r_end_2 - r_start_2) # mismatches in the alignment + soft clipped nucleotides
 
 
-                    if max(N_mismatch_1, N_mismatch_2) <= int(indexname) :
+                    if max(N_mismatch_1, N_mismatch_2) <= int(max_mismatch_no) :
                         all_mapped_passed += 1
                         numbers_mapped_lst[nn-1] += 1
                         #---- unmapped -------------------------
@@ -645,7 +646,7 @@ def bs_pair_end(main_read_file_1,
                 input_format="FastQ"
                 n_fastq=0
             elif len(l)==1 and oneline[0]!=">": 	# pure sequences
-                input_format="list of sequences"
+                input_format="_list of sequences"
             elif len(l)==11:	# Illumina GAII qseq file
                 input_format="Illumina GAII qseq file"
             elif oneline[0]==">":	# fasta
@@ -661,28 +662,27 @@ def bs_pair_end(main_read_file_1,
             outfile_FCT_list=[outfile_1FCT,outfile_2FCT]
             n_list=[0,0]
 
-
             for f in range(2):
                 read_file=read_file_list[f]
                 outf_FCT=open(outfile_FCT_list[f],'w')
                 original_bs_reads = original_bs_reads_lst[f]
                 n=n_list[f]
 
-                id=""
+                seq_id=""
                 seq=""
                 seq_ready="N"
                 for line in fileinput.input(tmp_d(read_file)):
                     l=line.split()
                     if input_format=="old Solexa Seq file":
                         n+=1
-                        id=str(n)
-                        id=id.zfill(12)
+                        seq_id=str(n)
+                        seq_id=seq_id.zfill(12)
                         seq=l[4]
                         seq_ready="Y"
-                    elif input_format=="list of sequences":
+                    elif input_format=="_list of sequences":
                         n+=1
-                        id=str(n)
-                        id=id.zfill(12)
+                        seq_id=str(n)
+                        seq_id=seq_id.zfill(12)
                         seq=l[0]
                         seq_ready="Y"
                     elif input_format=="FastQ":
@@ -691,8 +691,8 @@ def bs_pair_end(main_read_file_1,
                         seq_ready="N"
                         if m_fastq==0:
                             n+=1
-                            id=str(n)
-                            id=id.zfill(12)
+                            seq_id=str(n)
+                            seq_id=seq_id.zfill(12)
                             seq=""
                         elif m_fastq==1:
                             seq=l[0]
@@ -701,8 +701,8 @@ def bs_pair_end(main_read_file_1,
                             seq=""
                     elif input_format=="Illumina GAII qseq file":
                         n+=1
-                        id=str(n)
-                        id=id.zfill(12)
+                        seq_id=str(n)
+                        seq_id=seq_id.zfill(12)
                         seq=l[8]
                         seq_ready="Y"
                     elif input_format=="fasta":
@@ -711,8 +711,8 @@ def bs_pair_end(main_read_file_1,
                         seq_ready="N"
                         if m_fasta==0:
                             n+=1
-                            id=l[0][1:]
-                            id=id.zfill(17)
+                            seq_id=l[0][1:]
+                            seq_id=seq_id.zfill(17)
                             seq=""
                         elif m_fasta==1:
                             seq=l[0]
@@ -732,26 +732,26 @@ def bs_pair_end(main_read_file_1,
                                 signature_pos=seq.index(signature)
                                 if seq[signature_pos:] in adapterA:
                                     seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                    all_trimed+=1
+                                    all_trimmed+=1
                             else:
                                 signature=adapterB[:6]
                                 if signature in seq:
-                                    #print id,seq,signature;
+                                    #print seq_id,seq,signature;
                                     signature_pos=seq.index(signature)
                                     if seq[signature_pos:] in adapterB:
                                         seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                        all_trimed+=1
+                                        all_trimmed+=1
 
                         if len(seq) <= 4:
                             seq = "N" * (cut2-cut1+1)
                         #---------  trimmed_raw_BS_read  ------------------
-                        original_bs_reads[id] = seq
+                        original_bs_reads[seq_id] = seq
 
                         #---------  FW_C2T  ------------------
                         if f==0:
-                            outf_FCT.write('>%s\n%s\n'% (id, seq.replace("C","T")))
+                            outf_FCT.write('>%s\n%s\n'% (seq_id, seq.replace("C","T")))
                         elif f==1:
-                            outf_FCT.write('>%s\n%s\n'% (id, reverse_compl_seq(seq).replace("C","T")))
+                            outf_FCT.write('>%s\n%s\n'% (seq_id, reverse_compl_seq(seq).replace("C","T")))
 
 
                 n_list[f]=n
@@ -766,8 +766,8 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr=tmp_d("W_C2T_fr_m"+indexname+".mapping"+random_id)
-            CC2T_fr=tmp_d("C_C2T_fr_m"+indexname+".mapping"+random_id)
+            WC2T_fr=tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T_fr=tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                          'input_file_1' : outfile_1FCT,
@@ -796,26 +796,37 @@ def bs_pair_end(main_read_file_1,
 
             Unique_FW_fr_C2T = set() # +
             Unique_RC_fr_C2T = set() # -
+            Multiple_hits=set()
 
 
             for x in Union_set:
-                list = []
+                _list = []
                 for d in [FW_C2T_fr_U, RC_C2T_fr_U]:
                     mis_lst = d.get(x,[99])
                     mis = int(mis_lst[0])
-                    list.append(mis)
+                    _list.append(mis)
                 for d in [FW_C2T_fr_R, RC_C2T_fr_R]:
                     mis = d.get(x,99)
-                    list.append(mis)
-                mini = min(list)
-                if list.count(mini) == 1:
-                    mini_index = list.index(mini)
+                    _list.append(mis)
+                mini = min(_list)
+                if _list.count(mini) == 1:
+                    mini_index = _list.index(mini)
                     if mini_index == 0:
                         Unique_FW_fr_C2T.add(x)
                     elif mini_index == 1:
                         Unique_RC_fr_C2T.add(x)
+                    else :
+                        Multiple_hits.add(x)
+                else :
+                    Multiple_hits.add(x)
 
-
+           # write reads rejected by Multiple Hits to file
+            if show_multiple_hit :
+                outf_MH=open("Multiple_hit.fa",'w')
+                for i in Multiple_hits :
+                    outf_MH.write(">%s\n" % i)
+                    outf_MH.write("%s\n" % original_bs_reads[i])
+                outf_MH.close()
 
             FW_C2T_fr_uniq_lst=[[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
             RC_C2T_fr_uniq_lst=[[RC_C2T_fr_U[u][1],u] for u in Unique_RC_fr_C2T]
@@ -829,15 +840,6 @@ def bs_pair_end(main_read_file_1,
             numbers_premapped_lst[0]+=len(Unique_FW_fr_C2T)
             numbers_premapped_lst[1]+=len(Unique_RC_fr_C2T)
 
-            #logm("U -- %d FW-RC strand bs-unique pairs (mapped to Watson)"%(n1) )
-            #logm("U -- %d RC-FW strand bs-unique pairs (mapped to Crick)"%(n2)Z)
-            #logm("U -- %d bs-unique pairs"%(n12) )
-            #logm("-------------------------------- " )
-
-            #print "# %10d FW-RC bs-unique reads (mapped to Watson)"%(n1);
-            #print "# %10d RC-FW bs-unique reads (mapped to Watson)"%(n2);
-            #print "# %10d FW-RC bs-unique reads (mapped to Crick)"%(n3);
-            #print "# %10d RC-FW bs-unique reads (mapped to Crick)"%(n4);
 
             #----------------------------------------------------------------
 
@@ -902,7 +904,7 @@ def bs_pair_end(main_read_file_1,
                     N_mismatch_1 = N_MIS(r_aln_1, g_aln_1) #+ original_BS_length_1 - (r_end_1 - r_start_1) # mismatches in the alignment + soft clipped nucleotides
                     N_mismatch_2 = N_MIS(r_aln_2, g_aln_2) #+ original_BS_length_2 - (r_end_2 - r_start_2) # mismatches in the alignment + soft clipped nucleotides
 
-                    if max(N_mismatch_1, N_mismatch_2) <= int(indexname):
+                    if max(N_mismatch_1, N_mismatch_2) <= int(max_mismatch_no):
 
                         numbers_mapped_lst[nn-1] += 1
                         all_mapped_passed += 1
@@ -964,7 +966,7 @@ def bs_pair_end(main_read_file_1,
 
     logm("-------------------------------- " )
     logm("O Number of raw BS-read pairs: %d ( %d bp)"%(all_raw_reads,cut2-cut1+1) )
-    logm("O Number of ends trimmed for adapter: %d"% all_trimed+"\n")
+    logm("O Number of ends trimmed for adapter: %d"% all_trimmed+"\n")
 
     if all_raw_reads >0:
 
@@ -979,7 +981,7 @@ def bs_pair_end(main_read_file_1,
             logm("O -- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
 
 
-        logm("O --- %d uniqlely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, indexname) )
+        logm("O --- %d uniqlely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
         if asktag=="Y":
             logm("O ----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm("O ----- %7d RC-FW pairs mapped to Watson strand"%(numbers_mapped_lst[1]) )

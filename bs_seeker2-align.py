@@ -15,13 +15,13 @@ if __name__ == '__main__':
     parser = OptionParser()
     # option group 1
     opt_group = OptionGroup(parser, "For single end reads")
-    opt_group.add_option("-i", "--input", type="string", dest="infilename",help="Input your read file name (FORMAT: sequences, illumina fastq, qseq,fasta)", metavar="INFILE")
+    opt_group.add_option("-i", "--input", type="string", dest="infilename",help="Input your read file name (FORMAT: sequences, fastq, qseq,fasta)", metavar="INFILE")
     parser.add_option_group(opt_group)
 
     # option group 2
     opt_group = OptionGroup(parser, "For pair end reads")
-    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input your read file end 1 (FORMAT: sequences, illumina qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input your read file end 2 (FORMAT: sequences, illumina qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input your read file end 1 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input your read file end 2 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
     opt_group.add_option("--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [Default: %default]", default = -1)
     opt_group.add_option("--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 400)
     parser.add_option_group(opt_group)
@@ -29,10 +29,9 @@ if __name__ == '__main__':
     # option group 3
     opt_group = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options")
     opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Process reads from Reduced Representation Bisulfite Sequencing experiments')
-#    opt_group.add_option("--rrbs-tag", type="string",dest="rrbs_taginfo",help="Msp-I tag: CGG TGG CGA or CGG/TGG (both)", metavar="TAG", default = "CGG/TGG")
-    opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format",help="Cutting sites of restriction enzyme", metavar="pattern", default = "C-CGG")
-    opt_group.add_option("-L", "--low",type = "int", dest="rrbs_low_bound",help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 40)
-    opt_group.add_option("-U", "--up",type = "int", dest="rrbs_up_bound",help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 300)
+    opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format", help="Cutting sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", metavar="pattern", default = "C-CGG")
+    opt_group.add_option("-L", "--low", type = "int", dest="rrbs_low_bound", help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 40)
+    opt_group.add_option("-U", "--up", type = "int", dest="rrbs_up_bound", help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 500)
     parser.add_option_group(opt_group)
 
     # option group 4
@@ -41,7 +40,7 @@ if __name__ == '__main__':
     opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first base of your read to be mapped [Default: %default]", default = 1)
     opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle number of your read to be mapped [Default: %default]", default = 200)
     opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",help="Input text file of your adaptor sequences (to be trimed from the 3'end of the reads). Input 1 seq for dir. lib., 2 seqs for undir. lib. One line per sequence", metavar="FILE", default = '')
-    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adaptor [Default: %default]", default = 1)
+    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adaptor [Default: %default]", default = 0)
     opt_group.add_option("-g", "--genome", type="string", dest="genome",help="Name of the reference genome (the same as the reference genome file in the preprocessing step) [ex. chr21_hg18.fa]")
     opt_group.add_option("-m", "--mismatches",type = "int", dest="int_no_mismatches",help="Number of mismatches in one read [Default: %default]", default = 4)
     opt_group.add_option("--aligner", dest="aligner",help="Aligner program to perform the analisys: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE2)
@@ -55,6 +54,7 @@ if __name__ == '__main__':
     opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
     opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Default: %default]", metavar="PATH", default = tempfile.gettempdir())
     opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
+    opt_group.add_option("--multiple-hit", action="store_true", dest="Output_multiple_hit", default = False, help = 'Output reads with multiple hits to file\"Multiple_hit.fa\"')
 
     opt_group.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
 
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     if not (options.infilename or (options.infilename_1 and options.infilename_2)):
         error('You should set either -i or -1 and -2 options.')
-    # -t
+    # -t, directional / un-directional library
     asktag=str(options.taginfo).upper()
     if asktag not in 'YN':
         error('-t option should be either Y or N, not %s' % asktag)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         error('-a option should be: %s' % ' ,'.join(supported_aligners)+'.')
     # path for aligner
     aligner_exec = os.path.expanduser( os.path.join(options.aligner_path or aligner_path[options.aligner], options.aligner) )
-    # mismatch allowed: bowtie 1,build-in paramter '-m'; bowtie 2, post-filter paramter
+    # mismatch allowed: bowtie 1,build-in parameter '-m'; bowtie 2, post-filter paramter
     # mismatch should no greater than the read length
     int_no_mismatches=min(options.int_no_mismatches, options.cutnumber2-options.cutnumber1)
     str_no_mismatches=str(int_no_mismatches)
@@ -137,20 +137,21 @@ if __name__ == '__main__':
             if options.cut_format == "C-CGG" :
                 genome_subdir += '_rrbs_%d_%d'  % (options.rrbs_low_bound, options.rrbs_up_bound)
             else :
-                genome_subdir += '_rrbs_%s_%d_%d'  % (options.cut_format, options.rrbs_low_bound, options.rrbs_up_bound)
+                genome_subdir += '_rrbs_%s_%d_%d'  % ( re.sub(",","-",re.sub("-", "", options.cut_format)), options.rrbs_low_bound, options.rrbs_up_bound)
         else:
             possible_refs = filter(lambda dir: dir.startswith(genome+'_rrbs_'), os.listdir(options.dbpath))
             if len(possible_refs) == 1:
                 genome_subdir = possible_refs[0]
             else:
                 error('Cannot localize unambiguously the reference genome for RRBS. '
-                      'Please, specify the --low and --up options that you used at the preprocessing step.\n'
+                      'Please, specify the options \"--low\" and \"--up\" that you used at the index-building step.\n'
                       'Possible choices are:\n' + '\n'.join([pr.split('_rrbs_')[-1].replace('_',', ') for pr in possible_refs]))
 
     db_path = os.path.expanduser(os.path.join(options.dbpath, genome_subdir + '_' + options.aligner))
 
     if not os.path.isdir(db_path):
-        error(genome + ' cannot be found in ' + options.dbpath +'. Please, run the bs_seeker2-build.py to create it.')
+        error('Index DIR \"' + genome_subdir + '..\" cannot be found in ' + options.dbpath +'.\n\tPlease run the bs_seeker2-build.py '
+                            'to create it with the correct parameters for -g, -r, --low, --up and --aligner.')
 
     # handle aligner options
     #
@@ -181,8 +182,14 @@ if __name__ == '__main__':
                                             '-k'              : 2
                                 },
                                 SOAP    : { '-v' : int_no_mismatches,
-                                            '-p' : 2
+                                            '-p' : 2,
+                                            '-r' : 2,
+                                            '-M' : 4
+                                          },
+                                RMAP    : { '-M' : 2
+                                            # to do # control for only mapping on + strand
                                           }
+
                                 }
 
     if '--end-to-end' not in aligner_options:
@@ -245,9 +252,12 @@ if __name__ == '__main__':
     if options.infilename is not None:
         logm('Single end')
 
-        aligner_command = aligner_exec  + aligner_options_string() + { BOWTIE   : ' %(reference_genome)s  -f %(input_file)s %(output_file)s',
-                                                                       BOWTIE2  : ' -x %(reference_genome)s -f -U %(input_file)s -S %(output_file)s',
-                                                                       SOAP     : ' -D %(reference_genome)s.fa.index -o %(output_file)s -a %(input_file)s'}[options.aligner]
+        aligner_command = aligner_exec  + aligner_options_string() + \
+                              { BOWTIE   : ' %(reference_genome)s  -f %(input_file)s %(output_file)s',
+                                BOWTIE2  : ' -x %(reference_genome)s -f -U %(input_file)s -S %(output_file)s',
+                                SOAP     : ' -D %(reference_genome)s.fa.index -o %(output_file)s -a %(input_file)s',
+                                RMAP     : ' -c %(reference_genome)s.fa -o %(output_file)s %(input_file)s'
+                              }[options.aligner]
         logm ('Aligner command: %s' % aligner_command)
         # single end reads
         if options.rrbs: # RRBS scan
@@ -266,7 +276,8 @@ if __name__ == '__main__':
                     XS_pct,
                     XS_count,
                     options.adapter_mismatch,
-                    options.cut_format
+                    options.cut_format,
+                    options.Output_multiple_hit
                     )
         else: # Normal single end scan
             bs_single_end(  options.infilename,
@@ -282,7 +293,8 @@ if __name__ == '__main__':
                             outfile,
                             XS_pct,
                             XS_count,
-                            options.adapter_mismatch
+                            options.adapter_mismatch,
+                            options.Output_multiple_hit
                             )
     else:
         logm('Pair end')
@@ -304,11 +316,15 @@ if __name__ == '__main__':
                                         '-x' : options.max_insert_size,
                                         '-m' : options.min_insert_size if options.min_insert_size > 0 else 100
                                 }}[options.aligner],
+                               # integrating 'rmappe' is different from others
                                 **aligner_options)
 
-        aligner_command = aligner_exec + aligner_options_string() + { BOWTIE   : ' %(reference_genome)s  -f -1 %(input_file_1)s -2 %(input_file_2)s %(output_file)s',
-                                                                      BOWTIE2  : ' -x %(reference_genome)s  -f -1 %(input_file_1)s -2 %(input_file_2)s -S %(output_file)s',
-                                                                      SOAP     : ' -D %(reference_genome)s.fa.index -o %(output_file)s -a %(input_file_1)s -b %(input_file_2)s -2 %(output_file)s.unpaired'}[options.aligner]
+        aligner_command = aligner_exec + aligner_options_string() + \
+                              { BOWTIE   : ' %(reference_genome)s  -f -1 %(input_file_1)s -2 %(input_file_2)s %(output_file)s',
+                                BOWTIE2  : ' -x %(reference_genome)s  -f -1 %(input_file_1)s -2 %(input_file_2)s -S %(output_file)s',
+                                SOAP     : ' -D %(reference_genome)s.fa.index -o %(output_file)s -a %(input_file_1)s -b %(input_file_2)s -2 %(output_file)s.unpaired' #,
+                              #  RMAP     : #  rmappe, also paste two inputs into one file.
+                             }[options.aligner]
 
         logm('Aligner command: %s' % aligner_command)
 
@@ -325,7 +341,8 @@ if __name__ == '__main__':
                     tmp_path,
                     outfile,
                     XS_pct,
-                    XS_count
+                    XS_count,
+                    options.Output_multiple_hit
              )
 
     outfile.close()

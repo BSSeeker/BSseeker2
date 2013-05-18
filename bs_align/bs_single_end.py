@@ -29,7 +29,7 @@ def extract_mapping(ali_file):
                     #print "multiple hit", header, chr, location, no_mismatch, cigar # test
             header0 = header
             lst = [(no_mismatch, chr, location, cigar)]
-        else: # header == header0, same header (readid)
+        else: # header == header0, same header (read id)
             lst.append((no_mismatch, chr, location, cigar))
 
     if len(lst) == 1:
@@ -49,7 +49,7 @@ def extract_mapping(ali_file):
 
 def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines,
                   max_mismatch_no, aligner_command, db_path, tmp_path, outfile,
-                  XS_pct, XS_count, adapter_mismatch):
+                  XS_pct, XS_count, adapter_mismatch, show_multiple_hit=False):
     #----------------------------------------------------------------
     # adapter : strand-specific or not
     adapter=""
@@ -65,7 +65,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             adapter=adapter_inf.readline()
             adapter_inf.close()
             adapter=adapter.rstrip("\n")
-        elif asktag == "Y":#<--- undirectional library
+        elif asktag == "Y":#<--- un-directional library
             adapter_fw=adapter_inf.readline()
             adapter_rc=adapter_inf.readline()
             adapter_inf.close()
@@ -78,7 +78,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
     #----------------------------------------------------------------
     logm("Read filename: %s"% main_read_file )
-    logm("Undirectional library: %s" % asktag )
+    logm("Un-directional library: %s" % asktag )
     logm("The first base (for mapping): %d" % cut1)
     logm("The last base (for mapping): %d" % cut2)
     logm("Max. lines per mapping: %d"% no_small_lines)
@@ -137,8 +137,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         if asktag=="Y":  
 
             #----------------------------------------------------------------
-            outfile2=tmp_d('Trimed_C2T.fa'+random_id)
-            outfile3=tmp_d('Trimed_G2A.fa'+random_id)
+            outfile2=tmp_d('Trimmed_C2T.fa'+random_id)
+            outfile3=tmp_d('Trimmed_G2A.fa'+random_id)
 
             outf2=open(outfile2,'w')
             outf3=open(outfile3,'w')
@@ -223,7 +223,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                     # striping BS adapter from 3' read
                     if (adapter_fw !="") and (adapter_rc !="") :
-                        new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch)
+                        new_read = RemoveAdapter(seq, adapter_fw, adapter_mismatch)
                         new_read = Remove_5end_Adapter(new_read, adapter_rc)
                         if len(new_read) < len(seq) :
                             all_trimed += 1
@@ -291,7 +291,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             RC_C2T_U,RC_C2T_R=extract_mapping(CC2T)
 
             #----------------------------------------------------------------
-            # get uniq-hit reads
+            # get unique-hit reads
             #----------------------------------------------------------------
             Union_set=set(FW_C2T_U.iterkeys()) | set(RC_G2A_U.iterkeys()) | set(FW_G2A_U.iterkeys()) | set(RC_C2T_U.iterkeys())
 
@@ -299,6 +299,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             Unique_RC_G2A=set() # +
             Unique_FW_G2A=set() # -
             Unique_RC_C2T=set() # -
+            Multiple_hits=set()
 
 
             for x in Union_set:
@@ -322,6 +323,17 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     elif mini_index == 3:
                         Unique_RC_C2T.add(x)
                     # if mini_index = 4,5,6,7, indicating multiple hits
+                    else :
+                        Multiple_hits.add(x)
+                else :
+                    Multiple_hits.add(x)
+            # write reads rejected by Multiple Hits to file
+            if show_multiple_hit :
+                outf_MH=open("Multiple_hit.fa",'w')
+                for i in Multiple_hits :
+                    outf_MH.write(">%s\n" % i)
+                    outf_MH.write("%s\n" % original_bs_reads[i])
+                outf_MH.close()
 
             del Union_set
             del FW_C2T_R
@@ -418,8 +430,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                             #---XS FILTER----------------
                             XS = 0
-                            nCH = condense_seq.count('y') + condense_seq.count('z')
-                            nmCH = condense_seq.count('Y') + condense_seq.count('Z')
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
                             if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
                                 XS = 1
 
@@ -567,7 +579,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
             Unique_FW_C2T = set() # +
             Unique_RC_C2T = set() # -
-
+            Multiple_hits=set()
+            # write reads rejected by Multiple Hits to file
 
             for x in Union_set:
                 _list=[]
@@ -586,6 +599,18 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                         Unique_FW_C2T.add(x)
                     elif mini_index==1:
                         Unique_RC_C2T.add(x)
+                    else:
+                        Multiple_hits.add(x)
+                else :
+                    Multiple_hits.add(x)
+            # write reads rejected by Multiple Hits to file
+            if show_multiple_hit :
+                outf_MH=open("Multiple_hit.fa",'w')
+                for i in Multiple_hits :
+                    outf_MH.write(">%s\n" % i)
+                    outf_MH.write("%s\n" % original_bs_reads[i])
+                outf_MH.close()
+
 
 
             FW_C2T_uniq_lst=[[FW_C2T_U[u][1],u] for u in Unique_FW_C2T]

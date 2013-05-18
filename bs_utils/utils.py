@@ -8,7 +8,7 @@ import shutil
 import string
 import subprocess
 import types
-from itertools import izip
+#from itertools import izip
 
 import marshal
 import sys
@@ -26,6 +26,86 @@ def show_version() :
     print "     BS-Seeker2 v2.0.2 - April 20, 2013     "
     print ""
 
+
+
+"""
+IUPAC nucleotide code Base
+    A	Adenine
+    C	Cytosine
+    G	Guanine
+    T (or U)	Thymine (or Uracil)
+    R	A or G
+    Y	C or T
+    S	G or C
+    W	A or T
+    K	G or T
+    M	A or C
+    B	C or G or T
+    D	A or G or T
+    H	A or C or T
+    V	A or C or G
+    N	any base
+    . or -	gap
+"""
+
+
+def IUPAC ( nuc ) :
+    if nuc == 'R' :
+        return ('A','G')
+    elif nuc == 'Y' :
+        return ('C', 'T')
+    elif nuc == 'S' :
+        return ('G', 'C')
+    elif nuc == 'W' :
+        return ('A', 'T')
+    elif nuc == 'K' :
+        return ('G','T')
+    elif nuc == 'M' :
+        return ('A','C')
+    elif nuc == 'B' :
+        return ('C', 'G', 'T')
+    elif nuc == 'D' :
+        return ('A', 'G', 'T')
+    elif nuc == 'H' :
+        return ('A', 'C', 'T')
+    elif nuc == 'V' :
+        return ('A', 'C', 'G')
+    elif nuc == 'N' :
+        return ('A', 'C', 'G', 'T')
+    else :
+        return (nuc)
+
+
+def uniq(inlist):
+    # order preserving
+    uniques = []
+    for item in inlist:
+        if item not in uniques:
+            uniques.append(item)
+    return uniques
+
+from itertools import product
+
+def EnumerateIUPAC ( context_lst ) :
+    tag_list = []
+#    context_lst = [context]
+    for one_context in context_lst :
+        for m in product(*[ IUPAC(i) for i in list(one_context)]) :
+            tag_list.append(''.join(m))
+    return uniq(tag_list)
+
+from itertools import product
+
+# example: cut3_context="CGG"
+# return generator for : ["CGG","TGG"]
+# wild-card C to both C and T
+def Enumerate_C_to_CT ( cut3_context_lst ) :
+    tag_list = []
+    for context in cut3_context_lst :
+        for m in product(*[i if (i is not 'C') else ('C','T') for i in context]) :
+            tag_list.append(''.join(m))
+    return uniq(tag_list)
+
 #-------------------------------------------------------------------------------------
 
 # set a reasonable defaults
@@ -41,21 +121,27 @@ def find_location(program):
 BOWTIE = 'bowtie'
 BOWTIE2 = 'bowtie2'
 SOAP = 'soap'
+RMAP = 'rmap'
 
 supported_aligners = [
                       BOWTIE,
                       BOWTIE2,
-                      SOAP
+                      SOAP,
+                      RMAP
                     ]
 
-aligner_options_prefixes = { BOWTIE : '--bt-',
+aligner_options_prefixes = { BOWTIE  : '--bt-',
                              BOWTIE2 : '--bt2-',
-                             SOAP   : '--soap-' }
-aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or default_path)) for aligner, default_path in
-                                                                                                   [(BOWTIE,'~/bowtie-0.12.7/'),
-                                                                                                    (BOWTIE2, '~/bowtie-0.12.7/'),
-                                                                                                    (SOAP, '~/soap2.21release/')
-                                                                                                    ])
+                             SOAP    : '--soap-',
+                             RMAP    : '--rmap-' }
+
+aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or default_path))
+                    for aligner, default_path in
+                           [(BOWTIE,'~/bowtie-0.12.7/'),
+                            (BOWTIE2, '~/bowtie-0.12.7/'),
+                            (SOAP, '~/soap2.21release/'),
+                            (RMAP, '~/rmap_v2.05/bin')
+                            ])
 
 
 reference_genome_path = os.path.join(os.path.split(globals()['__file__'])[0],'reference_genomes')
@@ -145,7 +231,11 @@ def isplit_file(filename, output_prefix, nlines):
     """ Splits a file (equivalend to UNIX split -l ) """
     fno = 0
     lno = 0
-    input = (gzip.open if filename.endswith('.gz') else open)(filename, 'r')
+    try :
+        input = (gzip.open if filename.endswith('.gz') else open)(filename, 'r')
+    except IOError :
+        print "[Error] Cannot find file : %s !" % filename
+        exit(-1)
     output = None
     output_fname = None
     for l in input:
@@ -171,7 +261,11 @@ def read_fasta(fasta_file):
     """ Iterates over all sequences in a fasta file. One at a time, without reading the whole file into the main memory.
     """
 
-    input = (gzip.open if fasta_file.endswith('.gz') else open)(fasta_file)
+    try :
+        input = (gzip.open if fasta_file.endswith('.gz') else open)(fasta_file)
+    except IOError:
+        print "[Error] Cannot find fasta file : %s !" % fasta_file
+        exit(-1)
     sanitize = re.compile(r'[^ACTGN]')
     sanitize_seq_id = re.compile(r'[^A-Za-z0-9]')
 
@@ -231,7 +325,7 @@ def run_in_parallel(commands):
         return_code = proc.wait()
         logm('Finished: ' + commands[i][0])
         if return_code != 0:
-            error('%s \nexited with an error code: %d. Please, check the log files.' % (commands[i], return_code))
+            error('%s \nexit with an error code: %d. Please, check the log files.' % (commands[i], return_code))
     for _, stdout in commands:
         if stdout is not None:
             stdout.close()

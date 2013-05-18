@@ -204,19 +204,15 @@ def process_aligner_output(filename, pair_end = False):
                 # print "end-to-end\n"
                 mismatches = int([buf[i][5:] for i in xrange(11, len(buf)) if buf[i][:5] == 'XM:i:'][0])
         # --- Weilong ---------
-        else:
+        elif format == SOAP:
             mismatches = 1-buf[MAPQ]
             # mismatches = 1/float(buf[MAPQ])
             ## downstream might round (0,1) to 0, so use integer instead
             ## fixed by Weilong
-
-#        # add the soft clipped nucleotides to the number of mismatches
-#        cigar_string = buf[CIGAR]
-#        cigar = parse_cigar(cigar_string)
-#        if cigar[0][0] == BAM_SOFTCLIP:
-#            mismatches += cigar[0][1]
-#        if cigar[-1][0] == BAM_SOFTCLIP:
-#            mismatches += cigar[-1][1]
+        elif format == RMAP:
+            # chr16   75728107        75728147        read45  9       -
+            # chr16   67934919        67934959        read45  9       -
+            mismatches = buf[4]
 
         return (buf[QNAME], # read ID
                 buf[RNAME], # reference ID
@@ -238,6 +234,17 @@ def process_aligner_output(filename, pair_end = False):
                 parse_cigar(buf[SOAP_LEN]+'M')
             )
 
+        # chr16   75728107        75728147        read45  9       -
+    RMAP_CHR, RMAP_START, RMAP_END, RMAP_QNAME, RMAP_MISMATCH, RMAP_STRAND = range(6)
+    def parse_RMAP(line):
+        buf = line.split()
+        return ( buf[RMAP_QNAME],
+                 buf[RMAP_CHR],
+                 int(buf[RMAP_START]), # to check -1 or not
+                 int(buf[RMAP_END]) - int(buf[RMAP_START]) + 1,
+                 int(buf[RMAP_MISMATCH]),
+                 buf[RMAP_STRAND]
+        )
 
     if format == BOWTIE or format == BOWTIE2:
         if pair_end:
@@ -279,6 +286,15 @@ def process_aligner_output(filename, pair_end = False):
                 header, chr, location, no_mismatch, _, strand, cigar = parse_SOAP(line)
                 if header and strand == '+':
                     yield header, chr, location, no_mismatch, cigar
+    elif format == RMAP :
+        if pair_end :
+            todo = 0
+            # to do
+        else :
+            for line in input:
+                header, chr, location, read_len, no_mismatch, strand = parse_RMAP(line)
+                cigar = str(read_len) + "M"
+                yield header, chr, location, no_mismatch, cigar
 
     input.close()
 

@@ -19,8 +19,8 @@ def wg_build(fasta_file, build_command, ref_path, aligner):
     w_c2t = open(os.path.join(ref_path, 'W_C2T.fa'),'w')
     c_c2t = open(os.path.join(ref_path, 'C_C2T.fa'),'w')
 
-    w_g2a =open(os.path.join(ref_path, 'W_G2A.fa'),'w')
-    c_g2a =open(os.path.join(ref_path, 'C_G2A.fa'),'w')
+    w_g2a = open(os.path.join(ref_path, 'W_G2A.fa'),'w')
+    c_g2a = open(os.path.join(ref_path, 'C_G2A.fa'),'w')
     for chrom_id, chrom_seq in read_fasta(fasta_file):
         serialize(chrom_seq, os.path.join(ref_path, chrom_id))
         refd[chrom_id] = len(chrom_seq)
@@ -48,7 +48,8 @@ def wg_build(fasta_file, build_command, ref_path, aligner):
     run_in_parallel([(build_command % { 'fname' : fname }, fname+'.log') for fname in to_bowtie])
 
     # delete fasta files of converted genomes
-    delete_files(f+'.fa' for f in to_bowtie)
+    if aligner != "rmap" :
+        delete_files(f+'.fa' for f in to_bowtie)
 
     elapsed('Done')
 
