@@ -23,7 +23,7 @@ def reverse_compl_seq(strseq):
 
 def show_version() :
     print ""
-    print "     BS-Seeker2 v2.0.2 - April 20, 2013     "
+    print "     BS-Seeker2 v2.0.3 - May 19, 2013     "
     print ""
 
 
@@ -252,7 +252,8 @@ def isplit_file(filename, output_prefix, nlines):
             lno = nlines
         output.write(l)
         lno -= 1
-    output.close()
+    if output is not None:
+        output.close()
     yield output_fname
 
     input.close()
