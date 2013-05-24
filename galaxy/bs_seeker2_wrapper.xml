@@ -4,7 +4,7 @@
   <command interpreter="python">
     bs_seeker2_wrapper.py 
       ### define exec path
-      ###    --exec-path "/local/path/for/BS-Seeker2"
+      ###    --exec-path "/u/home/galaxy/galaxy/GalaxyTools/bin"
           --exec-path "/Users/weilong/Documents/program/BSseeker2"
       ### output
           --align--output $align_output
@@ -15,7 +15,7 @@
 
       ### aligner
 
-          --align--aligner $aligner
+          --align--aligner $choosealigner.aligner
 
       #if $singlePaired.sPaired == "paired"
           --align--input_1 $input1
@@ -25,7 +25,7 @@
       ### genome for build and mapping
       #if $refGenomeSource.genomeSource == "history"
           --build--file $refGenomeSource.ownFile
-          --build--aligner $aligner
+          --build--aligner $choosealigner.aligner
         #if $rrbsFragments.Fragmented == "Yes"
             --build--rrbs
             --build--low $rrbsFragments.lowerBound
@@ -87,38 +87,109 @@
         <option value="N">directional libraries</option>
         <option value="Y">undirectional libraries</option>
      </param>
-     <param name="aligner" type="select" label="Short reads aligner">
-        <option value="bowtie">bowtie</option>
-        <option value="bowtie2">bowtie2</option>
-     </param>
-     <conditional name="rrbsFragments">
-        <param name="Fragmented" type="select" label="RRBS-seq reads" help="RRBS-seq reads">
-          <option value="No">No</option>
-          <option value="Yes">Yes</option>
-        </param>
-        <when value="Yes">
-          <param name="lowerBound" type="integer" value="40" label="The lower bound for RRBS fragments" help="The lower bound for RRBS fragments" />
-          <param name="upperBound" type="integer" value="500" label="The upper bound for RRBS fragments" help="The upper bound for RRBS fragments" />
-        </when>
-     </conditional>
-     <conditional name="refGenomeSource">
-        <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="Built-ins were indexed using default options">
-           <option value="indexed">Use a built-in index</option>
-           <option value="history">Use one from the history</option>
-        </param>
-        <when value="indexed">
-          <param name="index" type="select" label="Select a reference genome">
-            <options from_data_table="bs_seeker2_indexes">
-              <filter type="sort_by" column="2"/>
-              <validator type="no_options" message="No indexes are available for the selected input dataset"/>
-            </options>
-          </param>
-        </when>
-        <when value="history">
-          <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
-        </when>
-     </conditional>
+     <conditional name="choosealigner">
+         <param name="aligner" type="select" label="Short reads aligner">
+             <option value="bowtie">bowtie</option>
+             <option value="bowtie2">bowtie2</option>
+         </param>
+         <when value="bowtie">
+             <conditional name="rrbsFragments">
+                 <param name="Fragmented" type="select" label="RRBS-seq reads" help="">
+                     <option value="No">No</option>
+                     <option value="Yes">Yes</option>
+                 </param>
+                 <when value="Yes">
+                     <param name="lowerBound" type="integer" value="40" label="The lower bound for RRBS fragments" help="Default: 40" />
+                     <param name="upperBound" type="integer" value="500" label="The upper bound for RRBS fragments" help="Default: 500" />
+                     <conditional name="refGenomeSource">
+                         <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="">
+                             <option value="indexed">Use a built-in index</option>
+                             <option value="history">Use one from the history</option>
+                         </param>
+                         <when value="indexed">
+                             <param name="index" type="select" label="Select a reference genome (RRBS, bowtie)">
+                                 <options from_data_table="bs_seeker2_indexes_RRBS_bowtie">
+                                     <filter type="sort_by" column="2"/>
+                                     <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+                                 </options>
+                             </param>
+                         </when>
+                         <when value="history">
+                             <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
+                         </when>
+                     </conditional>
+                 </when>
+                 <when value="No">
+                     <conditional name="refGenomeSource">
+                         <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="">
+                             <option value="indexed">Use a built-in index</option>
+                             <option value="history">Use one from the history</option>
+                         </param>
+                         <when value="indexed">
+                             <param name="index" type="select" label="Select a reference genome (WGBS, bowtie)">
+                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowite">
+                                     <filter type="sort_by" column="2"/>
+                                     <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+                                 </options>
+                             </param>
+                         </when>
+                         <when value="history">
+                             <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
+                         </when>
+                     </conditional>
+                 </when>
+             </conditional>
+         </when>
 
+         <when value="bowtie2">
+             <conditional name="rrbsFragments">
+                 <param name="Fragmented" type="select" label="RRBS-seq reads" help="">
+                     <option value="No">No</option>
+                     <option value="Yes">Yes</option>
+                 </param>
+                 <when value="Yes">
+                     <param name="lowerBound" type="integer" value="40" label="The lower bound for RRBS fragments" help="Default: 40" />
+                     <param name="upperBound" type="integer" value="500" label="The upper bound for RRBS fragments" help="Default: 500" />
+                     <conditional name="refGenomeSource">
+                         <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="">
+                             <option value="indexed">Use a built-in index</option>
+                             <option value="history">Use one from the history</option>
+                         </param>
+                         <when value="indexed">
+                             <param name="index" type="select" label="Select a reference genome (RRBS, bowtie2)">
+                                 <options from_data_table="bs_seeker2_indexes_RRBS_bowtie2">
+                                     <filter type="sort_by" column="2"/>
+                                     <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+                                 </options>
+                             </param>
+                         </when>
+                         <when value="history">
+                             <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
+                         </when>
+                     </conditional>
+                 </when>
+                 <when value="No">
+                     <conditional name="refGenomeSource">
+                         <param name="genomeSource" type="select" label="Will you select a reference genome from your history or use a built-in index?" help="">
+                             <option value="indexed">Use a built-in index</option>
+                             <option value="history">Use one from the history</option>
+                         </param>
+                         <when value="indexed">
+                             <param name="index" type="select" label="Select a reference genome (WGBS, bowtie2)">
+                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowite2">
+                                     <filter type="sort_by" column="2"/>
+                                     <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+                                 </options>
+                             </param>
+                         </when>
+                         <when value="history">
+                             <param name="ownFile" type="data" format="fasta" metadata_name="dbkey" label="Select the reference genome" />
+                         </when>
+                     </conditional>
+                 </when>
+             </conditional>
+         </when>
+     </conditional>
      <conditional name="adapterInfo">
         <param name="useAdapter" type="select" label="adapter sequence">
            <option value="noAdapter">No</option>
@@ -135,33 +206,14 @@
          <option value="full">Full parameter list</option>
        </param>
        <when value="preSet" /> 
-         <when value="full">
-           <param name="start_base" type="integer" value="1" label="The start base of the read to be mapped" help="The first base of your read to be mapped" />
-           <param name="end_base" type="integer" value="200" label="The end base of the read to be mapped" help="The last cycle number of your read to be mapped" />
-<!--           <param format="txt" name="adapter_file" type="data" label="Input file of your adaptor sequences" help="Input text file of your adaptor sequences" />
--->
-           <param name="num_mismatch" type="integer" value="4" label="Number of mismatches" help="Number of mismatches (0,1,...,read length)" />
+       <when value="full">
+           <param name="start_base" type="integer" value="1" label="The start base of the read to be mapped" help="" />
+           <param name="end_base" type="integer" value="200" label="The end base of the read to be mapped" help="" />
+
+           <param name="num_mismatch" type="integer" value="4" label="Number of mismatches" help="(INT) Default: 4" />
        </when>   
      </conditional>
-<!--  
-     <conditional name="GenomeSource">
-        <param name="genome" type="select" label="Will you select a genome from your history or use a built-in?">
-           <option value="builtin">Use a built-in genome</option>
-           <option value="historyFile">Use one from the history</option>
-        </param>
-        <when value="builtin">
-          <param name="genome" type="select" label="Select a genome">
-            <options from_data_table="all_fasta">
-              <filter type="sort_by" column="2"/>
-              <validator type="no_options" message="No genomes are available for the selected input dataset"/>
-            </options>
-          </param>
-        </when>
-        <when value="historyFile">
-          <param name="ownSeqFile" type="data" format="fasta" metadata_name="dbkey" label="Select a reference sequence file" />
-        </when>
-     </conditional>
--->
+
 </inputs>
 
   <outputs>
@@ -172,6 +224,26 @@
 
   </outputs>
   <help>
+**What it does**
+
+BS-Seeker2 is a seamlessly pipeline for mapping bisulfite sequencing data and generating detailed DNA methylome. BS-Seeker2 improves mappability by using local alignment, and is tailored for RRBS library by building special index, with higher efficiency and accuracy. This is the Galaxy version of BS-Seeker2.
+
+------
+
+**Resources**
+
+The homepage for BS-Seeker2 is http://pellegrini.mcdb.ucla.edu/BS_Seeker2/.
+
+For more information of BS-Seeker2, please refer to https://github.com/BSSeeker/BSseeker2.
+
+------
+
+**Example**
+
+- Adapter file::
+
+      AGATCGGAAGAGCACACGTC
+
 
   </help>
 </tool>
