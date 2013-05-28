@@ -20,7 +20,7 @@ Also, you can use an instance of BS-Seeker 2 in Galaxy from [http://galaxy.hoffm
 2. Other features
 ============
 * Supported library types
-	- whole genomewide bisulfite sequencing (WGBS)
+	- whole genome-wide bisulfite sequencing (WGBS)
 	- reduced representative bisulfite sequencing (RRBS)
 
 * Supported formats for input file
@@ -547,11 +547,29 @@ A: You can ask the administrator of your cluster to install pysam. If you don't 
         cd BSseeker2-master/
 
 
-7. Updates
-============
+（4）Run BS-Seeker2
 
+Q: Can I add the path of BS-Seeker2's *.py to the $PATH, so I can call
+BS-Seeker2 from anywhere?
 
+A: If you're using the "python" from path "/usr/bin/python", you can directly
+add the path of BS-Seeker2 in file ~/.profile (MAC) or ~/.bashrc (Linux).
+But if you are using python under other directories, you might need to modify
+BS-Seeker2's script first. For example, if your python path is "/my_python/python",
+please change the first line in "bs_seeker-build.py", "bs_seeker-align.py" and
+"bs_seeker-call_methylation.py" to
 
+        #!/my_python/python
+
+Then add
+
+        export PATH=/path/to/BS-Seeker2/:$PATH
+
+to file  ~/.profile (MAC) or ~/.bashrc (Linux), and source the file:
+
+        source  ~/.profile # (on MAC)
+
+Then you can use BS-Seeker2 globally.
 
 
 
