@@ -1,7 +1,7 @@
 BS-Seeker2
 =========
 
-BS-Seeker2 performs accurate and fast mapping of bisulfite-treated short reads. BS-Seeker2 is an updated version on BS-Seeker.
+BS-Seeker2 (BS Seeker 2) performs accurate and fast mapping of bisulfite-treated short reads. BS-Seeker2 is an updated version on BS-Seeker.
 
 0. Availability
 ============
@@ -30,8 +30,8 @@ Also, you can use an instance of BS-Seeker 2 in Galaxy from [http://galaxy.hoffm
 	- pure sequence (one-line one-sequence)
 
 * Supported alignment tools
-	- [bowtie](http://bowtie-bio.sourceforge.net/index.shtml)
-	- [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+	- [bowtie](http://bowtie-bio.sourceforge.net/index.shtml) : Single-seed
+	- [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) : Multiple-seed, gapped-alignment
 		- [local alignment](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#local-alignment-example)
 		- [end-to-end alignment](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#end-to-end-alignment-example)
 	- [SOAP](http://soap.genomics.org.cn/)
@@ -469,7 +469,14 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 
 
 
-5. Questions & Answers
+Contact Information
+============
+
+If you still have questions on BS-Seeker 2, or you find bugs when using BS-Seeker 2, or you have suggestions, please write email to guoweilong@gmail.com (Weilong Guo).
+
+
+
+Questions & Answers
 ============
 
 (1) Speed-up your alignment
@@ -553,7 +560,8 @@ Q: Can I add the path of BS-Seeker2's *.py to the $PATH, so I can call
 BS-Seeker2 from anywhere?
 
 A: If you're using the "python" from path "/usr/bin/python", you can directly
-add the path of BS-Seeker2 in file ~/.profile (MAC) or ~/.bashrc (Linux).
+add the path of BS-Seeker2 in file "~/.bash_profile" (bash) or "~/.profile"
+(other shell) or "~/.bashrc" (per-interactive-shell startup).
 But if you are using python under other directories, you might need to modify
 BS-Seeker2's script first. For example, if your python path is "/my_python/python",
 please change the first line in "bs_seeker-build.py", "bs_seeker-align.py" and
@@ -565,18 +573,16 @@ Then add
 
         export PATH=/path/to/BS-Seeker2/:$PATH
 
-to file  ~/.profile (MAC) or ~/.bashrc (Linux), and source the file:
+to file "~/.bash_profile" (e.g.), and source the file:
 
-        source  ~/.profile # (on MAC)
+        source  ~/.bash_profile
 
-Then you can use BS-Seeker2 globally.
+Then you can use BS-Seeker2 globally by typing:
 
+        bs_seeker_build.py -h
+        bs_seeker-align.py -h
+        bs_seeker-call_methylation.py -h
 
-
-Contact Information
-============
-
-If you still have questions on BS-Seeker 2, or you find bugs when using BS-Seeker 2, or you have suggestions, please write email to guoweilong@gmail.com (Weilong Guo).
 
 
 

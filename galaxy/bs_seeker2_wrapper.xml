@@ -2,7 +2,7 @@
   <requirements><requirement type='package'>bs_seeker2</requirement></requirements>
   <description>Versatile aligner for bisulfite sequencing data</description>
   <command interpreter="python">
-    bs_seeker2_wrapper.py 
+      bs_seeker2_wrapper.py
       ### define exec path
       ###    --exec-path "/u/home/galaxy/galaxy/GalaxyTools/bin"
           --exec-path "/Users/weilong/Documents/program/BSseeker2"
@@ -13,35 +13,38 @@
           --call_methylation--ATCGmap $call_methylation_ATCGmap
           --call_methylation--txt
 
-      ### aligner
-
-          --align--aligner $choosealigner.aligner
-
       #if $singlePaired.sPaired == "paired"
           --align--input_1 $input1
           --align--input_2 $singlePaired.input2
       #end if
 
-      ### genome for build and mapping
-      #if $refGenomeSource.genomeSource == "history"
-          --build--file $refGenomeSource.ownFile
-          --build--aligner $choosealigner.aligner
-        #if $rrbsFragments.Fragmented == "Yes"
-            --build--rrbs
-            --build--low $rrbsFragments.lowerBound
-            --build--up $rrbsFragments.upperBound
-            --align--rrbs
-            --align--low $rrbsFragments.lowerBound
-            --align--up $rrbsFragments.upperBound
-         #end if
-          --align-g $refGenomeSource.ownFile
-          --align--db $refGenomeSource.ownFile
+
+      ### aligner
+      --align--aligner ${choosealigner.aligner}
+      --build--aligner ${choosealigner.aligner}
+
+      ### Index from history or built-in
+      #if $choosealigner.rrbsFragments.refGenomeSource.genomeSource == "history"
+          --build--file ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
+          --align-g ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
+          --align--db ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
+      #else if $choosealigner.rrbsFragments.refGenomeSource.genomeSource == "indexed"
+          --align--db ${choosealigner.rrbsFragments.refGenomeSource.index.fields.path}
+          --align-g ${choosealigner.rrbsFragments.refGenomeSource.index.fields.path}/${choosealigner.rrbsFragments.refGenomeSource.index.fields.dbkey}.fa
+
       #end if
 
-      #if $refGenomeSource.genomeSource == "indexed"
-           --align--db ${refGenomeSource.index.fields.path}
-           --align-g ${refGenomeSource.index.fields.path}/${refGenomeSource.index.fields.dbkey}.fa
+      ### RRBS or WGBS
+      #if $choosealigner.rrbsFragments.Fragmented == "Yes"
+          --build--rrbs
+          --build--low ${choosealigner.rrbsFragments.lowerBound}
+          --build--up ${choosealigner.rrbsFragments.upperBound}
+          --align--rrbs
+          --align--low ${choosealigner.rrbsFragments.lowerBound}
+          --align--up ${choosealigner.rrbsFragments.upperBound}
       #end if
+
+
 
       ### Inputs
       #if $singlePaired.sPaired == "single"
@@ -52,7 +55,7 @@
           --align-t $tag
 
       ### other general options
-      #if $sParams.sSettingsType == "preSet" 
+      #if $sParams.sSettingsType == "preSet"
           --align--start_base 1
           --align--end_base 200
           --align--mis 4
@@ -60,13 +63,13 @@
 
       ### adapter information
       #if $adapterInfo.useAdapter == "Yes"
-          --align--adapter $adapterInfo.adapter_file
+          --align--adapter ${adapterInfo.adapter_file}
       #end if
 
-      #if $sParams.sSettingsType == "full" 
-          --align--start_base $sParams.start_base
-          --align--end_base $sParams.end_base
-          --align--mis $sParams.num_mismatch
+      #if $sParams.sSettingsType == "full"
+          --align--start_base ${sParams.start_base}
+          --align--end_base ${sParams.end_base}
+          --align--mis ${sParams.num_mismatch}
       #end if
 
   </command>
@@ -127,7 +130,7 @@
                          </param>
                          <when value="indexed">
                              <param name="index" type="select" label="Select a reference genome (WGBS, bowtie)">
-                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowite">
+                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowtie">
                                      <filter type="sort_by" column="2"/>
                                      <validator type="no_options" message="No indexes are available for the selected input dataset"/>
                                  </options>
@@ -176,7 +179,7 @@
                          </param>
                          <when value="indexed">
                              <param name="index" type="select" label="Select a reference genome (WGBS, bowtie2)">
-                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowite2">
+                                 <options from_data_table="bs_seeker2_indexes_WGBS_bowtie2">
                                      <filter type="sort_by" column="2"/>
                                      <validator type="no_options" message="No indexes are available for the selected input dataset"/>
                                  </options>
