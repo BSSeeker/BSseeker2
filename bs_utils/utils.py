@@ -308,7 +308,7 @@ def deserialize(filename):
     try:
         input = open(filename+'.data')
     except IOError:
-        print "\n[Error]:\n\t Cannot fine file: %s.data" % filename
+        print "\n[Error]:\n\t Cannot find file: %s.data" % filename
         exit(-1)
 
     obj = marshal.load(input)

@@ -5,6 +5,7 @@
       bs_seeker2_wrapper.py
       ### define exec path
       ###    --exec-path "/u/home/galaxy/galaxy/GalaxyTools/bin"
+      ### [Please change the following path to your local directory]
           --exec-path "/Users/weilong/Documents/program/BSseeker2"
       ### output
           --align--output $align_output
@@ -21,11 +22,11 @@
 
       ### aligner
       --align--aligner ${choosealigner.aligner}
-      --build--aligner ${choosealigner.aligner}
 
       ### Index from history or built-in
       #if $choosealigner.rrbsFragments.refGenomeSource.genomeSource == "history"
           --build--file ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
+          --build--aligner ${choosealigner.aligner}
           --align-g ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
           --align--db ${choosealigner.rrbsFragments.refGenomeSource.ownFile}
       #else if $choosealigner.rrbsFragments.refGenomeSource.genomeSource == "indexed"
@@ -36,9 +37,11 @@
 
       ### RRBS or WGBS
       #if $choosealigner.rrbsFragments.Fragmented == "Yes"
-          --build--rrbs
-          --build--low ${choosealigner.rrbsFragments.lowerBound}
-          --build--up ${choosealigner.rrbsFragments.upperBound}
+          #if $choosealigner.rrbsFragments.refGenomeSource.genomeSource == "history"
+            --build--rrbs
+            --build--low ${choosealigner.rrbsFragments.lowerBound}
+            --build--up ${choosealigner.rrbsFragments.upperBound}
+          #end if
           --align--rrbs
           --align--low ${choosealigner.rrbsFragments.lowerBound}
           --align--up ${choosealigner.rrbsFragments.upperBound}
