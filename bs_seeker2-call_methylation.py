@@ -141,7 +141,9 @@ if __name__ == '__main__':
                 #if ( (options.RM_SX) and (pr.alignment.tags[1][1] == 1) ):
                 ##=== Fixed error reported by Roberto
                 #print options.RM_SX,  dict(pr.alignment.tags)["XS"]
-                if ( (options.RM_SX) and (dict(pr.alignment.tags)["XS"] == 1) ):
+                #if ( (options.RM_SX) and (dict(pr.alignment.tags)["XS"] == 1) ):
+
+                if ( (options.RM_SX) and (dict(pr.alignment.tags).get("XS",0) == 1) ):
                     # print "Debug: ", options.RM_SX, pr.alignment.tags[1]
                     # when need to filter and read with tag (XS==1), then remove the reads
                     continue

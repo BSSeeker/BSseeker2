@@ -981,7 +981,8 @@ def bs_pair_end(main_read_file_1,
             logm("O -- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
 
 
-        logm("O --- %d uniqlely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
+        logm("O --- Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
+        logm("O --- %d uniquely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
         if asktag=="Y":
             logm("O ----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm("O ----- %7d RC-FW pairs mapped to Watson strand"%(numbers_mapped_lst[1]) )

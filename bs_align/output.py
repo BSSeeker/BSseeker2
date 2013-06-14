@@ -34,7 +34,7 @@ class outfile:
         self.f.close()
 
     def store(self, qname, N_mismatch, FR, refname, strand, pos, cigar, original_BS, methy, STEVE, rnext = -1, pnext = -1, qual = None, output_genome = None,
-              rrbs = False, my_region_serial = None, my_region_start = None, my_region_end = None):
+              rrbs = False, my_region_serial = -1, my_region_start = 0, my_region_end = 0):
 
         if self.format == BS_SEEKER1:
 

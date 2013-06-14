@@ -692,6 +692,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
     logm("Number of raw reads: %d \n"% all_raw_reads)
     if all_raw_reads >0:
         logm("Number of reads having adapter removed: %d \n" % all_trimed )
+        logm("Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
         logm("Number of unique-hits reads for post-filtering: %d\n" % all_mapped)
         if asktag=="Y":
             logm(" ---- %7d FW reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )

@@ -397,11 +397,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_FW_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial ,
+                                      my_region_start ,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -466,11 +466,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_RC_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial,
+                                      my_region_start,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -771,11 +771,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_FW_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial ,
+                                      my_region_start ,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -834,11 +834,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_RC_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial ,
+                                      my_region_start ,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -905,11 +905,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_FW_G2A += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial ,
+                                      my_region_start ,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -975,11 +975,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         num_mapped_RC_G2A += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
-                                      output_genome = output_genome,
-                                      rrbs = True,
-                                      my_region_serial = my_region_serial,
-                                      my_region_start = my_region_start,
-                                      my_region_end = my_region_end)
+                                      output_genome,
+                                      True,
+                                      my_region_serial ,
+                                      my_region_start ,
+                                      my_region_end)
                 else :
                     print "[For debug]: reads not in same lengths"
 
@@ -1004,6 +1004,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
         for kk in range(len(n_cut_tag_lst)):
             logm("O Number of raw reads with %s tag: %d (%1.3f)"%(cut3_tag_lst[kk],n_cut_tag_lst[cut3_tag_lst[kk]],float(n_cut_tag_lst[cut3_tag_lst[kk]])/all_raw_reads))
         logm("O Number of CGG/TGG reads having adapter removed: %d "%all_tagged_trimmed)
+        logm("O Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
         logm("O Number of unique-hits reads for post-filtering: %d"%all_mapped)
 
         logm("O ------ %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))

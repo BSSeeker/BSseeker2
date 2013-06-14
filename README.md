@@ -6,6 +6,8 @@ BS-Seeker2 (BS Seeker 2) performs accurate and fast mapping of bisulfite-treated
 0. Availability
 ============
 
+Homepage of [BS-Seeker2](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/).
+
 The source code for this package is available from
 [https://github.com/BSSeeker/BSseeker2](https://github.com/BSSeeker/BSseeker2).
 Also, you can use an instance of BS-Seeker 2 in Galaxy from [http://galaxy.hoffman2.idre.ucla.edu](http://galaxy.hoffman2.idre.ucla.edu).
@@ -465,7 +467,7 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
         (14) # of reads from Crick strand mapped here, support G on Watson strand and C on Crick strand
         (15) # of reads from Crick strand mapped here, support N
 
-        (16) methylation_level = #C/(#C+#T); "nan" means none reads support C/T at this position.
+        (16) methylation_level = #C/(#C+#T) = (C8+C14)/(C7+C8+C11+C14); "nan" means none reads support C/T at this position.
 
 
 
