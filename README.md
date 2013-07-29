@@ -48,9 +48,10 @@ Also, you can use an instance of BS-Seeker 2 in Galaxy from [http://galaxy.hoffm
 
 * Linux or Mac OS platform
 * One of the following Aligner
-  - [bowtie](http://bowtie-bio.sourceforge.net/)
-  - [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/) (Recommend)
+  - [bowtie](http://bowtie-bio.sourceforge.net/) (fast)
+  - [bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/) (Default)
   - [soap](http://soap.genomics.org.cn/)
+  - [rmap](http://www.cmb.usc.edu/people/andrewds/rmap/)
 * [Python](http://www.python.org/download/) (Version 2.6 +)
 
   (It is normally pre-installed in Linux. Type " python -V" to see the installed version.)
@@ -467,7 +468,8 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
         (14) # of reads from Crick strand mapped here, support G on Watson strand and C on Crick strand
         (15) # of reads from Crick strand mapped here, support N
 
-        (16) methylation_level = #C/(#C+#T) = (C8+C14)/(C7+C8+C11+C14); "nan" means none reads support C/T at this position.
+        (16) methylation_level = #C/(#C+#T) = C8/(C7+C8) for Watson strand, =C14/(C11+C14) for Crick strand;
+        "nan" means none reads support C/T at this position.
 
 
 

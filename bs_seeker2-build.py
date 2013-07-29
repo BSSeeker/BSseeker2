@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 from optparse import OptionParser, OptionGroup
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
-        print parser.print_help()
+        parser.print_help()
         exit(0)
 
     if options.version :
@@ -44,7 +44,11 @@ if __name__ == '__main__':
 
     rrbs = options.rrbs
 
-    fasta_file=os.path.expanduser(options.filename)
+    if options.filename is not None :
+        fasta_file=os.path.expanduser(options.filename)
+    else :
+        error("Please specify the genome file (Fasta) using \"-f\"")
+
     if fasta_file is None:
         error('Fasta file for the reference genome must be supported')
 
@@ -69,8 +73,13 @@ if __name__ == '__main__':
 
     print "Reference genome file: %s" % fasta_file
     print "Reduced Representation Bisulfite Sequencing: %s" % rrbs
+    print "Short reads aligner you are using: %s" % options.aligner
     print "Builder path: %s" % builder_exec
+
     #---------------------------------------------------------------
+
+    if not os.path.isfile( builder_exec ) :
+        error("Cannot file program %s for execution." % builder_exec)
 
     ref_path = options.dbpath
 

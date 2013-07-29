@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
@@ -226,7 +226,7 @@ def main():
     (options, args) = parser.parse_args()
     
     if (options.infile is None) or (options.outfile is None) :
-        print parser.print_help()
+        parser.print_help()
         exit(-1)
     FilterReads(options.infile, options.outfile, options.keepquality)
 

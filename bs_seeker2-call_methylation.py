@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from optparse import OptionParser, OptionGroup
 from bs_utils.utils import *
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
-        print parser.print_help()
+        parser.print_help()
         exit(0)
 
     if options.version :

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from optparse import OptionParser, OptionGroup
 import re
@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
-        print parser.print_help()
+        parser.print_help()
         exit(0)
 
     if options.version :
@@ -263,7 +263,6 @@ if __name__ == '__main__':
         if options.rrbs: # RRBS scan
             bs_rrbs(options.infilename,
                     asktag,
-            #        options.rrbs_taginfo,
                     options.adapter_file,
                     options.cutnumber1,
                     options.cutnumber2,

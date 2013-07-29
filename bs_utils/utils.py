@@ -137,10 +137,10 @@ aligner_options_prefixes = { BOWTIE  : '--bt-',
 
 aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or default_path))
                     for aligner, default_path in
-                           [(BOWTIE,'~/bowtie-0.12.7/'),
-                            (BOWTIE2, '~/bowtie-0.12.7/'),
-                            (SOAP, '~/soap2.21release/'),
-                            (RMAP, '~/rmap_v2.05/bin')
+                           [(BOWTIE,'~/bowtie/'),
+                            (BOWTIE2, '~/bowtie2/'),
+                            (SOAP, '~/soap/'),
+                            (RMAP, '~/rmap/bin')
                             ])
 
 
