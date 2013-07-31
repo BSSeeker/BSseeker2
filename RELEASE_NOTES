@@ -9,5 +9,7 @@ v2.0.4 - July 29, 2013
 3. Fix error report when using wrong path for short reads aligner
 4. MIT License
 
+V2.0.5 - July 31, 2013
+1. Fix bug in "bs_single_end.py" for "numbers_premapped_lst[0] += len(Unique_FW_C2T)"
 
 

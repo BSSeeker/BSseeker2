@@ -353,17 +353,17 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             RC_C2T_uniq_lst=[x[1] for x in RC_C2T_uniq_lst]
             FW_G2A_uniq_lst=[x[1] for x in FW_G2A_uniq_lst]
             RC_G2A_uniq_lst=[x[1] for x in RC_G2A_uniq_lst]
+            #----------------------------------------------------------------
+
+            numbers_premapped_lst[0] += len(Unique_FW_C2T)
+            numbers_premapped_lst[1] += len(Unique_RC_G2A)
+            numbers_premapped_lst[2] += len(Unique_FW_G2A)
+            numbers_premapped_lst[3] += len(Unique_RC_C2T)
 
             del Unique_FW_C2T
             del Unique_FW_G2A
             del Unique_RC_C2T
             del Unique_RC_G2A
-
-            #----------------------------------------------------------------
-            numbers_premapped_lst[0] += len(Unique_FW_C2T)
-            numbers_premapped_lst[1] += len(Unique_RC_G2A)
-            numbers_premapped_lst[2] += len(Unique_FW_G2A)
-            numbers_premapped_lst[3] += len(Unique_RC_C2T)
 
 
             #----------------------------------------------------------------
