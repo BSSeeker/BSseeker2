@@ -104,13 +104,13 @@ def bs_pair_end(main_read_file_1,
                 aligner_command,
                 db_path,
                 tmp_path,
-                outfile, XS_pct, XS_count, show_multiple_hit=False):
+                outfile, XS_pct, XS_count, adapter_mismatch, show_multiple_hit=False):
 
 
     #----------------------------------------------------------------
-    adapter=""
-    adapterA=""
-    adapterB=""
+    adapter  = ""
+    adapterA = ""
+    adapterB = ""
     if adapter_file !="":
         try :
             adapter_inf=open(adapter_file,"r")
@@ -134,12 +134,15 @@ def bs_pair_end(main_read_file_1,
     logm("End 1 filename: %s"% main_read_file_1  )
     logm("End 2 filename: %s"% main_read_file_2  )
     logm("The first base (for mapping): %d"% cut1  )
-    logm("The last base (for mapping): %d"% cut2  )
+    logm("The  last base (for mapping): %d"% cut2  )
 
-    logm("-------------------------------- " )
-    logm("Un-directional library: %s" % asktag  )
     logm("Path for short reads aligner: %s"% aligner_command + '\n')
     logm("Reference genome library path: %s"% db_path  )
+
+    if asktag == "Y" :
+        logm("Un-directional library" )
+    else :
+        logm("Directional library")
     logm("Number of mismatches allowed: %s"% max_mismatch_no  )
 
     if adapter_file !="":
@@ -182,6 +185,9 @@ def bs_pair_end(main_read_file_1,
     all_trimmed=0
     all_mapped=0
     all_mapped_passed=0
+    all_base_before_trim=0
+    all_base_after_trim=0
+    all_base_mapped=0
 
     all_unmapped=0
 
@@ -192,6 +198,8 @@ def bs_pair_end(main_read_file_1,
     uC_lst=[0,0,0]
 
     no_my_files=0
+    read_id_lst_1 = dict()
+    read_id_lst_2 = dict()
 
     #----------------------------------------------------------------
     print "== Start mapping =="
@@ -212,11 +220,14 @@ def bs_pair_end(main_read_file_1,
             #----------------------------------------------------------------
             outfile_1FCT = tmp_d('Trimmed_FCT_1.fa'+random_id)
             outfile_1RCT = tmp_d('Trimmed_RCT_1.fa'+random_id)
-            outfile_2FCT = tmp_d('Trimmed_FCT_2.fa'+random_id)
+            outfile_2RGA = tmp_d('Trimmed_FCT_2.fa'+random_id)
             outfile_2RCT = tmp_d('Trimmed_RCT_2.fa'+random_id)
 
             try :
-                read_inf = open(tmp_d(read_file_1),"r")
+                if read_file_1.endswith(".gz") : # support input file ending with ".gz"
+                    read_inf = gzip.open(tmp_d(read_file_1), "rb")
+                else :
+                    read_inf = open(tmp_d(read_file_1),"r")
             except IOError :
                 print "[Error] Cannot open file : %s", tmp_d(read_file_1)
                 exit(-1)
@@ -226,128 +237,131 @@ def bs_pair_end(main_read_file_1,
 
             if oneline[0]=="@":	# Illumina GAII FastQ (Lister et al Nature 2009)
                 input_format="fastq"
-                n_fastq=0
             elif len(l)==1 and oneline[0]!=">": 	# pure sequences
                 input_format="seq"
             elif len(l)==11:	# Illumina GAII qseq file
                 input_format="qseq"
             elif oneline[0]==">":	# fasta
                 input_format="fasta"
-                n_fasta=0
             read_inf.close()
 
             print "Detected data format: %s" % input_format
 
             #----------------------------------------------------------------
             read_file_list   = [read_file_1, read_file_2]
-            outfile_FCT_list = [outfile_1FCT, outfile_2FCT]
+            outfile_FCT_list = [outfile_1FCT, outfile_2RGA]
             outfile_RCT_list = [outfile_1RCT, outfile_2RCT]
             n_list = [0, 0]
-
-
             for f in range(2):
                 read_file = read_file_list[f]
                 outf_FCT = open(outfile_FCT_list[f], 'w')
-                outf_RCT = open(outfile_RCT_list[f], 'w')
+                outf_RGA = open(outfile_RCT_list[f], 'w')
                 original_bs_reads = original_bs_reads_lst[f]
                 n = n_list[f]
-
-                seq_id = ""
+                read_id = ""
                 seq = ""
                 seq_ready = "N"
+                line_no = 0
                 for line in fileinput.input(tmp_d(read_file)):
-                    l=line.split()
+                    l = line.split()
+                    line_no += 1
                     if input_format=="seq":
-                        n+=1
-                        seq_id=str(n)
-                        seq_id=seq_id.zfill(12)
-                        seq=l[0]
-                        seq_ready="Y"
+                        n += 1
+                        read_id = str(n)
+                        read_id = read_id.zfill(12)
+                        if f == 1 :
+                            read_id_lst_1[read_id] = read_id
+                        else :
+                            read_id_lst_2[read_id] = read_id
+                        seq = l[0]
+                        seq_ready = "Y"
                     elif input_format=="fastq":
-                        m_fastq=math.fmod(n_fastq,4)
-                        n_fastq+=1
-                        seq_ready="N"
-                        if m_fastq==0:
-                            n+=1
-                            seq_id=str(n)
-                            seq_id=seq_id.zfill(12)
-                            seq=""
-                        elif m_fastq==1:
-                            seq=l[0]
-                            seq_ready="Y"
-                        else:
-                            seq=""
+                        l_fastq = math.fmod(line_no, 4)
+                        if l_fastq==1 :
+                            all_raw_reads += 1
+                            read_id = str(line_no/4+1).zfill(12)
+                            if f==1 :
+                                read_id_lst_1[read_id] = l[0][1:]
+                            else :
+                                read_id_lst_2[read_id] = l[0][1:]
+                            seq_ready="N"
+                        elif l_fastq==2 :
+                            seq = l[0]
+                            seq_ready = "Y"
+                        else :
+                            seq = ""
+                            seq_ready = "N"
                     elif input_format=="qseq":
-                        n+=1
-                        seq_id=str(n)
-                        seq_id=seq_id.zfill(12)
-                        seq=l[8]
-                        seq_ready="Y"
+                        all_raw_reads += 1
+                        read_id = str(line_no)
+                        read_id = read_id.zfill(12)
+                        if f == 1 :
+                            read_id_lst_1[read_id] = l[0][1:]
+                        else :
+                            read_id_lst_2[read_id] = l[0][1:]
+                        seq = l[8]
+                        seq_ready = "Y"
                     elif input_format=="fasta":
-                        m_fasta=math.fmod(n_fasta,2)
-                        n_fasta+=1
-                        seq_ready="N"
-                        if m_fasta==0:
-                            n+=1
-                            seq_id=l[0][1:]
-                            seq_id=seq_id.zfill(17)
-                            seq=""
-                        elif m_fasta==1:
-                            seq=l[0]
-                            seq_ready="Y"
-                        else:
-                            seq=""
+                        l_fasta = math.fmod(line_no,2)
+                        seq_ready = "N"
+                        if l_fasta==1:
+                            all_raw_reads += 1
+                            read_id = str(line_no/2+1).zfill(12)
+                            if f==1 :
+                                read_id_lst_1[read_id] = l[0][1:]
+                            else :
+                                read_id_lst_2[read_id] = l[0][1:]
+                            seq = ""
+                        elif l_fasta==0 :
+                            seq = l[0]
+                            seq_ready = "Y"
                     #----------------------------------------------------------------
                     if seq_ready=="Y":
-                        seq=seq[cut1-1:cut2] #------- selecting 0..52 from 1..72  -e 52
-                        seq=seq.upper()
-                        seq=seq.replace(".","N")
+                        seq = seq[cut1-1:cut2] #------- selecting 0..52 from 1..72  -e 52
+                        seq = seq.upper()
+                        seq = seq.replace(".","N")
 
                         #--striping BS adapter from 3' read --------------------------------------------------------------
-                        if (adapterA !="") and (adapterB !=""):
-                            signature=adapterA[:6]
-                            if signature in seq:
-                                signature_pos=seq.index(signature)
-                                if seq[signature_pos:] in adapterA:
-                                    seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                    all_trimmed+=1
-                            else:
-                                signature=adapterB[:6]
-                                if signature in seq:
-                                    #print seq_id,seq,signature;
-                                    signature_pos=seq.index(signature)
-                                    if seq[signature_pos:] in adapterB:
-                                        seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                        all_trimmed+=1
+                        all_base_before_trim += len(seq)
+                        if f==0 and adapterA!="" :
+                            new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            if len(new_read)<len(seq) :
+                                all_trimmed += 1
+                            seq = new_read
+                        if f==1 and adapterB!="" :
+                            new_read = RemoveAdapter(seq, adapterB, adapter_mismatch)
+                            if len(new_read)<len(seq) :
+                                all_trimmed += 1
+                            seq = new_read
+                        all_base_after_trim += len(seq)
 
-                        if len(seq) <= 4:
+                        if len(seq)<=4:
                             seq = "N" * (cut2-cut1+1)
                         #---------  trimmed_raw_BS_read  ------------------
-                        original_bs_reads[seq_id] = seq
+                        original_bs_reads[read_id] = seq
 
                         #---------  FW_C2T  ------------------
-                        outf_FCT.write('>%s\n%s\n' % (seq_id, seq.replace("C","T")))
+                        outf_FCT.write('>%s\n%s\n' % (read_id, seq.replace("C","T")))
                         #---------  RC_G2A  ------------------
-                        outf_RCT.write('>%s\n%s\n' % (seq_id, seq.replace("G","A")))
+                        outf_RGA.write('>%s\n%s\n' % (read_id, seq.replace("G","A")))
 
-                n_list[f]=n
+                n_list[f] = n
 
                 outf_FCT.close()
-                outf_RCT.close()
+                outf_RGA.close()
 
                 fileinput.close()
 
-
             #print "All input end 1: %d , end 2: %d "%(n_list[0],n_list[1]);
-            all_raw_reads+=n
+            all_raw_reads += n
 
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr=tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            WC2T_rf=tmp_d("W_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T_fr=tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T_rf=tmp_d("C_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_fr = tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_rf = tmp_d("W_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
+            CG2A_fr = tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            CC2T_rf = tmp_d("C_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
 
             run_in_parallel([aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                       'input_file_1' : outfile_1FCT,
@@ -357,64 +371,62 @@ def bs_pair_end(main_read_file_1,
                              aligner_command % {'reference_genome' : os.path.join(db_path,'C_C2T'),
                                                       'input_file_1' : outfile_1FCT,
                                                       'input_file_2' : outfile_2RCT,
-                                                      'output_file' : CC2T_fr},
+                                                      'output_file' : CG2A_fr},
 
                              aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
-                                                      'input_file_1' : outfile_2FCT,
+                                                      'input_file_1' : outfile_2RGA,
                                                       'input_file_2' : outfile_1RCT,
                                                       'output_file' : WC2T_rf},
 
                              aligner_command % {'reference_genome' : os.path.join(db_path,'C_C2T'),
-                                                      'input_file_1' : outfile_2FCT,
+                                                      'input_file_1' : outfile_2RGA,
                                                       'input_file_2' : outfile_1RCT,
                                                       'output_file' : CC2T_rf}])
 
-
-            delete_files(outfile_1FCT, outfile_2FCT, outfile_1RCT, outfile_2RCT)
+            delete_files(outfile_1FCT, outfile_2RGA, outfile_1RCT, outfile_2RCT)
 
 
             #--------------------------------------------------------------------------------
             # Post processing
             #--------------------------------------------------------------------------------
 
-
             FW_C2T_fr_U, FW_C2T_fr_R = extract_mapping(WC2T_fr)
             FW_C2T_rf_U, FW_C2T_rf_R = extract_mapping(WC2T_rf)
-            RC_C2T_fr_U, RC_C2T_fr_R = extract_mapping(CC2T_fr)
+            RC_G2A_fr_U, RC_G2A_fr_R = extract_mapping(CG2A_fr)
             RC_C2T_rf_U, RC_C2T_rf_R = extract_mapping(CC2T_rf)
 
-            delete_files(WC2T_fr, WC2T_rf, CC2T_fr, CC2T_rf)
+            delete_files(WC2T_fr, WC2T_rf, CG2A_fr, CC2T_rf)
 
             #----------------------------------------------------------------
             # get uniq-hit reads
             #----------------------------------------------------------------
-            Union_set=set(FW_C2T_fr_U.iterkeys()) | set(FW_C2T_rf_U.iterkeys()) | set(RC_C2T_fr_U.iterkeys()) | set(RC_C2T_rf_U.iterkeys())
+            Union_set = set(FW_C2T_fr_U.iterkeys()) | set(FW_C2T_rf_U.iterkeys()) | set(RC_G2A_fr_U.iterkeys()) | set(RC_C2T_rf_U.iterkeys())
 
-            Unique_FW_fr_C2T=set() # +
-            Unique_FW_rf_C2T=set() # +
-            Unique_RC_fr_C2T=set() # -
-            Unique_RC_rf_C2T=set() # -
-            Multiple_hits=set()
+            Unique_FW_fr_C2T = set() # +
+            Unique_FW_rf_C2T = set() # +
+            Unique_RC_fr_G2A = set() # -
+            Unique_RC_rf_C2T = set() # -
+            Multiple_hits = set()
 
 
             for x in Union_set:
-                _list=[]
-                for d in [FW_C2T_fr_U, FW_C2T_rf_U, RC_C2T_fr_U, RC_C2T_rf_U]:
-                    mis_lst=d.get(x,[99])
-                    mis=int(mis_lst[0])
+                _list = []
+                for d in [FW_C2T_fr_U, FW_C2T_rf_U, RC_G2A_fr_U, RC_C2T_rf_U]:
+                    mis_lst = d.get(x,[99])
+                    mis = int(mis_lst[0])
                     _list.append(mis)
-                for d in [FW_C2T_fr_R, FW_C2T_rf_R, RC_C2T_fr_R, RC_C2T_rf_R]:
-                    mis=d.get(x,99)
+                for d in [FW_C2T_fr_R, FW_C2T_rf_R, RC_G2A_fr_R, RC_C2T_rf_R]:
+                    mis = d.get(x,99)
                     _list.append(mis)
-                mini=min(_list)
+                mini = min(_list)
                 if _list.count(mini)==1:
-                    mini_index=_list.index(mini)
+                    mini_index = _list.index(mini)
                     if mini_index==0:
                         Unique_FW_fr_C2T.add(x)
                     elif mini_index==1:
                         Unique_FW_rf_C2T.add(x)
                     elif mini_index==2:
-                        Unique_RC_fr_C2T.add(x)
+                        Unique_RC_fr_G2A.add(x)
                     elif mini_index==3:
                         Unique_RC_rf_C2T.add(x)
                     else :
@@ -424,7 +436,7 @@ def bs_pair_end(main_read_file_1,
 
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit :
-                outf_MH=open("Multiple_hit.fa",'w')
+                outf_MH = open("Multiple_hit.fa",'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
@@ -433,32 +445,32 @@ def bs_pair_end(main_read_file_1,
             del Union_set
             del FW_C2T_fr_R
             del FW_C2T_rf_R
-            del RC_C2T_fr_R
+            del RC_G2A_fr_R
             del RC_C2T_rf_R
 
-            FW_C2T_fr_uniq_lst=[[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
-            FW_C2T_rf_uniq_lst=[[FW_C2T_rf_U[u][1],u] for u in Unique_FW_rf_C2T]
-            RC_C2T_fr_uniq_lst=[[RC_C2T_fr_U[u][1],u] for u in Unique_RC_fr_C2T]
-            RC_C2T_rf_uniq_lst=[[RC_C2T_rf_U[u][1],u] for u in Unique_RC_rf_C2T]
+            FW_C2T_fr_uniq_lst = [[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
+            FW_C2T_rf_uniq_lst = [[FW_C2T_rf_U[u][1],u] for u in Unique_FW_rf_C2T]
+            RC_C2T_fr_uniq_lst = [[RC_G2A_fr_U[u][1],u] for u in Unique_RC_fr_G2A]
+            RC_C2T_rf_uniq_lst = [[RC_C2T_rf_U[u][1],u] for u in Unique_RC_rf_C2T]
 
             FW_C2T_fr_uniq_lst.sort()
             FW_C2T_rf_uniq_lst.sort()
             RC_C2T_fr_uniq_lst.sort()
             RC_C2T_rf_uniq_lst.sort()
-            FW_C2T_fr_uniq_lst=[x[1] for x in FW_C2T_fr_uniq_lst]
-            FW_C2T_rf_uniq_lst=[x[1] for x in FW_C2T_rf_uniq_lst]
-            RC_C2T_fr_uniq_lst=[x[1] for x in RC_C2T_fr_uniq_lst]
-            RC_C2T_rf_uniq_lst=[x[1] for x in RC_C2T_rf_uniq_lst]
+            FW_C2T_fr_uniq_lst = [x[1] for x in FW_C2T_fr_uniq_lst]
+            FW_C2T_rf_uniq_lst = [x[1] for x in FW_C2T_rf_uniq_lst]
+            RC_C2T_fr_uniq_lst = [x[1] for x in RC_C2T_fr_uniq_lst]
+            RC_C2T_rf_uniq_lst = [x[1] for x in RC_C2T_rf_uniq_lst]
             #----------------------------------------------------------------
 
-            numbers_premapped_lst[0]+=len(Unique_FW_fr_C2T)
-            numbers_premapped_lst[1]+=len(Unique_FW_rf_C2T)
-            numbers_premapped_lst[2]+=len(Unique_RC_fr_C2T)
-            numbers_premapped_lst[3]+=len(Unique_RC_rf_C2T)
+            numbers_premapped_lst[0] += len(Unique_FW_fr_C2T)
+            numbers_premapped_lst[1] += len(Unique_FW_rf_C2T)
+            numbers_premapped_lst[2] += len(Unique_RC_fr_G2A)
+            numbers_premapped_lst[3] += len(Unique_RC_rf_C2T)
 
             del Unique_FW_fr_C2T
             del Unique_FW_rf_C2T
-            del Unique_RC_fr_C2T
+            del Unique_RC_fr_G2A
             del Unique_RC_rf_C2T
 
             #----------------------------------------------------------------
@@ -466,7 +478,7 @@ def bs_pair_end(main_read_file_1,
             nn = 0
             for ali_unique_lst, ali_dic in [(FW_C2T_fr_uniq_lst,FW_C2T_fr_U),
                                             (FW_C2T_rf_uniq_lst,FW_C2T_rf_U),
-                                            (RC_C2T_fr_uniq_lst,RC_C2T_fr_U),
+                                            (RC_C2T_fr_uniq_lst,RC_G2A_fr_U),
                                             (RC_C2T_rf_uniq_lst,RC_C2T_rf_U)]:
                 nn += 1
 
@@ -476,15 +488,15 @@ def bs_pair_end(main_read_file_1,
                     _, mapped_chr, mapped_location_1, cigar1, mapped_location_2, cigar2 = ali_dic[header]
 
                     #-------------------------------------
-                    if mapped_chr != mapped_chr0:
-                        my_gseq=deserialize(db_d(mapped_chr))
-                        chr_length=len(my_gseq)
-                        mapped_chr0=mapped_chr
+                    if mapped_chr!=mapped_chr0:
+                        my_gseq = deserialize(db_d(mapped_chr))
+                        chr_length = len(my_gseq)
+                        mapped_chr0 = mapped_chr
                     #-------------------------------------
-                    if nn == 1 or nn == 3:
+                    if nn==1 or nn==3 :
                         original_BS_1 = original_bs_reads_1[header]
                         original_BS_2 = reverse_compl_seq(original_bs_reads_2[header])
-                    else:
+                    else :
                         original_BS_1 = original_bs_reads_2[header]
                         original_BS_2 = reverse_compl_seq(original_bs_reads_1[header])
 
@@ -493,70 +505,26 @@ def bs_pair_end(main_read_file_1,
 
                     all_mapped += 1
 
-                    if nn == 1: 							# FW-RC mapped to + strand:
-
+                    if nn==1 : 							# FW-RC mapped to + strand:
                         FR = "+FR"
-
-#                        mapped_location_1 += 1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "+"
-
-#                        mapped_location_2 += 1
-#                        origin_genome_long_2 = my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1]
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "+"
-
-                    elif nn==2: 							# RC-FW mapped to + strand:
-
-#                        original_BS_1 = original_bs_reads_2[header]
-#                        original_BS_2 = reverse_compl_seq(original_bs_reads_1[header])
+                    elif nn==2 : 							# RC-FW mapped to + strand:
                         FR = "+RF"
-#                        mapped_location_1 += 1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "+"
-
-#                        mapped_location_2 += 1
-#                        origin_genome_long_2 = my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1]
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "+"
-
-
-                    elif nn==3: 						# FW-RC mapped to - strand:
-#                        original_BS_1=original_bs_reads_1[header]
-#                        original_BS_2=reverse_compl_seq(original_bs_reads_2[header])
-
+                    elif nn==3 : 						# FW-RC mapped to - strand:
                         FR = "-FR"
                         mapped_location_1 = chr_length - mapped_location_1 - g_len_1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_long_1 = reverse_compl_seq(origin_genome_long_1)
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "-"
-
                         mapped_location_2 = chr_length - mapped_location_2 - g_len_2
-#                        origin_genome_long_2 = reverse_compl_seq(my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1 ])
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "-"
-
-                    elif nn==4: 						# RC-FW mapped to - strand:
-#                        original_BS_1=original_bs_reads_2[header]
-#                        original_BS_2=reverse_compl_seq(original_bs_reads_1[header])
-
+                    elif nn==4 : 						# RC-FW mapped to - strand:
                         FR = "-RF"
                         mapped_location_1 = chr_length - mapped_location_1 - g_len_1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_long_1 = reverse_compl_seq(origin_genome_long_1)
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "-"
-
                         mapped_location_2 = chr_length - mapped_location_2 - g_len_2
-#                        origin_genome_long_2 = reverse_compl_seq(my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1])
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "-"
-
-
-
 
                     origin_genome_1, next_1, output_genome_1 = get_genomic_sequence(my_gseq, mapped_location_1, mapped_location_1 + g_len_1, mapped_strand_1)
                     origin_genome_2, next_2, output_genome_2 = get_genomic_sequence(my_gseq, mapped_location_2, mapped_location_2 + g_len_2, mapped_strand_2)
@@ -564,12 +532,14 @@ def bs_pair_end(main_read_file_1,
                     r_aln_1, g_aln_1 = cigar_to_alignment(cigar1, original_BS_1, origin_genome_1)
                     r_aln_2, g_aln_2 = cigar_to_alignment(cigar2, original_BS_2, origin_genome_2)
 
-
                     N_mismatch_1 = N_MIS(r_aln_1, g_aln_1) #+ original_BS_length_1 - (r_end_1 - r_start_1) # mismatches in the alignment + soft clipped nucleotides
                     N_mismatch_2 = N_MIS(r_aln_2, g_aln_2) #+ original_BS_length_2 - (r_end_2 - r_start_2) # mismatches in the alignment + soft clipped nucleotides
 
+                    N_mismatch = max(N_mismatch_1, N_mismatch_2)
+                    mm_no=float(max_mismatch_no)
+                    if (mm_no>=1 and N_mismatch<=mm_no) or (mm_no<1 and N_mismatch_1<=mm_no*len(original_BS_1)
+                            and N_mismatch_2<=mm_no*len(original_BS_2)):
 
-                    if max(N_mismatch_1, N_mismatch_2) <= int(max_mismatch_no) :
                         all_mapped_passed += 1
                         numbers_mapped_lst[nn-1] += 1
                         #---- unmapped -------------------------
@@ -577,43 +547,46 @@ def bs_pair_end(main_read_file_1,
                         del original_bs_reads_2[header]
                         #---------------------------------------
 
-#                        output_genome_1 = origin_genome_long_1[0:2] + "_" + origin_genome_1 + "_" + origin_genome_long_1[-2:]
-#                        output_genome_2 = origin_genome_long_2[0:2] + "_" + origin_genome_2 + "_" + origin_genome_long_2[-2:]
-
-                        methy_1=methy_seq(r_aln_1, g_aln_1 + next_1)
-                        methy_2=methy_seq(r_aln_2, g_aln_2 + next_2)
+                        methy_1 = methy_seq(r_aln_1, g_aln_1 + next_1)
+                        methy_2 = methy_seq(r_aln_2, g_aln_2 + next_2)
 
                         mC_lst, uC_lst = mcounts(methy_1, mC_lst, uC_lst)
                         mC_lst, uC_lst = mcounts(methy_2, mC_lst, uC_lst)
 
-
-                        # 
                         #---XS FILTER----------------
-                        #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                         XS_1 = 0
                         nCH_1 = methy_1.count('y') + methy_1.count('z')
                         nmCH_1 = methy_1.count('Y') + methy_1.count('Z')
                         if( (nmCH_1>XS_count) and nmCH_1/float(nCH_1+nmCH_1)>XS_pct ) :
                             XS_1 = 1
-                        #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                         XS_2 = 0
                         nCH_2 = methy_2.count('y') + methy_2.count('z')
                         nmCH_2 = methy_2.count('Y') + methy_2.count('Z')
                         if( (nmCH_2>XS_count) and nmCH_2/float(nCH_2+nmCH_2)>XS_pct ) :
                             XS_2 = 1
 
+                        if mapped_strand_1=='+' :
+                            flag_1 = 67     # 1000011   : 1st read, + strand
+                            flag_2 = 131    #10000011   : 2nd read, + strand
+                        else :
+                            flag_1 = 115    # 1110011   : 1st read, - strand
+                            flag_2 = 179    # 10110011  : 2nd read, - strand
 
-                        outfile.store(header, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
+                        outfile.store2( read_id_lst_1[header], flag_1, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
                             output_genome = output_genome_1, rnext = mapped_chr, pnext = mapped_location_2)
-                        outfile.store(header, N_mismatch_2, FR, mapped_chr, mapped_strand_2, mapped_location_2, cigar2, original_BS_2, methy_2, XS_2,
+                        all_base_mapped += len(original_BS_1)
+
+                        outfile.store2( read_id_lst_2[header], flag_2, N_mismatch_2, FR, mapped_chr, mapped_strand_2, mapped_location_2, cigar2, original_BS_2, methy_2, XS_2,
                             output_genome = output_genome_2, rnext = mapped_chr, pnext = mapped_location_1)
+                        all_base_mapped += len(original_BS_2)
+
 
             print "--> %s %s (%d/%d) " % (read_file_1, read_file_2, no_my_files, len(my_files))
             #----------------------------------------------------------------
             #	output unmapped pairs
             #----------------------------------------------------------------
 
-            unmapped_lst=original_bs_reads_1.keys()
+            unmapped_lst = original_bs_reads_1.keys()
             unmapped_lst.sort()
 
 #            for u in unmapped_lst:
@@ -623,189 +596,188 @@ def bs_pair_end(main_read_file_1,
             all_unmapped += len(unmapped_lst)
 
 
+        #  Directional library
         if asktag=="N":
 
             #----------------------------------------------------------------
-            outfile_1FCT= tmp_d('Trimed_FCT_1.fa'+random_id)
-            outfile_2FCT= tmp_d('Trimed_FCT_2.fa'+random_id)
+            outfile_1FCT = tmp_d('Trimed_FCT_1.fa'+random_id)
+            outfile_2RGA = tmp_d('Trimed_RGA_2.fa'+random_id)
 
             try :
-                read_inf=open(tmp_d(read_file_1),"r")
+                if read_file_1.endswith(".gz") : # support input file ending with ".gz"
+                    read_inf = gzip.open(tmp_d(read_file_1), "rb")
+                else :
+                    read_inf = open(tmp_d(read_file_1),"r")
             except IOError :
                 print "[Error] Cannot open file : %s", tmp_d(read_file_1)
                 exit(-1)
 
-            oneline=read_inf.readline()
-            l=oneline.split()
-            input_format=""
+            oneline = read_inf.readline()
+            l = oneline.split()
+            input_format = ""
 
-            #if len(l)==5: # old solexa format
-            #	input_format="old Solexa Seq file"
-
-            if oneline[0]=="@":	# Illumina GAII FastQ (Lister et al Nature 2009)
-                input_format="FastQ"
-                n_fastq=0
-            elif len(l)==1 and oneline[0]!=">": 	# pure sequences
-                input_format="_list of sequences"
-            elif len(l)==11:	# Illumina GAII qseq file
-                input_format="Illumina GAII qseq file"
-            elif oneline[0]==">":	# fasta
-                input_format="fasta"
-                n_fasta=0
+            if oneline[0]=="@" :
+                input_format = "fastq"
+            elif len(l)==1 and oneline[0]!=">" :
+                input_format = "seq"
+            elif len(l)==11 :
+                input_format = "qseq"
+            elif oneline[0]==">" :
+                input_format = "fasta"
 
             read_inf.close()
 
             print "Detected data format: %s" % input_format
 
             #----------------------------------------------------------------
-            read_file_list=[read_file_1,read_file_2]
-            outfile_FCT_list=[outfile_1FCT,outfile_2FCT]
-            n_list=[0,0]
+            read_file_list = [read_file_1,read_file_2]
+            outfile_FCT_list = [outfile_1FCT,outfile_2RGA]
+            n_list = [0,0]
 
             for f in range(2):
-                read_file=read_file_list[f]
-                outf_FCT=open(outfile_FCT_list[f],'w')
+                read_file = read_file_list[f]
+                outf_FCT = open(outfile_FCT_list[f],'w')
                 original_bs_reads = original_bs_reads_lst[f]
-                n=n_list[f]
+                n = n_list[f]
 
-                seq_id=""
-                seq=""
-                seq_ready="N"
+                read_id = ""
+                seq = ""
+                seq_ready = "N"
+                line_no = 0
                 for line in fileinput.input(tmp_d(read_file)):
-                    l=line.split()
-                    if input_format=="old Solexa Seq file":
-                        n+=1
-                        seq_id=str(n)
-                        seq_id=seq_id.zfill(12)
-                        seq=l[4]
-                        seq_ready="Y"
-                    elif input_format=="_list of sequences":
-                        n+=1
-                        seq_id=str(n)
-                        seq_id=seq_id.zfill(12)
-                        seq=l[0]
-                        seq_ready="Y"
-                    elif input_format=="FastQ":
-                        m_fastq=math.fmod(n_fastq,4)
-                        n_fastq+=1
-                        seq_ready="N"
-                        if m_fastq==0:
-                            n+=1
-                            seq_id=str(n)
-                            seq_id=seq_id.zfill(12)
-                            seq=""
-                        elif m_fastq==1:
-                            seq=l[0]
-                            seq_ready="Y"
-                        else:
-                            seq=""
-                    elif input_format=="Illumina GAII qseq file":
-                        n+=1
-                        seq_id=str(n)
-                        seq_id=seq_id.zfill(12)
-                        seq=l[8]
-                        seq_ready="Y"
+                    l = line.split()
+                    line_no += 1
+                    if input_format=="seq":
+                        n += 1
+                        read_id = str(n)
+                        read_id = read_id.zfill(12)
+                        if f == 1 :
+                            read_id_lst_1[read_id] = read_id
+                        else :
+                            read_id_lst_2[read_id] = read_id
+                        seq = l[0]
+                        seq_ready = "Y"
+                    elif input_format=="fastq":
+                        l_fastq = math.fmod(line_no, 4)
+                        if l_fastq==1 :
+                            all_raw_reads += 1
+                            read_id = str(line_no/4+1).zfill(12)
+                            if f==1 :
+                                read_id_lst_1[read_id] = l[0][1:]
+                            else :
+                                read_id_lst_2[read_id] = l[0][1:]
+                            seq_ready = "N"
+                        elif l_fastq==2 :
+                            seq = l[0]
+                            seq_ready = "Y"
+                        else :
+                            seq = ""
+                            seq_ready = "N"
+                    elif input_format=="qseq":
+                        all_raw_reads += 1
+                        read_id = str(line_no)
+                        read_id = read_id.zfill(12)
+                        if f == 1 :
+                            read_id_lst_1[read_id] = l[0][1:]
+                        else :
+                            read_id_lst_2[read_id] = l[0][1:]
+                        seq = l[8]
+                        seq_ready = "Y"
                     elif input_format=="fasta":
-                        m_fasta=math.fmod(n_fasta,2)
-                        n_fasta+=1
-                        seq_ready="N"
-                        if m_fasta==0:
-                            n+=1
-                            seq_id=l[0][1:]
-                            seq_id=seq_id.zfill(17)
-                            seq=""
-                        elif m_fasta==1:
-                            seq=l[0]
-                            seq_ready="Y"
-                        else:
-                            seq=""
+                        l_fasta = math.fmod(line_no,2)
+                        if l_fasta==1:
+                            seq_ready = "N"
+                            all_raw_reads += 1
+                            read_id = str(line_no/2+1).zfill(12)
+                            if f == 1 :
+                                read_id_lst_1[read_id] = l[0][1:]
+                            else :
+                                read_id_lst_2[read_id] = l[0][1:]
+                            seq = ""
+                        elif l_fasta==0 :
+                            seq = l[0]
+                            seq_ready = "Y"
                     #----------------------------------------------------------------
                     if seq_ready=="Y":
-                        seq=seq[cut1-1:cut2] #<----------------------selecting 0..52 from 1..72  -e 52
-                        seq=seq.upper()
-                        seq=seq.replace(".","N")
+                        seq = seq[cut1-1:cut2] #<----------------------selecting 0..52 from 1..72  -e 52
+                        seq = seq.upper()
+                        seq = seq.replace(".","N")
 
                         #--striping BS adapter from 3' read --------------------------------------------------------------
-                        if (adapterA !="") and (adapterB !=""):
-                            signature=adapterA[:6]
-                            if signature in seq:
-                                signature_pos=seq.index(signature)
-                                if seq[signature_pos:] in adapterA:
-                                    seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                    all_trimmed+=1
-                            else:
-                                signature=adapterB[:6]
-                                if signature in seq:
-                                    #print seq_id,seq,signature;
-                                    signature_pos=seq.index(signature)
-                                    if seq[signature_pos:] in adapterB:
-                                        seq=seq[:signature_pos]#+"".join(["N" for x in range(len(seq)-len(signature_pos))])
-                                        all_trimmed+=1
+                        all_base_before_trim += len(seq)
+                        if f==0 and adapterA!="" :
+                            new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            if len(new_read) < len(seq) :
+                                all_trimmed += 1
+                            seq = new_read
+                        if f==1 and adapterB!="" :
+                            new_read = RemoveAdapter(seq, adapterB, adapter_mismatch)
+                            if len(new_read)<len(seq) :
+                                all_trimmed += 1
+                            seq = new_read
+                        all_base_after_trim += len(seq)
 
-                        if len(seq) <= 4:
+                        if len(seq)<=4:
                             seq = "N" * (cut2-cut1+1)
                         #---------  trimmed_raw_BS_read  ------------------
-                        original_bs_reads[seq_id] = seq
+                        original_bs_reads[read_id] = seq
 
                         #---------  FW_C2T  ------------------
                         if f==0:
-                            outf_FCT.write('>%s\n%s\n'% (seq_id, seq.replace("C","T")))
+                            outf_FCT.write('>%s\n%s\n'% (read_id, seq.replace("C","T")))
                         elif f==1:
-                            outf_FCT.write('>%s\n%s\n'% (seq_id, reverse_compl_seq(seq).replace("C","T")))
+                            outf_FCT.write('>%s\n%s\n'% (read_id, seq.replace("G","A")))
 
-
-                n_list[f]=n
+                n_list[f] = n
                 outf_FCT.close()
-
                 fileinput.close()
 
-
             #print "All input end 1: %d , end 2: %d "%(n_list[0],n_list[1]);
-            all_raw_reads+=n
+            all_raw_reads += n
 
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr=tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T_fr=tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_fr = tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            CG2A_fr = tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                          'input_file_1' : outfile_1FCT,
-                                         'input_file_2' : outfile_2FCT,
+                                         'input_file_2' : outfile_2RGA,
                                          'output_file' : WC2T_fr},
 
                               aligner_command % {'reference_genome' : os.path.join(db_path,'C_C2T'),
                                          'input_file_1' : outfile_1FCT,
-                                         'input_file_2' : outfile_2FCT,
-                                         'output_file' : CC2T_fr} ])
+                                         'input_file_2' : outfile_2RGA,
+                                         'output_file' : CG2A_fr} ])
 
 
-            delete_files(outfile_1FCT, outfile_2FCT)
+            delete_files(outfile_1FCT, outfile_2RGA)
 
             #--------------------------------------------------------------------------------
             # Post processing
             #--------------------------------------------------------------------------------
 
             FW_C2T_fr_U, FW_C2T_fr_R = extract_mapping(WC2T_fr)
-            RC_C2T_fr_U, RC_C2T_fr_R = extract_mapping(CC2T_fr)
+            RC_G2A_fr_U, RC_G2A_fr_R = extract_mapping(CG2A_fr)
 
             #----------------------------------------------------------------
             # get uniq-hit reads
             #----------------------------------------------------------------
-            Union_set = set(FW_C2T_fr_U.iterkeys()) | set(RC_C2T_fr_U.iterkeys())
+            Union_set = set(FW_C2T_fr_U.iterkeys()) | set(RC_G2A_fr_U.iterkeys())
 
             Unique_FW_fr_C2T = set() # +
-            Unique_RC_fr_C2T = set() # -
+            Unique_RC_fr_G2A = set() # -
             Multiple_hits=set()
 
 
             for x in Union_set:
                 _list = []
-                for d in [FW_C2T_fr_U, RC_C2T_fr_U]:
+                for d in [FW_C2T_fr_U, RC_G2A_fr_U]:
                     mis_lst = d.get(x,[99])
                     mis = int(mis_lst[0])
                     _list.append(mis)
-                for d in [FW_C2T_fr_R, RC_C2T_fr_R]:
+                for d in [FW_C2T_fr_R, RC_G2A_fr_R]:
                     mis = d.get(x,99)
                     _list.append(mis)
                 mini = min(_list)
@@ -814,7 +786,7 @@ def bs_pair_end(main_read_file_1,
                     if mini_index == 0:
                         Unique_FW_fr_C2T.add(x)
                     elif mini_index == 1:
-                        Unique_RC_fr_C2T.add(x)
+                        Unique_RC_fr_G2A.add(x)
                     else :
                         Multiple_hits.add(x)
                 else :
@@ -822,34 +794,33 @@ def bs_pair_end(main_read_file_1,
 
            # write reads rejected by Multiple Hits to file
             if show_multiple_hit :
-                outf_MH=open("Multiple_hit.fa",'w')
+                outf_MH = open("Multiple_hit.fa",'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
                 outf_MH.close()
 
-            FW_C2T_fr_uniq_lst=[[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
-            RC_C2T_fr_uniq_lst=[[RC_C2T_fr_U[u][1],u] for u in Unique_RC_fr_C2T]
+            FW_C2T_fr_uniq_lst = [[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
+            RC_C2T_fr_uniq_lst = [[RC_G2A_fr_U[u][1],u] for u in Unique_RC_fr_G2A]
 
             FW_C2T_fr_uniq_lst.sort()
             RC_C2T_fr_uniq_lst.sort()
-            FW_C2T_fr_uniq_lst=[x[1] for x in FW_C2T_fr_uniq_lst]
-            RC_C2T_fr_uniq_lst=[x[1] for x in RC_C2T_fr_uniq_lst]
+            FW_C2T_fr_uniq_lst = [x[1] for x in FW_C2T_fr_uniq_lst]
+            RC_C2T_fr_uniq_lst = [x[1] for x in RC_C2T_fr_uniq_lst]
             #----------------------------------------------------------------
 
-            numbers_premapped_lst[0]+=len(Unique_FW_fr_C2T)
-            numbers_premapped_lst[1]+=len(Unique_RC_fr_C2T)
+            numbers_premapped_lst[0] += len(Unique_FW_fr_C2T)
+            numbers_premapped_lst[1] += len(Unique_RC_fr_G2A)
 
 
             #----------------------------------------------------------------
 
             nn = 0
-            for ali_unique_lst, ali_dic in [(FW_C2T_fr_uniq_lst,FW_C2T_fr_U), (RC_C2T_fr_uniq_lst,RC_C2T_fr_U)]:
+            for ali_unique_lst, ali_dic in [(FW_C2T_fr_uniq_lst,FW_C2T_fr_U), (RC_C2T_fr_uniq_lst,RC_G2A_fr_U)]:
                 nn += 1
                 mapped_chr0 = ""
                 for header in ali_unique_lst:
                     _, mapped_chr, mapped_location_1, cigar1, mapped_location_2, cigar2 = ali_dic[header]
-
 
                     #-------------------------------------
                     if mapped_chr != mapped_chr0:
@@ -860,6 +831,7 @@ def bs_pair_end(main_read_file_1,
 
                     original_BS_1 = original_bs_reads_1[header]
                     original_BS_2 = reverse_compl_seq(original_bs_reads_2[header])
+                    #original_BS_2 = original_bs_reads_2[header]
 
                     r_start_1, r_end_1, g_len_1 = get_read_start_end_and_genome_length(cigar1)
                     r_start_2, r_end_2, g_len_2 = get_read_start_end_and_genome_length(cigar2)
@@ -868,35 +840,17 @@ def bs_pair_end(main_read_file_1,
 
                     if nn == 1: 							# FW-RC mapped to + strand:
                         FR = "+FR"
-#                        mapped_location_1 += 1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "+"
-
-#                        mapped_location_2 += 1
-#                        origin_genome_long_2 = my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1]
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "+"
-
                     elif nn == 2: 						# FW-RC mapped to - strand:
-
                         FR="-FR"
                         mapped_location_1 = chr_length - mapped_location_1 - g_len_1
-#                        origin_genome_long_1 = my_gseq[mapped_location_1 - 2 - 1 : mapped_location_1 + g_len_1 + 2 - 1]
-#                        origin_genome_long_1 = reverse_compl_seq(origin_genome_long_1)
-#                        origin_genome_1 = origin_genome_long_1[2:-2]
                         mapped_strand_1 = "-"
-
                         mapped_location_2 = chr_length - mapped_location_2 - g_len_2
-#                        origin_genome_long_2 = reverse_compl_seq(my_gseq[mapped_location_2 - 2 - 1 : mapped_location_2 + g_len_2 + 2 - 1])
-#                        origin_genome_2 = origin_genome_long_2[2:-2]
                         mapped_strand_2 = "-"
-
-
 
                     origin_genome_1, next_1, output_genome_1 = get_genomic_sequence(my_gseq, mapped_location_1, mapped_location_1 + g_len_1, mapped_strand_1)
                     origin_genome_2, next_2, output_genome_2 = get_genomic_sequence(my_gseq, mapped_location_2, mapped_location_2 + g_len_2, mapped_strand_2)
-
 
                     r_aln_1, g_aln_1 = cigar_to_alignment(cigar1, original_BS_1, origin_genome_1)
                     r_aln_2, g_aln_2 = cigar_to_alignment(cigar2, original_BS_2, origin_genome_2)
@@ -904,7 +858,12 @@ def bs_pair_end(main_read_file_1,
                     N_mismatch_1 = N_MIS(r_aln_1, g_aln_1) #+ original_BS_length_1 - (r_end_1 - r_start_1) # mismatches in the alignment + soft clipped nucleotides
                     N_mismatch_2 = N_MIS(r_aln_2, g_aln_2) #+ original_BS_length_2 - (r_end_2 - r_start_2) # mismatches in the alignment + soft clipped nucleotides
 
-                    if max(N_mismatch_1, N_mismatch_2) <= int(max_mismatch_no):
+#                    if max(N_mismatch_1, N_mismatch_2) <= int(max_mismatch_no):
+#                    if N_mismatch <= int(max_mismatch_no) :
+                    N_mismatch = max(N_mismatch_1, N_mismatch_2)
+                    mm_no=float(max_mismatch_no)
+                    if (mm_no>=1 and N_mismatch<=mm_no) or (mm_no<1 and N_mismatch_1<=mm_no*len(original_BS_1)
+                            and N_mismatch_2<=mm_no*len(original_BS_2)):
 
                         numbers_mapped_lst[nn-1] += 1
                         all_mapped_passed += 1
@@ -914,8 +873,6 @@ def bs_pair_end(main_read_file_1,
                         del original_bs_reads_2[header]
 
                         #---------------------------------------
-#                        output_genome_1 = origin_genome_long_1[0:2] + "_" + origin_genome_1 + "_" + origin_genome_long_1[-2:]
-#                        output_genome_2 = origin_genome_long_2[0:2] + "_" + origin_genome_2 + "_" + origin_genome_long_2[-2:]
                         methy_1=methy_seq(r_aln_1, g_aln_1 + next_1)
                         methy_2=methy_seq(r_aln_2, g_aln_2 + next_2)
                         mC_lst,uC_lst = mcounts(methy_1, mC_lst, uC_lst)
@@ -936,11 +893,20 @@ def bs_pair_end(main_read_file_1,
                         if( (nmCH_2>XS_count) and nmCH_2/float(nCH_2+nmCH_2)>XS_pct ) :
                             XS_2 = 1
 
+                        if mapped_strand_1 == '+' :
+                            flag_1 = 67     #  1000011   : 1st read, + strand
+                            flag_2 = 131    # 10000011   : 2nd read, + strand
+                        else :
+                            flag_1 = 115    #  1110011   : 1st read, - strand
+                            flag_2 = 179    # 10110011   : 2nd read, - strand
 
-                        outfile.store(header, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
+                        outfile.store2( read_id_lst_1[header], flag_1, N_mismatch_1, FR, mapped_chr, mapped_strand_1, mapped_location_1, cigar1, original_BS_1, methy_1, XS_1,
                                       output_genome = output_genome_1, rnext = mapped_chr, pnext = mapped_location_2)
-                        outfile.store(header, N_mismatch_2, FR, mapped_chr, mapped_strand_2, mapped_location_2, cigar2, original_BS_2, methy_2, XS_2,
+                        all_base_mapped += len(original_BS_1)
+
+                        outfile.store2( read_id_lst_2[header], flag_2, N_mismatch_2, FR, mapped_chr, mapped_strand_2, mapped_location_2, cigar2, original_BS_2, methy_2, XS_2,
                                       output_genome = output_genome_2, rnext = mapped_chr, pnext = mapped_location_1)
+                        all_base_mapped += len(original_BS_2)
 
             print "--> %s %s (%d/%d) " % (read_file_1, read_file_2, no_my_files, len(my_files))
             #----------------------------------------------------------------
@@ -956,45 +922,40 @@ def bs_pair_end(main_read_file_1,
 
             all_unmapped+=len(unmapped_lst)
 
-
     #==================================================================================================
-#    outf.close()
-#
-#    outf_u1.close()
-#    outf_u2.close()
     delete_files(tmp_path)
 
     logm("-------------------------------- " )
-    logm("O Number of raw BS-read pairs: %d ( %d bp)"%(all_raw_reads,cut2-cut1+1) )
-    logm("O Number of ends trimmed for adapter: %d"% all_trimmed+"\n")
+    logm("Number of raw BS-read pairs: %d " %(all_raw_reads/2) )
+    if adapterA != "" or adapterB != "" :
+        logm("Number of reads having adapter removed: %d \n"% all_trimmed)
+        logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
 
     if all_raw_reads >0:
 
-        logm("O Number of unique-hits read pairs for post-filtering: %d" % all_mapped + "\n")
+        logm("Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
+        logm("Number of unique-hits reads (before post-filtering): %d" % all_mapped + "\n")
         if asktag=="Y":
-            logm("O -- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
-            logm("O -- %7d RC-FW pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[1]) )
-            logm("O -- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[2]) )
-            logm("O -- %7d RC-FW pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[3]) )
+            logm("-- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
+            logm("-- %7d RC-FW pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[1]) )
+            logm("-- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[2]) )
+            logm("-- %7d RC-FW pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[3]) )
         elif asktag=="N":
-            logm("O -- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
-            logm("O -- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
-
-
-        logm("O --- Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
-        logm("O --- %d uniquely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
+            logm("-- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
+            logm("-- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
+        logm("--- %d uniquely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
         if asktag=="Y":
-            logm("O ----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
-            logm("O ----- %7d RC-FW pairs mapped to Watson strand"%(numbers_mapped_lst[1]) )
-            logm("O ----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[2]) )
-            logm("O ----- %7d RC-FW pairs mapped to Crick strand"%(numbers_mapped_lst[3]) )
+            logm("----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
+            logm("----- %7d RC-FW pairs mapped to Watson strand"%(numbers_mapped_lst[1]) )
+            logm("----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[2]) )
+            logm("----- %7d RC-FW pairs mapped to Crick strand"%(numbers_mapped_lst[3]) )
         elif asktag=="N":
-            logm("O ----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
-            logm("O ----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[1]) )
+            logm("----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
+            logm("----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[1]) )
 
-        logm("O Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
-        logm("O Unmapped read pairs: %d"% all_unmapped+"\n")
-
+        logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)*2/all_raw_reads) )
+        logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
+        logm("Unmapped read pairs: %d"% all_unmapped+"\n")
 
         n_CG=mC_lst[0]+uC_lst[0]
         n_CHG=mC_lst[1]+uC_lst[1]

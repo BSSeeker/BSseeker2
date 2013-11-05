@@ -75,7 +75,7 @@ Some reads would be extremely amplified during the PCR. This script helps you ge
 
 	$ python FilterReads.py
 	Usage: FilterReads.py -i <input> -o <output> [-k]
-	Author : Guo, Weilong; guoweilong@gmail.com; 2012-11-10
+	Author : Guo, Weilong; 2012-11-10
 	Unique reads for qseq/fastq/fasta/sequencce, and filter
 	low quality file in qseq file.
 
@@ -106,16 +106,16 @@ Module to build the index for BS-Seeker2.
       -h, --help            show this help message and exit
       -f FILE, --file=FILE  Input your reference genome file (fasta)
       --aligner=ALIGNER     Aligner program to perform the analysis: bowtie,
-                            bowtie2, soap [Default: bowtie2]
-      -p PATH, --path=PATH  Path to the aligner program. Defaults:
-                            bowtie: /u/home/mcdb/weilong/install/bowtie-0.12.8
-                            bowtie2:
-                            /u/home/mcdb/weilong/install/bowtie2-2.0.0-beta7
-                            soap: /u/home/mcdb/weilong/install/soap2.21release/
+                            bowtie2, soap, rmap [Default: bowtie]
+      -p PATH, --path=PATH  Path to the aligner program. Detected:
+                            bowtie: ~/install/bowtie
+                            bowtie2: ~/install/bowtie2
+                            rmap: ~/install/rmap_/bin
+                            soap: ~/install/soap/
       -d DBPATH, --db=DBPATH
                             Path to the reference genome library (generated in
-                            preprocessing genome) [Default: /u/home/mcdb/weilong/i
-                            nstall/BSseeker2/bs_utils/reference_genomes]
+                            preprocessing genome) [Default: ~/install
+                            /BSseeker2/bs_utils/reference_genomes]
       -v, --version         show version of BS-Seeker2
 
       Reduced Representation Bisulfite Sequencing Options:
@@ -126,7 +126,7 @@ Module to build the index for BS-Seeker2.
                             certain fragments will be masked. [Default: False]
         -l LOW_BOUND, --low=LOW_BOUND
                             lower bound of fragment length (excluding recognition
-                            sequence such as C-CGG) [Default: 40]
+                            sequence such as C-CGG) [Default: 20]
         -u UP_BOUND, --up=UP_BOUND
                             upper bound of fragment length (excluding recognition
                             sequence such as C-CGG ends) [Default: 500]
@@ -134,6 +134,7 @@ Module to build the index for BS-Seeker2.
                             Cut sites of restriction enzyme. Ex: MspI(C-CGG),
                             Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG).
                             [Default: C-CGG]
+
 
 ##Example
 
@@ -151,7 +152,7 @@ Module to build the index for BS-Seeker2.
 
 * Build genome index for RRBS library for double-enzyme : MspI (C-CGG) & ApeKI (G-CWGC, where W=A|T, see [IUPAC code](http://www.bioinformatics.org/sms/iupac.html))
 
-        python bs_seeker2-build.py -f genome.fa -r -c C-CGG,G-CWGC
+        python bs_seeker2-build.py -f genome.fa -r -c C-CGG,G-CWGC --aligner=bowtie
 
 ##Tips:
 
@@ -173,75 +174,73 @@ Module to map reads on 3-letter converted genome.
 ##Usage :
 
     $ python ~/install/BSseeker2/bs_seeker2-align.py -h
-    Usage: bs_seeker2-align.py [options]
+    Usage: bs_seeker2-align.py {-i <single> | -1 <mate1> -2 <mate2>} -g <genome.fa> [options]
 
     Options:
       -h, --help            show this help message and exit
 
       For single end reads:
         -i INFILE, --input=INFILE
-                            Input your read file name (FORMAT: sequences,
-                            fastq, qseq,fasta)
+                            Input read file (FORMAT: sequences, qseq, fasta,
+                            fastq). Ex: read.fa or read.fa.gz
 
       For pair end reads:
         -1 FILE, --input_1=FILE
-                            Input your read file end 1 (FORMAT: sequences,
-                            qseq, fasta, fastq)
+                            Input read file, mate 1 (FORMAT: sequences, qseq,
+                            fasta, fastq)
         -2 FILE, --input_2=FILE
-                            Input your read file end 2 (FORMAT: sequences,
-                            qseq, fasta, fastq)
-        --minins=MIN_INSERT_SIZE
+                            Input read file, mate 2 (FORMAT: sequences, qseq,
+                            fasta, fastq)
+        -I MIN_INSERT_SIZE, --minins=MIN_INSERT_SIZE
                             The minimum insert size for valid paired-end
-                            alignments [Default: -1]
-        --maxins=MAX_INSERT_SIZE
+                            alignments [Default: 0]
+        -X MAX_INSERT_SIZE, --maxins=MAX_INSERT_SIZE
                             The maximum insert size for valid paired-end
-                            alignments [Default: 400]
+                            alignments [Default: 500]
 
       Reduced Representation Bisulfite Sequencing Options:
-        -r, --rrbs          Process reads from Reduced Representation Bisulfite
-                            Sequencing experiments
+        -r, --rrbs          Map reads to the Reduced Representation genome
         -c pattern, --cut-site=pattern
                             Cutting sites of restriction enzyme. Ex: MspI(C-CGG),
                             Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG).
+                            [Default: C-CGG]
         -L RRBS_LOW_BOUND, --low=RRBS_LOW_BOUND
-                            lower bound of fragment length (excluding C-CGG ends)
-                            [Default: 40]
+                            Lower bound of fragment length (excluding C-CGG ends)
+                            [Default: 20]
         -U RRBS_UP_BOUND, --up=RRBS_UP_BOUND
-                            upper bound of fragment length (excluding C-CGG ends)
+                            Upper bound of fragment length (excluding C-CGG ends)
                             [Default: 500]
 
       General options:
         -t TAG, --tag=TAG   [Y]es for undirectional lib, [N]o for directional
                             [Default: N]
         -s CUTNUMBER1, --start_base=CUTNUMBER1
-                            The first base of your read to be mapped [Default: 1]
+                            The first cycle of the read to be mapped [Default: 1]
         -e CUTNUMBER2, --end_base=CUTNUMBER2
-                            The last cycle number of your read to be mapped
-                            [Default: 200]
+                            The last cycle of the read to be mapped [Default: 200]
         -a FILE, --adapter=FILE
                             Input text file of your adaptor sequences (to be
-                            trimed from the 3'end of the reads). Input 1 seq for
-                            dir. lib., 2 seqs for undir. lib. One line per
-                            sequence
+                            trimmed from the 3'end of the reads, ). Input one seq
+                            for dir. lib., twon seqs for undir. lib. One line per
+                            sequence. Only the first 10bp will be used
         --am=ADAPTER_MISMATCH
-                            Number of mismatches allowed in adaptor [Default: 1]
+                            Number of mismatches allowed in adapter [Default: 0]
         -g GENOME, --genome=GENOME
-                            Name of the reference genome (the same as the
-                            reference genome file in the preprocessing step) [ex.
-                            chr21_hg18.fa]
-        -m INT_NO_MISMATCHES, --mismatches=INT_NO_MISMATCHES
+                            Name of the reference genome (should be the same as
+                            "-f" in bs_seeker2-build.py ) [ex. chr21_hg18.fa]
+        -m NO_MISMATCHES, --mismatches=NO_MISMATCHES
                             Number of mismatches in one read [Default: 4]
-        --aligner=ALIGNER   Aligner program to perform the analisys: bowtie,
-                            bowtie2, soap [Default: bowtie2]
+        --aligner=ALIGNER   Aligner program for short reads mapping: bowtie,
+                            bowtie2, soap, rmap [Default: bowtie]
         -p PATH, --path=PATH
-                            Path to the aligner program. Defaults:
-                            bowtie: /u/home/mcdb/weilong/install/bowtie-0.12.8
-                            bowtie2:
-                            /u/home/mcdb/weilong/install/bowtie2-2.0.0-beta7
-                            soap: /u/home/mcdb/weilong/soap2.21release/
+                            Path to the aligner program. Detected:
+                            bowtie: ~/install/bowtie
+                            bowtie2: ~/install/bowtie2
+                            rmap: ~/install/rmap/bin
+                            soap: ~/install/soap/
         -d DBPATH, --db=DBPATH
                             Path to the reference genome library (generated in
-                            preprocessing genome) [Default: /u/home/mcdb/weilong/i
+                            preprocessing genome) [Default: ~/i
                             nstall/BSseeker2/bs_utils/reference_genomes]
         -l NO_SPLIT, --split_line=NO_SPLIT
                             Number of lines per split (the read file will be split
@@ -252,7 +251,7 @@ Module to map reads on 3-letter converted genome.
         -f FORMAT, --output-format=FORMAT
                             Output format: bam, sam, bs_seeker1 [Default: bam]
         --no-header         Suppress SAM header lines [Default: False]
-        --temp_dir=PATH     The path to your temporary directory [Default: /tmp]
+        --temp_dir=PATH     The path to your temporary directory [Detected: /tmp]
         --XS=XS_FILTER      Filter definition for tag XS, format X,Y. X=0.8 and
                             y=5 indicate that for one read, if #(mCH sites)/#(all
                             CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or
@@ -264,31 +263,51 @@ Module to map reads on 3-letter converted genome.
       Aligner Options:
         You may specify any additional options for the aligner. You just have
         to prefix them with --bt- for bowtie, --bt2- for bowtie2, --soap- for
-        soap, and BS Seeker will pass them on. For example: --bt-p 4 will
-        increase the number of threads for bowtie to 4, --bt--tryhard will
-        instruct bowtie to try as hard as possible to find valid alignments
-        when they exist, and so on. Be sure that you know what you are doing
-        when using these options! Also, we don't do any validation on the
-        values.
-
+        soap, --rmap- for rmap, and BS Seeker will pass them on. For example:
+        --bt-p 4 will increase the number of threads for bowtie to 4, --bt--
+        tryhard will instruct bowtie to try as hard as possible to find valid
+        alignments when they exist, and so on. Be sure that you know what you
+        are doing when using these options! Also, we don't do any validation
+        on the values.
 
 
 ##Examples :
 
-* Align from fasta format with bowtie2 (local alignment) for whole genome, allowing 3 mismatches
+* WGBS library ; alignment mode, bowtie ; map to WGBS index
 
-        python bs_seeker2-align.py -i WGBS.fa -m 3 --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa
+        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa
 
-* Align from qseq format for RRBS with bowtie, default parameters for RRBS fragments
+* WGBS library ; alignment mode, bowtie2-local ; map to WGBS index
 
-        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.sam -f sam -g genome.fa -r -a adapter.txt
+        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa
 
-* Align from qseq format for RRBS with bowtie (end-to-end), specifying lengths of fragments ranging [40bp, 400bp]
+* WGBS library ; alignment mode, bowtie2-end-to-end ; map to WGBS index
 
-        python bs_seeker2-align.py -i RRBS.qseq --aligner=bowtie2 --bt2--end-to-end -o RRBS.bam -f bam -g genome.fa -r --low=40 --up=400 -a adapter.txt
+        python bs_seeker2-align.py -i WGBS.fa -m 3 --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa --bt2--end-to-end
+
+* RRBS library ; alignment mode, bowtie ; map to RR index
+
+        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -r -a adapter.txt
+
+* RRBS library ; alignment mode, bowtie ; map to WG index
+
+        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt
+
+* RRBS library ; alignment mode, bowtie2-end-to-end ; map to WG index
+
+        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt --bt2--end-to-end
+
+* Align from qseq format for RRBS with bowtie, specifying lengths of fragments ranging [40bp, 400bp]
+
+        python bs_seeker2-align.py -i RRBS.qseq --aligner=bowtie -o RRBS.bam -f bam -g genome.fa -r --low=40 --up=400 -a adapter.txt
 
 The parameters '--low' and '--up' should be the same with corresponding parameters when building the genome index
 
+* WGBS library ; alignment mode, bowtie ; map to WGBS index; use 8 threads for alignment
+
+        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa --bt-p 4
+
+BS-Seeker2 will run TWO bowtie instances in parallel.
 
 
 ##Input file:
@@ -342,6 +361,10 @@ The parameters '--low' and '--up' should be the same with corresponding paramete
 
 	For example, if 95% of reads come from fragments with length range [50bp, 250bp], you'd better choose [40bp, 300bp].
 
+- Fewer mismatches for the 'local alignment' mode.
+
+    As the 'local alignment', the bad sequenced bases are usually trimmed, and would not be considered by the parameter "-m".
+    It is suggested to user fewer mismatches for the 'local alignment' mode.
 
 (3) bs_seeker2-call_methylation.py
 ------------
@@ -352,16 +375,14 @@ This module calls methylation levels from the mapping result.
 ##Usage:
 
         $ python bs_seeker2-call_methylation.py -h
-        Usage: bs_seeker2-call_methylation.py [options]
-
         Options:
           -h, --help            show this help message and exit
           -i INFILE, --input=INFILE
                                 BAM output from bs_seeker2-align.py
           -d DBPATH, --db=DBPATH
                                 Path to the reference genome library (generated in
-                                preprocessing genome) [Default: /u/home/mcdb/weilong/i
-                                nstall/BSseeker2/bs_utils/reference_genomes]
+                                preprocessing genome) [Default: ~/install
+                                /BSseeker2/bs_utils/reference_genomes]
           -o OUTFILE, --output-prefix=OUTFILE
                                 The output prefix to create ATCGmap and wiggle files
                                 [INFILE]
@@ -371,6 +392,7 @@ This module calls methylation levels from the mapping result.
           -x, --rm-SX           Removed reads with tag 'XS:i:1', which would be
                                 considered as not fully converted by bisulfite
                                 treatment [Default: False]
+          --txt                 Show CGmap and ATCGmap in .gz [Default: False]
           -r READ_NO, --read-no=READ_NO
                                 The least number of reads covering one site to be
                                 shown in wig file [Default: 1]
@@ -431,9 +453,9 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
         (3) position
         (4) context (CG/CHG/CHH)
         (5) dinucleotide-context (CA/CC/CG/CT)
-        (6) methyltion-level = #-of-C / (#-of-C + #-of-T)
-        (7) #-of-C (methylated)
-        (8) (#-ofC + #-of-T) (all cytosines)
+        (6) methylation-level = #_of_C / (#_of_C + #_of_T).
+        (7) #_of_C (methylated C, the count of reads showing C here)
+        (8) = #_of_C + #_of_T (all Cytosines, the count of reads showing C or T here)
 
 
 - ATCGmap file
@@ -443,7 +465,7 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
         chr1	T	3009410	--	--	0	10	0	0	0	0	0	0	0	0	na
         chr1	C	3009411	CHH	CC	0	10	0	0	0	0	0	0	0	0	0.0
         chr1	C	3009412	CHG	CC	0	10	0	0	0	0	0	0	0	0	0.0
-        chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.833333333333
+        chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.83
 
 
     Format descriptions:
@@ -476,7 +498,7 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 Contact Information
 ============
 
-If you still have questions on BS-Seeker 2, or you find bugs when using BS-Seeker 2, or you have suggestions, please write email to guoweilong@gmail.com (Weilong Guo).
+If you still have questions on BS-Seeker 2, or you find bugs when using BS-Seeker 2, or you have suggestions, please write email to [Weilong Guo](guoweilong@gmail.com).
 
 
 
@@ -558,7 +580,7 @@ A: You can ask the administrator of your cluster to install pysam. If you don't 
         cd BSseeker2-master/
 
 
-（4）Run BS-Seeker2
+(4)Run BS-Seeker2
 
 Q: Can I add the path of BS-Seeker2's *.py to the $PATH, so I can call
 BS-Seeker2 from anywhere?
@@ -586,6 +608,69 @@ Then you can use BS-Seeker2 globally by typing:
         bs_seeker_build.py -h
         bs_seeker-align.py -h
         bs_seeker-call_methylation.py -h
+
+(5) Unique alignment
+
+Q: If I want to only keep alignments that map uniquely, is this an argument I should supply directly
+to Bowtie2 (via BS Seeker 2's command line option), or is this an option that's available in
+BS Seeker 2 itself?
+
+A: BS-Seeker2 reports unique alignment by default already. If you want to know how many reads
+could have multiple hits, run BS-Seeker2 with parameter "--multiple-hit".
+
+
+(6) Output
+
+Q: In CGmap files, why some lines shown "--" but not a motif (CG/CHG/CHH), for example:
+
+    chr01   C       4303711 --      CC      0.0     0       2
+    chr01   C       4303712 --      CN      0.0     0       2
+
+A: In this example, the site 4303713 is "N" in genome, thus we could not decide the explict pattern.
+
+(7) Algorithm to remove the adapter.
+
+Q: What's the algorithm to remove the adapter
+
+A: BS-Seeker2 has built-in algorithm for removing the adapter, which is developed by [Weilong Guo](http://bioinfo.au.tsinghua.edu.cn/member/wguo/index.html).
+
+    First, if the adapter was provided as "AGATCGGAAGAGCACACGTC", only the first 10bp would be used.
+    Second, we use semi-local alignment strategy for removing the adapters.
+    Exmaple:
+
+        Read :       ACCGCGTTGATCGAGTACGTACGTGGGTC
+        Adapter :    ....................ACGTGGGTCCCG
+
+        no_mismatch : the maximum number allowed for mismatches
+
+        Algorithm: (allowing 1 mismatch)
+        -Step 1:
+          ACCGCGTTGATCGAGTACGTACGTGGGTC
+          ||XX
+          ACGTGGGTCCCG
+        -Step 2:
+          ACCGCGTTGATCGAGTACGTACGTGGGTC
+           X||X
+          .ACGTGGGTCCCG
+        -Step 3:
+          ACCGCGTTGATCGAGTACGTACGTGGGTC
+            XX
+          ..ACGTGGGTCCCG
+        -Step ...
+        -Step N:
+          ACCGCGTTGATCGAGTACGTACGTGGGTC
+                              |||||||||
+          ....................ACGTGGGTCCCG
+        Success & return!
+
+    Third, we also removed the synthesized bases at the end of RRBS fragments.
+    Take the "C-CGG" cutting site as example,
+
+        - - C|U G G - - =>cut=> - - C      =>add=> - - C|C G =>sequencing
+        - - G G C|C - -         - - G G C          - - G G C
+
+    In our algorithm, the "CG" in "--CCG" (upper strand) was trimmed, in order to get accurate methyaltion level.
+
 
 
 

@@ -1,6 +1,7 @@
 import fileinput, os, time, random, math
 from bs_utils.utils import *
 from bs_align_utils import *
+import gzip
 
 #----------------------------------------------------------------
 # Read from the mapped results, return lists of unique / multiple-hit reads
@@ -77,20 +78,23 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
 
     #----------------------------------------------------------------
-    logm("Read filename: %s"% main_read_file )
-    logm("Un-directional library: %s" % asktag )
-    logm("The first base (for mapping): %d" % cut1)
-    logm("The last base (for mapping): %d" % cut2)
-    logm("Max. lines per mapping: %d"% no_small_lines)
-    logm("Aligner: %s" % aligner_command)
-    logm("Reference genome library path: %s" % db_path )
-    logm("Number of mismatches allowed: %s" % max_mismatch_no )
+    logm("Read filename: %s" % main_read_file)
+    logm("The first base (for mapping): %d"% cut1  )
+    logm("The  last base (for mapping): %d"% cut2  )
+
+    logm("Path for short reads aligner: %s"% aligner_command + '\n')
+    logm("Reference genome library path: %s"% db_path  )
+
+    if asktag == "Y" :
+        logm("Un-directional library" )
+    else :
+        logm("Directional library")
+
+    logm("Number of mismatches allowed: %s"% max_mismatch_no  )
+
     if adapter_file !="":
-        if asktag=="N":
-            logm("Adapter to be removed from 3' reads: %s"%(adapter.rstrip("\n")))
-        elif asktag=="Y":
-            logm("Adapter to be removed from 3' FW reads: %s"%(adapter_fw.rstrip("\n")) )
-            logm("Adapter to be removed from 3' RC reads: %s"%(adapter_rc.rstrip("\n")) )
+        logm("Adapter seq: %s" % adapter_fw)
+    logm("-------------------------------- " )
     #----------------------------------------------------------------
 
     # helper method to join fname with tmp_path
@@ -109,16 +113,18 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
     #---- Stats ------------------------------------------------------------
     all_raw_reads=0
-    all_trimed=0
+    all_trimmed=0
     all_mapped=0
     all_mapped_passed=0
+    all_base_before_trim=0
+    all_base_after_trim=0
+    all_base_mapped=0
 
     numbers_premapped_lst=[0,0,0,0]
     numbers_mapped_lst=[0,0,0,0]
 
     mC_lst=[0,0,0]
     uC_lst=[0,0,0]
-
 
     no_my_files=0
 
@@ -132,7 +138,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         random_id = ".tmp-"+str(random.randint(1000000,9999999))
 
         #-------------------------------------------------------------------
-        # undirectional sequencing
+        # un-directional sequencing
         #-------------------------------------------------------------------
         if asktag=="Y":  
 
@@ -146,74 +152,70 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             #----------------------------------------------------------------
             # detect format of input file
             try :
-                read_inf=open(read_file,"r")
+                if read_file.endswith(".gz") : # support input file ending with ".gz"
+                    read_inf = gzip.open(read_file, "rb")
+                else :
+                    read_inf=open(read_file,"r")
             except IOError :
                 print "[Error] Cannot open input file : %s" % read_file
                 exit(-1)
 
-            oneline=read_inf.readline()
-            l=oneline.split()
-            input_format=""
-            if oneline[0]=="@":	# fastq
-                input_format="fastq"
-                n_fastq=0
-            elif len(l)==1 and oneline[0]!=">": # pure sequences
-                input_format="seq"
-            elif len(l)==11: # qseq
-                input_format="qseq"
-            elif oneline[0]==">":	# fasta
-                input_format="fasta"
-                n_fasta=0
+            oneline = read_inf.readline()
+            l = oneline.split()
+            input_format = ""
+            if oneline[0]=="@":
+                input_format = "fastq"
+            elif len(l)==1 and oneline[0]!=">":
+                input_format = "seq"
+            elif len(l)==11:
+                input_format = "qseq"
+            elif oneline[0]==">":
+                input_format = "fasta"
             read_inf.close()
 
             #----------------------------------------------------------------
-            # read sequence, remove adapter and convert 
-            read_id=""
-            seq=""
-            seq_ready="N"
-            for line in fileinput.input(read_file):
-                l=line.split()
-
+            # read sequence, remove adapter and convert
+            read_id = ""
+            seq = ""
+            seq_ready = "N"
+            line_no = 0
+            for line in fileinput.input(read_file, openhook=fileinput.hook_compressed): # allow input with .gz
+                l = line.split()
+                line_no += 1
                 if input_format=="seq":
-                    all_raw_reads+=1
-                    read_id=str(all_raw_reads)
-                    read_id=read_id.zfill(12)
-                    seq=l[0]
-                    seq_ready="Y"
+                    all_raw_reads += 1
+                    read_id = str(all_raw_reads)
+                    read_id = read_id.zfill(12)
+                    seq = l[0]
+                    seq_ready = "Y"
                 elif input_format=="fastq":
-                    m_fastq=math.fmod(n_fastq,4)
-                    n_fastq+=1
-                    seq_ready="N"
-                    if m_fastq==0:
-                        all_raw_reads+=1
-                        read_id=str(all_raw_reads)
-                        read_id=read_id.zfill(12)
-                        seq=""
-                    elif m_fastq==1:
-                        seq=l[0]
-                        seq_ready="Y"
-                    else:
-                        seq=""
+                    l_fastq = math.fmod(line_no, 4)
+                    if l_fastq == 1 :
+                        all_raw_reads += 1
+                        read_id = l[0][1:]
+                        seq_ready = "N"
+                    elif l_fastq == 2 :
+                        seq = l[0]
+                        seq_ready = "Y"
+                    else :
+                        seq = ""
+                        seq_ready = "N"
                 elif input_format=="qseq":
-                    all_raw_reads+=1
-                    read_id=str(all_raw_reads)
-                    read_id=read_id.zfill(12)
-                    seq=l[8]
-                    seq_ready="Y"
-                elif input_format=="fasta":
-                    m_fasta=math.fmod(n_fasta,2)
-                    n_fasta+=1
-                    seq_ready="N"
-                    if m_fasta==0:
-                        all_raw_reads+=1
-                        #read_id=str(all_raw_reads)
-                        read_id=l[0][1:]
-                        seq=""
-                    elif m_fasta==1:
-                        seq=l[0]
-                        seq_ready="Y"
-                    else:
-                        seq=""
+                    all_raw_reads += 1
+                    read_id = str(all_raw_reads)
+                    read_id = read_id.zfill(12)
+                    seq = l[8]
+                    seq_ready = "Y"
+                elif input_format=="fasta" :
+                    l_fasta = math.fmod(line_no,2)
+                    if l_fasta==1:
+                        all_raw_reads += 1
+                        read_id = l[0][1:]
+                        seq = ""
+                        seq_ready = "N"
+                    elif l_fasta==0 :
+                        seq = l[0]
+                        seq_ready = "Y"
 
                 #----------------------------------------------------------------
                 if seq_ready=="Y":
@@ -222,13 +224,14 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     seq=seq.replace(".","N")
 
                     # striping BS adapter from 3' read
+                    all_base_before_trim += len(seq)
                     if (adapter_fw !="") and (adapter_rc !="") :
                         new_read = RemoveAdapter(seq, adapter_fw, adapter_mismatch)
                         new_read = Remove_5end_Adapter(new_read, adapter_rc)
                         if len(new_read) < len(seq) :
-                            all_trimed += 1
+                            all_trimmed += 1
                         seq = new_read
-
+                    all_base_after_trim += len(seq)
                     if len(seq)<=4:
                         seq=''.join(["N" for x in xrange(cut2-cut1+1)])
 
@@ -376,7 +379,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                                             (FW_G2A_uniq_lst,FW_G2A_U),
                                             (RC_C2T_uniq_lst,RC_C2T_U)]:
                 nn += 1
-                mapped_chr0 = ""
 
                 for header in ali_unique_lst:
 
@@ -422,7 +424,9 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                     if len(r_aln)==len(g_aln):
                         N_mismatch = N_MIS(r_aln, g_aln)
-                        if N_mismatch <= int(max_mismatch_no):
+#                        if N_mismatch <= int(max_mismatch_no):
+                        mm_no=float(max_mismatch_no)
+                        if (mm_no>=1 and N_mismatch<=mm_no) or (mm_no<1 and N_mismatch<=(mm_no*len(r_aln)) ):
                             numbers_mapped_lst[nn-1] += 1
                             all_mapped_passed += 1
                             methy = methy_seq(r_aln, g_aln + next)
@@ -436,6 +440,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                                 XS = 1
 
                             outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand, mapped_location, cigar, original_BS, methy, XS, output_genome = output_genome)
+                            all_base_mapped += len(original_BS)
 
             #----------------------------------------------------------------
             logm("--> %s (%d) "%(read_file, no_my_files))
@@ -449,78 +454,74 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
         if asktag=="N":  
             #----------------------------------------------------------------
-            outfile2=tmp_d('Trimed_C2T.fa'+random_id)
+            outfile2=tmp_d('Trimmed_C2T.fa'+random_id)
             outf2=open(outfile2,'w')
-
-            n=0
             #----------------------------------------------------------------
             try :
-                read_inf=open(read_file,"r")
+                if read_file.endswith(".gz") : # support input file ending with ".gz"
+                    read_inf = gzip.open(read_file, "rb")
+                else :
+                    read_inf=open(read_file,"r")
             except IOError :
                 print "[Error] Cannot open input file : %s" % read_file
                 exit(-1)
 
-            oneline=read_inf.readline()
-            l=oneline.split()
-            input_format=""
-            if oneline[0]=="@":	# FastQ
-                input_format="fastq"
-                n_fastq=0
-            elif len(l)==1 and oneline[0]!=">": # pure sequences
-                input_format="seq"
-            elif len(l)==11: # Illumina GAII qseq file
-                input_format="qseq"
-            elif oneline[0]==">":	# fasta
-                input_format="fasta"
-                n_fasta=0
+            oneline = read_inf.readline()
+            l = oneline.split()
+            input_format = ""
+            if oneline[0]=="@":
+                input_format = "fastq"
+            elif len(l)==1 and oneline[0]!=">":
+                input_format = "seq"
+            elif len(l)==11:
+                input_format = "qseq"
+            elif oneline[0]==">":
+                input_format = "fasta"
             read_inf.close()
+
             #print "detected data format: %s"%(input_format)
             #----------------------------------------------------------------
             read_id=""
             seq=""
             seq_ready="N"
-            for line in fileinput.input(read_file):
-                l=line.split()
+            line_no = 0
+            for line in fileinput.input(read_file, openhook=fileinput.hook_compressed):
+                l = line.split()
+                line_no += 1
                 if input_format=="seq":
-                    all_raw_reads+=1
-                    read_id=str(all_raw_reads)
-                    read_id=read_id.zfill(12)
-                    seq=l[0]
-                    seq_ready="Y"
+                    all_raw_reads += 1
+                    read_id = str(all_raw_reads)
+                    read_id = read_id.zfill(12)
+                    seq = l[0]
+                    seq_ready = "Y"
                 elif input_format=="fastq":
-                    m_fastq=math.fmod(n_fastq,4)
-                    n_fastq+=1
-                    seq_ready="N"
-                    if m_fastq==0:
-                        all_raw_reads+=1
-                        read_id=str(all_raw_reads)
-                        read_id=read_id.zfill(12)
-                        seq=""
-                    elif m_fastq==1:
-                        seq=l[0]
-                        seq_ready="Y"
-                    else:
-                        seq=""
+                    l_fastq = math.fmod(line_no, 4)
+                    if l_fastq == 1 :
+                        all_raw_reads += 1
+                        read_id = l[0][1:]
+                        seq_ready = "N"
+                    elif l_fastq == 2 :
+                        seq = l[0]
+                        seq_ready = "Y"
+                    else :
+                        seq = ""
+                        seq_ready = "N"
                 elif input_format=="qseq":
-                    all_raw_reads+=1
-                    read_id=str(all_raw_reads)
-                    read_id=read_id.zfill(12)
-                    seq=l[8]
-                    seq_ready="Y"
-                elif input_format=="fasta":
-                    m_fasta=math.fmod(n_fasta,2)
-                    n_fasta+=1
-                    seq_ready="N"
-                    if m_fasta==0:
-                        all_raw_reads+=1
-                        read_id=l[0][1:]
-                        seq=""
-                    elif m_fasta==1:
-                        seq=l[0]
-                        seq_ready="Y"
-                    else:
-                        seq=""
-
+                    all_raw_reads += 1
+                    read_id = str(all_raw_reads)
+                    read_id = read_id.zfill(12)
+                    seq = l[8]
+                    seq_ready = "Y"
+                elif input_format=="fasta" :
+                    l_fasta = math.fmod(line_no,2)
+                    if l_fasta==1:
+                        all_raw_reads += 1
+                        read_id = l[0][1:]
+                        seq = ""
+                        seq_ready = "N"
+                    elif l_fasta==0 :
+                        seq = l[0]
+                        seq_ready = "Y"
                 #--------------------------------
                 if seq_ready=="Y":
                     seq=seq[cut1-1:cut2] #<---selecting 0..52 from 1..72  -e 52
@@ -528,12 +529,13 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     seq=seq.replace(".","N")
 
                     #--striping adapter from 3' read -------
+                    all_base_before_trim += len(seq)
                     if adapter != "":
                         new_read = RemoveAdapter(seq, adapter, adapter_mismatch)
                         if len(new_read) < len(seq) :
-                            all_trimed += 1
+                            all_trimmed += 1
                         seq = new_read
-
+                    all_base_after_trim += len(seq)
                     if len(seq)<=4:
                         seq = "N" * (cut2-cut1+1)
 
@@ -612,7 +614,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 outf_MH.close()
 
 
-
             FW_C2T_uniq_lst=[[FW_C2T_U[u][1],u] for u in Unique_FW_C2T]
             RC_C2T_uniq_lst=[[RC_C2T_U[u][1],u] for u in Unique_RC_C2T]
             FW_C2T_uniq_lst.sort()
@@ -633,7 +634,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             chr_length = dict()
             for ali_unique_lst, ali_dic in [(FW_C2T_uniq_lst,FW_C2T_U),(RC_C2T_uniq_lst,RC_C2T_U)]:
                 nn += 1
-                mapped_chr0 = ""
                 for header in ali_unique_lst:
                     _, mapped_chr, mapped_location, cigar = ali_dic[header]
                     original_BS = original_bs_reads[header]
@@ -641,11 +641,6 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     if mapped_chr not in gseq :
                         gseq[mapped_chr] = deserialize(db_d(mapped_chr))
                         chr_length[mapped_chr] = len(gseq[mapped_chr])
-                    #if mapped_chr != mapped_chr0:
-                    #    my_gseq = deserialize(db_d(mapped_chr))
-                    #    chr_length = len(my_gseq)
-                    #    mapped_chr0 = mapped_chr
-                    #-------------------------------------
 
                     r_start, r_end, g_len = get_read_start_end_and_genome_length(cigar)
 
@@ -664,7 +659,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                     if len(r_aln) == len(g_aln):
                         N_mismatch = N_MIS(r_aln, g_aln) #+ original_BS_length - (r_end - r_start) # mismatches in the alignment + soft clipped nucleotides
-                        if N_mismatch <= int(max_mismatch_no):
+                        mm_no=float(max_mismatch_no)
+                        if (mm_no>=1 and N_mismatch<=mm_no) or (mm_no<1 and N_mismatch<=(mm_no*len(r_aln)) ):
                             numbers_mapped_lst[nn-1] += 1
                             all_mapped_passed += 1
                             methy = methy_seq(r_aln, g_aln+next)
@@ -678,6 +674,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                                 XS = 1
 
                             outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand, mapped_location, cigar, original_BS, methy, XS, output_genome = output_genome)
+                            all_base_mapped += len(original_BS)
 
             #----------------------------------------------------------------
             logm("--> %s (%d) "%(read_file,no_my_files))
@@ -686,14 +683,16 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
     #----------------------------------------------------------------
 
-#    outf.close()
     delete_files(tmp_path)
 
     logm("Number of raw reads: %d \n"% all_raw_reads)
     if all_raw_reads >0:
-        logm("Number of reads having adapter removed: %d \n" % all_trimed )
-        logm("Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
-        logm("Number of unique-hits reads for post-filtering: %d\n" % all_mapped)
+        logm("Number of bases in total: %d "%all_base_before_trim)
+        if adapter != "" :
+            logm("Number of reads having adapter removed: %d \n" % all_trimmed )
+            logm("Number of bases after trimming the adapters: %d (%1.3f)"%(all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
+        logm("Number of reads are rejected because of multiple hits: %d\n" % len(Multiple_hits) )
+        logm("Number of unique-hits reads (before post-filtering): %d\n" % all_mapped)
         if asktag=="Y":
             logm(" ---- %7d FW reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
             logm(" ---- %7d RC reads mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[1]) )
@@ -713,6 +712,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
             logm(" ---- %7d FW reads mapped to Watson strand"%(numbers_mapped_lst[0]) )
             logm(" ---- %7d FW reads mapped to Crick strand"%(numbers_mapped_lst[1]) )
         logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads) )
+        logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
+
 
         n_CG=mC_lst[0]+uC_lst[0]
         n_CHG=mC_lst[1]+uC_lst[1]

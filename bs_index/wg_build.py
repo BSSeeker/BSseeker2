@@ -3,8 +3,8 @@ from bs_utils.utils import *
 
 def wg_build(fasta_file, build_command, ref_path, aligner):
 
-    # ref_path is a string that containts the directory where the reference genomes are stored with
-    # the input fasta filename appended
+    # ref_path is a string that contains the directory where the reference genomes are stored with
+    # the input Fasta filename appended
     ref_path = os.path.join(ref_path,
                             os.path.split(fasta_file)[1] + '_'+aligner)
 

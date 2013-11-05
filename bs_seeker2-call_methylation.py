@@ -133,8 +133,6 @@ if __name__ == '__main__':
         nuc, context, subcontext = context_calling(chrom_seq, col.pos)
         total_reads = 0
 
-
-
         for pr in col.pileups:
         #     print pr
              if (not pr.indel) : # skip indels
@@ -152,7 +150,6 @@ if __name__ == '__main__':
                     print 'WARNING: read %s has an invalid alignment. Discarding.. ' % pr.alignment.qname
                     continue
                 read_nuc = pr.alignment.seq[pr.qpos]
-         #       print "read_nuc=", read_nuc
                 if pr.alignment.is_reverse:
                     ATCG_rev[read_nuc] += 1
                 else:
@@ -194,7 +191,8 @@ if __name__ == '__main__':
                 wiggle.write('%d\t%f\n' % (pos, meth_level))
             else :
                 wiggle.write('%d\t-%f\n' % (pos, meth_level))
-            CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
+
+        CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
     ATCGmap.close()
     CGmap.close()
     wiggle.close()

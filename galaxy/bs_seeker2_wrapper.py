@@ -114,7 +114,6 @@ if __name__ == '__main__':
                                     ('_rrbs_%s_%s' % (getopt(args[ALIGN], '-l', '--low', '40'),
                                                       getopt(args[ALIGN], '-u', '--up', '500'))
                                      if len(set(['-r', '--rrbs']) & set(args[ALIGN])) > 0 else '') +
-
                                     '_' + args[ALIGN]['--aligner'])
                                     })
     run_prog(os.path.join(path_to_bs_seeker, 'bs_seeker2-call_methylation.py'), args[CALL_METHYLATION])

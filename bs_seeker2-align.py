@@ -7,44 +7,47 @@ from bs_align import output
 from bs_align.bs_pair_end import *
 from bs_align.bs_single_end import *
 from bs_align.bs_rrbs import *
-from bs_utils.utils import *
+#import re
+#from bs_utils.utils import *
 
 
 if __name__ == '__main__':
 
-    parser = OptionParser()
+    parser = OptionParser(usage="Usage: %prog {-i <single> | -1 <mate1> -2 <mate2>} -g <genome.fa> [options]")
     # option group 1
     opt_group = OptionGroup(parser, "For single end reads")
-    opt_group.add_option("-i", "--input", type="string", dest="infilename",help="Input your read file name (FORMAT: sequences, fastq, qseq,fasta)", metavar="INFILE")
+    opt_group.add_option("-i", "--input", type="string", dest="infilename",help="Input read file (FORMAT: sequences, qseq, fasta, fastq). Ex: read.fa or read.fa.gz", metavar="INFILE")
     parser.add_option_group(opt_group)
 
     # option group 2
     opt_group = OptionGroup(parser, "For pair end reads")
-    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input your read file end 1 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input your read file end 2 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [Default: %default]", default = -1)
-    opt_group.add_option("--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 400)
+    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input read file, mate 1 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input read file, mate 2 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-I", "--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [Default: %default]", default = 0)
+    opt_group.add_option("-X", "--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 500)
     parser.add_option_group(opt_group)
 
     # option group 3
     opt_group = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options")
-    opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Process reads from Reduced Representation Bisulfite Sequencing experiments')
+    opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Map reads to the Reduced Representation genome')
     opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format", help="Cutting sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", metavar="pattern", default = "C-CGG")
-    opt_group.add_option("-L", "--low", type = "int", dest="rrbs_low_bound", help="lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 40)
-    opt_group.add_option("-U", "--up", type = "int", dest="rrbs_up_bound", help="upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 500)
+    opt_group.add_option("-L", "--low", type = "int", dest="rrbs_low_bound", help="Lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 20)
+    opt_group.add_option("-U", "--up", type = "int", dest="rrbs_up_bound", help="Upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 500)
     parser.add_option_group(opt_group)
 
     # option group 4
     opt_group = OptionGroup(parser, "General options")
     opt_group.add_option("-t", "--tag", type="string", dest="taginfo",help="[Y]es for undirectional lib, [N]o for directional [Default: %default]", metavar="TAG", default = 'N')
-    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first base of your read to be mapped [Default: %default]", default = 1)
-    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle number of your read to be mapped [Default: %default]", default = 200)
-    opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",help="Input text file of your adaptor sequences (to be trimed from the 3'end of the reads). Input 1 seq for dir. lib., 2 seqs for undir. lib. One line per sequence", metavar="FILE", default = '')
-    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adaptor [Default: %default]", default = 0)
-    opt_group.add_option("-g", "--genome", type="string", dest="genome",help="Name of the reference genome (the same as the reference genome file in the preprocessing step) [ex. chr21_hg18.fa]")
-    opt_group.add_option("-m", "--mismatches",type = "int", dest="int_no_mismatches",help="Number of mismatches in one read [Default: %default]", default = 4)
-    opt_group.add_option("--aligner", dest="aligner",help="Aligner program to perform the analisys: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE2)
-    opt_group.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Defaults: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
+    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first cycle of the read to be mapped [Default: %default]", default = 1)
+    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle of the read to be mapped [Default: %default]", default = 200)
+    opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",help="Input text file of your adaptor sequences (to be trimmed from the 3'end of the reads, ). "
+                                                                                    "Input one seq for dir. lib., twon seqs for undir. lib. One line per sequence. "
+                                                                                    "Only the first 10bp will be used", metavar="FILE", default = '')
+    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adapter [Default: %default]", default = 0)
+    opt_group.add_option("-g", "--genome", type="string", dest="genome",help="Name of the reference genome (should be the same as \"-f\" in bs_seeker2-build.py ) [ex. chr21_hg18.fa]")
+    opt_group.add_option("-m", "--mismatches",type = "float", dest="no_mismatches",help="Number of mismatches in one read [Default: %default]", default = 4)
+    opt_group.add_option("--aligner", dest="aligner",help="Aligner program for short reads mapping: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE)
+    opt_group.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Detected: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
         metavar="PATH"
     )
     opt_group.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
@@ -52,7 +55,7 @@ if __name__ == '__main__':
     opt_group.add_option("-o", "--output", type="string", dest="outfilename",help="The name of output file [INFILE.bs(se|pe|rrbs)]", metavar="OUTFILE")
     opt_group.add_option("-f", "--output-format", type="string", dest="output_format",help="Output format: "+', '.join(output.formats)+" [Default: %default]", metavar="FORMAT", default = output.BAM)
     opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
-    opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Default: %default]", metavar="PATH", default = tempfile.gettempdir())
+    opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = tempfile.gettempdir())
     opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
     opt_group.add_option("--multiple-hit", action="store_true", dest="Output_multiple_hit", default = False, help = 'Output reads with multiple hits to file\"Multiple_hit.fa\"')
 
@@ -112,6 +115,38 @@ if __name__ == '__main__':
 
     if not (options.infilename or (options.infilename_1 and options.infilename_2)):
         error('You should set either -i or -1 and -2 options.')
+
+    # Calculate the length of read
+    if options.infilename :
+        read_file = options.infilename
+    elif options.infilename_1 :
+        read_file = options.infilename_1
+    else :
+        error('You should at least specify -i or -1 options.')
+
+    try :
+        if read_file.endswith(".gz") : # support input file ending with ".gz"
+            read_inf = gzip.open(read_file, "rb")
+        else :
+            read_inf=open(read_file,"r")
+    except IOError :
+        print "[Error] Cannot open input file : %s" % read_file
+        exit(-1)
+    oneline = read_inf.readline()
+    oneline = read_inf.readline() # get the second line
+    read_len = min(len(oneline), (options.cutnumber2-options.cutnumber1))
+    read_inf.close()
+    # mismatch allowed: bowtie 1,build-in parameter '-m'; bowtie 2, post-filter paramter
+    # mismatch should no greater than the read length
+    no_mismatches = float(options.no_mismatches)
+    if (no_mismatches < 1) :
+        int_no_mismatches=int(no_mismatches * read_len)
+    else :
+        int_no_mismatches=int(no_mismatches)
+
+    str_no_mismatches=str(options.no_mismatches) # pass to specific mode
+
+
     # -t, directional / un-directional library
     asktag=str(options.taginfo).upper()
     if asktag not in 'YN':
@@ -121,10 +156,8 @@ if __name__ == '__main__':
         error('-a option should be: %s' % ' ,'.join(supported_aligners)+'.')
     # path for aligner
     aligner_exec = os.path.expanduser( os.path.join(options.aligner_path or aligner_path[options.aligner], options.aligner) )
-    # mismatch allowed: bowtie 1,build-in parameter '-m'; bowtie 2, post-filter paramter
-    # mismatch should no greater than the read length
-    int_no_mismatches=min(options.int_no_mismatches, options.cutnumber2-options.cutnumber1)
-    str_no_mismatches=str(int_no_mismatches)
+
+
     # -g
     if options.genome is None:
         error('-g is a required option')
@@ -149,19 +182,17 @@ if __name__ == '__main__':
 
     db_path = os.path.expanduser(os.path.join(options.dbpath, genome_subdir + '_' + options.aligner))
 
+
     if not os.path.isdir(db_path):
         error('Index DIR \"' + genome_subdir + '..\" cannot be found in ' + options.dbpath +'.\n\tPlease run the bs_seeker2-build.py '
                             'to create it with the correct parameters for -g, -r, --low, --up and --aligner.')
-
-    # handle aligner options
-    #
 
     # default aligner options
     aligner_options_defaults = {
                                 BOWTIE  : { '-e'              : 40*int_no_mismatches,
                                             '--nomaqround'    : True,
                                             '--norc'          : True,
-                                            '-k'              : 2,
+                                            #'-k'              : 2,
                                             # -k=2; report two best hits, and filter by error rates
                                             '--quiet'         : True,
                                             '--best'          : True,
@@ -179,7 +210,7 @@ if __name__ == '__main__':
                                             # run bowtie2 in local mode by default
                                             '--local' : '--end-to-end' not in aligner_options,
                                             #'--mm'            : True,
-                                            '-k'              : 2
+                                            #'-k'              : 2
                                 },
                                 SOAP    : { '-v' : int_no_mismatches,
                                             '-p' : 2,
@@ -238,13 +269,22 @@ if __name__ == '__main__':
         else:
             aligner_title = aligner_title + "-local"
 
+    if options.aligner == BOWTIE :
+        logm("Mode: Bowtie")
+    elif options.aligner == BOWTIE2 :
+        if '--end-to-end' not in aligner_options :
+            logm("Mode: Bowtie2, local alignment")
+        else :
+            logm("Mode: Bowtie2, end-to-end alignment")
+
+
     tmp_path = tempfile.mkdtemp(prefix='bs_seeker2_%s_-%s-TMP-' % (os.path.split(outfilename)[1], aligner_title ), dir = options.temp_dir)
 
 
     (XS_x, XS_y) = options.XS_filter.split(",")
     XS_pct = float(XS_x)
     XS_count = int(XS_y)
-    logm('Filter for tag XS: #(mCH)/#(all CH)>%f and #(mCH)>%d' % (XS_pct, XS_count))
+    logm('Filter for tag XS: #(mCH)/#(all CH)>%.2f%% and #(mCH)>%d' % (XS_pct*100, XS_count))
 
 
     logm('Temporary directory: %s' % tmp_path)
@@ -253,8 +293,8 @@ if __name__ == '__main__':
         logm('Single end')
 
         aligner_command = aligner_exec  + aligner_options_string() + \
-                              { BOWTIE   : ' %(reference_genome)s  -f %(input_file)s %(output_file)s',
-                                BOWTIE2  : ' -x %(reference_genome)s -f -U %(input_file)s -S %(output_file)s',
+                              { BOWTIE   : ' -k 2 %(reference_genome)s  -f %(input_file)s %(output_file)s',
+                                BOWTIE2  : ' -k 2 -x %(reference_genome)s -f -U %(input_file)s -S %(output_file)s',
                                 SOAP     : ' -D %(reference_genome)s.fa.index -o %(output_file)s -a %(input_file)s',
                                 RMAP     : ' -c %(reference_genome)s.fa -o %(output_file)s %(input_file)s'
                               }[options.aligner]
@@ -298,18 +338,18 @@ if __name__ == '__main__':
     else:
         logm('Pair end')
         # pair end specific default options
-        aligner_options = dict({BOWTIE: {'--ff'  : asktag == 'N',
-                                         '--fr'  : asktag == 'Y',
+        aligner_options = dict({BOWTIE: {'--fr'  : True,
                                          '-X'    : options.max_insert_size,
-                                         '-I'    : options.min_insert_size if options.min_insert_size > 0 else None
+                                         '-I'    : options.min_insert_size if options.min_insert_size > 0 else None,
+                                         '-a'    : True # "-k 2" in bowtie would not report the best two
                                 },
                                 BOWTIE2 : {
-                                         '--ff'  : asktag == 'N',
-                                         '--fr'  : asktag == 'Y',
+                                         '--fr'  : True,
                                          '-X'    : options.max_insert_size,
                                          '-I'    : options.min_insert_size if options.min_insert_size > 0 else None,
                                          '--no-discordant'  : True,
-                                         '--no-mixed'       : True
+                                         '--no-mixed'       : True,
+                                         '-k'    : 2
                                 },
                                 SOAP: {
                                         '-x' : options.max_insert_size,
@@ -327,6 +367,11 @@ if __name__ == '__main__':
 
         logm('Aligner command: %s' % aligner_command)
 
+        if '--end-to-end' not in aligner_options:
+            aligner_options_defaults[BOWTIE2].update({'-D' : 50})
+        else:
+            aligner_options_defaults[BOWTIE2].update({'-D' : 50, '-L': 15, '--score-min': 'L,-0.6,-0.6' })
+
         bs_pair_end(options.infilename_1,
                     options.infilename_2,
                     asktag,
@@ -341,6 +386,7 @@ if __name__ == '__main__':
                     outfile,
                     XS_pct,
                     XS_count,
+                    options.adapter_mismatch,
                     options.Output_multiple_hit
              )
 

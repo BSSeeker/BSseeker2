@@ -12,8 +12,8 @@ if __name__ == '__main__':
     parser = OptionParser()
 
     parser.add_option("-f", "--file", dest="filename", help="Input your reference genome file (fasta)", metavar="FILE")
-    parser.add_option("--aligner", dest="aligner", help="Aligner program to perform the analysis: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE2)
-    parser.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Defaults: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
+    parser.add_option("--aligner", dest="aligner", help="Aligner program to perform the analysis: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE)
+    parser.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Detected: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
                   metavar="PATH")
     parser.add_option("-d", "--db", type="string", dest="dbpath", help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]", metavar="DBPATH", default = reference_genome_path)
 
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     rrbs_opts = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options",
                                 "Use this options with conjuction of -r [--rrbs]")
     rrbs_opts.add_option("-r", "--rrbs", action="store_true", dest="rrbs", help = 'Build index specially for Reduced Representation Bisulfite Sequencing experiments. Genome other than certain fragments will be masked. [Default: %default]', default = False)
-    rrbs_opts.add_option("-l", "--low",type= "int", dest="low_bound", help="lower bound of fragment length (excluding recognition sequence such as C-CGG) [Default: %default]", default = 40)
+    rrbs_opts.add_option("-l", "--low",type= "int", dest="low_bound", help="lower bound of fragment length (excluding recognition sequence such as C-CGG) [Default: %default]", default = 20)
     rrbs_opts.add_option("-u", "--up", type= "int", dest="up_bound", help="upper bound of fragment length (excluding recognition sequence such as C-CGG ends) [Default: %default]", default = 500)
     rrbs_opts.add_option("-c", "--cut-site", type= "string", dest="cut_format", help="Cut sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", default = "C-CGG")
     parser.add_option_group(rrbs_opts)

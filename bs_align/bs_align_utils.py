@@ -54,9 +54,15 @@ Success & return!
 
 """
 
-def RemoveAdapter ( read, adapter, no_mismatch ) :
+# Remove the adapter from 3' end
+def RemoveAdapter ( read, adapter, no_mismatch, rm_back=0) :
     lr = len(read)
     la = len(adapter)
+    # Check the empty adapter, namely, the reads start with the 2nd base of adapter,
+    # not including the 'A' base in front of the adapter.
+    if adapter[2:] == read[0:(la-1)] :
+        return ""
+
     for i in xrange( lr - no_mismatch ) :
         read_pos = i
         adapter_pos = 0
@@ -74,8 +80,14 @@ def RemoveAdapter ( read, adapter, no_mismatch ) :
                     adapter_pos = adapter_pos + 1
         # while_end
 
+        # Cut the extra bases before the adapter
+        #     --C|CG G--  => --CNN+A+<adapter>
+        #     --G GC|C--     --GGC
         if adapter_pos == la or read_pos == lr :
-            return read[:i]
+            if i <= rm_back :
+                return ''
+            else :
+                return read[:(i-rm_back)]
     # for_end
     return read
 

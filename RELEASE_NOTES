@@ -9,7 +9,19 @@ v2.0.4 - July 29, 2013
 3. Fix error report when using wrong path for short reads aligner
 4. MIT License
 
-V2.0.5 - July 31, 2013
+V2.0.5 - Nov 31, 2013
 1. Fix bug in "bs_single_end.py" for "numbers_premapped_lst[0] += len(Unique_FW_C2T)"
+2. Make the default aligner to Bowtie
+3. Update the README file
+4. "-r N" in call-methylation will only control Wiggle file
+5. Change the output of pair-end mapping to the standard format of SAM file (the QNAME and FLAG fields)
+6. The artificially synthesized bases at the ends of RRBS fragments are removed when removing the adapters
+7. Add the total number of bases of uniquely mapped reads to the STDOUT
+8. Support "end-to-end" alignment mode in the Galaxy version
+9. Support input file in both TEXT or Compressed (.gz) format
+10. "-m" allow both INT and FLOAT as input. Ex: '-m 5' or '-m 0.05'
+11. Add mode information in output
+
+
 
 

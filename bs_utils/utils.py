@@ -23,7 +23,7 @@ def reverse_compl_seq(strseq):
 
 def show_version() :
     print ""
-    print "     BS-Seeker2 v2.0.3 - May 19, 2013     "
+    print "     BS-Seeker2 v2.0.5 - Nov 5, 2013     "
     print ""
 
 
@@ -135,14 +135,15 @@ aligner_options_prefixes = { BOWTIE  : '--bt-',
                              SOAP    : '--soap-',
                              RMAP    : '--rmap-' }
 
-aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or default_path))
-                    for aligner, default_path in
-                           [(BOWTIE,'~/bowtie/'),
-                            (BOWTIE2, '~/bowtie2/'),
-                            (SOAP, '~/soap/'),
-                            (RMAP, '~/rmap/bin')
-                            ])
-
+#aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or default_path))
+#                    for aligner, default_path in
+#                           [(BOWTIE,'~/bowtie/'),
+#                            (BOWTIE2, '~/bowtie2/'),
+#                            (SOAP, '~/soap/'),
+#                            (RMAP, '~/rmap/bin')
+#                            ])
+aligner_path = dict((aligner, os.path.expanduser(find_location(aligner) or "None"))
+                    for aligner in [(BOWTIE), (BOWTIE2), (SOAP), (RMAP)])
 
 reference_genome_path = os.path.join(os.path.split(globals()['__file__'])[0],'reference_genomes')
 
@@ -214,7 +215,10 @@ def split_file(filename, output_prefix, nlines):
     """ Splits a file (equivalend to UNIX split -l ) """
     fno = 0
     lno = 0
-    INPUT = open(filename, 'r')
+    if filename.endswith(".gz") :
+        INPUT = gzip.open(filename, 'rb')
+    else :
+        INPUT = open(filename, 'r')
     output = None
     for l in INPUT:
         if lno == 0:
@@ -321,7 +325,10 @@ def run_in_parallel(commands):
 
     commands = [(cmd[0], open(cmd[1], 'w')) if type(cmd) is tuple else (cmd, None) for cmd in commands]
 
-    logm('Starting commands:\n' + '\n'.join([cmd for cmd, stdout in commands]))
+    #logm('Starting commands:\n' + '\n'.join([cmd for cmd, stdout in commands]))
+    logm('Starting commands:')
+    for cmd, stdout in commands :
+        logm("Launched: "+cmd)
     for i, proc in enumerate([subprocess.Popen(args = shlex.split(cmd), stdout = stdout) for cmd, stdout in commands]):
         return_code = proc.wait()
         logm('Finished: ' + commands[i][0])
