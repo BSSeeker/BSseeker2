@@ -1,6 +1,6 @@
 BS-Seeker2
 =========
-[Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) | [Published Paper](www.biomedcentral.com/1471-2164/14/774) |
+[Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) | [Published Paper](http://www.biomedcentral.com/1471-2164/14/774) |
 [Source code](https://github.com/BSSeeker/BSseeker2) |
 [Galaxy Toolshed](http://toolshed.g2.bx.psu.edu/repository?repository_id=e435334e4e9e19c1) |
 [UCLA Galaxy](http://galaxy.hoffman2.idre.ucla.edu)
@@ -66,7 +66,7 @@ Optional and independent module.
 Some reads would be extremely amplified during the PCR. This script helps you get unique reads before doing the mapping.
 You can decide whether or not to filter reads before doing the mapping.
 
-##Usage :
+####Usage :
 
 	$ python FilterReads.py
 	Usage: FilterReads.py -i <input> -o <output> [-k]
@@ -81,7 +81,7 @@ You can decide whether or not to filter reads before doing the mapping.
 	  -k          Would not filter low quality reads if specified
 
 
-##Tip :
+####Tip :
 
 - This step is not suggested for RRBS library, as reads from RRBS library would more likely from the same location.
 
@@ -92,7 +92,7 @@ You can decide whether or not to filter reads before doing the mapping.
 Module to build the index for BS-Seeker2.
 
 
-##Usage :
+####Usage :
 
     $ python bs_seeker2-build.py -h
     Usage: bs_seeker2-build.py [options]
@@ -131,7 +131,7 @@ Module to build the index for BS-Seeker2.
                             [Default: C-CGG]
 
 
-##Example
+####Example
 
 * Build genome index for WGBS using bowtie, path of bowtie should be included in $PATH
 
@@ -149,7 +149,7 @@ Module to build the index for BS-Seeker2.
 
         python bs_seeker2-build.py -f genome.fa -r -c C-CGG,G-CWGC --aligner=bowtie
 
-##Tips:
+####Tips:
 
 - Index built for BS-Seeker2 is different from the index for BS-Seeker 1.
 For RRBS, you need to specify "-r" in the parameters. Also, you need to specify LOW_BOUND and UP_BOUND for the range of fragment lengths according your protocol.
@@ -166,7 +166,7 @@ For RRBS, you need to specify "-r" in the parameters. Also, you need to specify 
 
 Module to map reads on 3-letter converted genome.
 
-##Usage :
+####Usage :
 
     $ python ~/install/BSseeker2/bs_seeker2-align.py -h
     Usage: bs_seeker2-align.py {-i <single> | -1 <mate1> -2 <mate2>} -g <genome.fa> [options]
@@ -266,7 +266,7 @@ Module to map reads on 3-letter converted genome.
         on the values.
 
 
-##Examples :
+####Examples :
 
 * WGBS library ; alignment mode, bowtie ; map to WGBS index
 
@@ -305,7 +305,7 @@ The parameters '--low' and '--up' should be the same with corresponding paramete
 BS-Seeker2 will run TWO bowtie instances in parallel.
 
 
-##Input file:
+####Input file:
 
 - Adapter.txt (example for single-end WGBS / RRBS) :
 
@@ -317,7 +317,7 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
             <adapter for mate 2>
 
 
-##Output files:
+####Output files:
 
 - SAM file
 
@@ -347,7 +347,7 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
             For reads mapped on Watson(minus) strand, the 10th colum in SAM file is not the original reads but the revered sequences.
 
 
-##Tips:
+####Tips:
 
 - Removing adapter is recommended.
 
@@ -372,7 +372,7 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
 
 This module calls methylation levels from the mapping result.
 
-##Usage:
+####Usage:
 
         $ python bs_seeker2-call_methylation.py -h
         Options:
@@ -399,7 +399,7 @@ This module calls methylation levels from the mapping result.
           -v, --version         show version of BS-Seeker2
 
 
-##Example :
+####Example :
 
 -For WGBS (whole genome bisulfite sequencing):
 
@@ -420,7 +420,7 @@ This module calls methylation levels from the mapping result.
 
 The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 
-##Output files:
+####Output files:
 
 - wig file
 
