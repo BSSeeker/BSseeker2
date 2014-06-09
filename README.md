@@ -317,9 +317,9 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
             <adapter for mate 2>
 
 
-####Output files:
+####Output format:
 
-- SAM file
+- SAM format
 
     Sample:
 
@@ -345,6 +345,30 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
 
         Note:
             For reads mapped on Watson(minus) strand, the 10th colum in SAM file is not the original reads but the revered sequences.
+
+
+- BS_Seeker format
+
+    Sample:
+
+        read10	 1	+FW	chr1+0000169137	TC_CGGGGGTTATATGAGTGTGACGGCTGTAGCGTTAGGTGACGATGTCATCTCCGCGTTCCAAGCGTTATGTGCGCACTGAGGGACACATCCACGTTCCCGG_GG	CGGGGGTTATATGAGTGTGATGGTTGTAGCGTTAGGTGATGATGTTATTTTTGCGTTTTAAGCGTTATGTGCGTATTGAGGGATATATTTACGTTTTTGA	X-------------------x--y-----X---------x-----z--z-yx-X---zz---X--------X-z-y-------z-z--zz-X---zyx--	0	77	169135	169235
+        read102	 1	+FW	chr1+0000169137	TC_CGGGGGTTATATGAGTGTGACGGCTGTAGCGTTAGGTGACGATGTCATCTCCGCGTTCCAAGCGTTATGTGCGCACTGAGGGACACATCCACGTTCCCGG_GG	CGGGGGTTATATGAGTGTGATGGTTGTAGCGTTAGGTGATGATGTTATTTTTGCGTTTTAAGCGTTATGTGCGTATTGAGGGATATATTTACGTTTTTGA	X-------------------x--y-----X---------x-----z--z-yx-X---zz---X--------X-z-y-------z-z--zz-X---zyx--	0	77	169135	169235
+        read104	 0	+FW	chr1+0000325341	-C_CGGCAAACACCACGCCCCGCGATATGGCAGGATTCATGCCGACTAATGGAAAACACACCAGATGCTGGAAAGAGATAAAGGAGAGCGTTACTGCAATACT_GT	CGGTAAATATTACGTTTCGCGATATGGTAGGATTTATGTCGATTAATGGAAAATATATCAGATGTTGGAAAGAGATAAAGGAGAGCGTTATTGTAATATT	X--z---z-zz-X-zzyX-X-------y------z---yX--z----------z-z-zY-----y--------------------X----y--z----y-	0	154	325339	325509
+        read105	 0	+FW	chr1+0000238994	-C_CGGCCACACAGTGAAAGGCTGGGCTGTGAGAGCTTCGGTGGAAACCAGGCCTTCACCACTTCTTCTCCCTTCAAGCCACACACAGCTGTTGCAAGTTCCG_G-	CGGTTACATAGTGAAAGGTTGGGTTGTGAGAGTTTTGGTGGAAATTAGGTTTTTATTATTTTTTTTTTTTTTAAGTTATATATAGTTGTTGTAAGTTTCG	X--zz-Z-y---------y----y--------z--x--------zy---zz--z-zz-z--z--z-zzz--z---zz-z-z-y--y-----z-----yX-	0	118	238992	239093
+
+
+    Format descriptions:
+
+        (1) Read ID (from the header columns in seq/fastq/qseq/fasta file, or a serial number of the original input)
+        (2) Number of mismatches between the genomic seq and the BS read list in columns 6 and 7. The bisulfite converted sites between read Ts to genomic Cs are not included.
+        (3) The strand which the read may be from (+FW, +RC, -RC, -FW)
+        (4) The coordinate of the mapped position, indicating [the chromosome], [the mapped strand ("+" or "-")], and [the 0-based, 5'-end coordinate of the mapped genomic sequence on the Watson strand].
+        (5) BS read sequences from 5' to 3': if the reads are uniquely mapped as they were FW reads, the original reads are shown. If the reads are uniquely mapped as they were RC reads, their reverse complements are shown.
+        (6) Summarized sequence of methylated sites: the methylated CG/CHG/CHH sites are marked as X/Y/Z (upper case), whereas the unmethylated CG/CHG/CHH sites are marked as x/y/z (lower case). This column is summarised directly from Columns 6 and 7.
+        (7) XS tag, 1 when read is recognized as not fully converted by bisulfite treatment, or else 0
+        (8) my_region_serial, tag only for RRBS, serial id of mapped fragment
+        (9) my_region_start, tag only for RRBS, start position of mapped fragment
+        (10) my_region_end, tag only for RRBS, end position of mapped fragment
 
 
 ####Tips:
@@ -534,9 +558,21 @@ A: For bowtie/bowtie2, you can specify the parameter "--bt--mm"/"--bt2--mm" to u
 
 Q: "How could I specify more threads/CPU"?
 
-A: By default, BS-Seeker2 will create two bowtie/bowtie2 processes for directional library (four for un-directional library),
- and each process would run with 2 threads. User can change the number of total threads using parameter "--bt-p"/"--bt2-p". For example,
- "--bt-p 4" will require 8 CPUs in total.
+A: By default, BS-Seeker2 will create two bowtie/bowtie2 processes for directional library (four for
+un-directional library), and each process would run with 2 threads. User can change the number of total
+threads using parameter "--bt-p"/"--bt2-p". For example, "--bt-p 4" will require 8 CPUs in total.
+
+
+####QA1.4
+
+Q: "I check my storage using $df –Th. and /tmp storage using 100%. Why these happening?"
+A: You can solve it by specifying the parameter "--temp_dir=<your_path>". By default, BS-Seeker2 will
+save the temporary files under /tmp, and delete them when finishing. If your system's storage is not
+enough, try to replace <your_path> by another folder with enough space. Also don't forget to delete
+the files be saved in your /tmp folders, which was failed to be deleted as the previous process exit
+improperly.
+
+
 
 ###(2)  Input/Output formats
 
@@ -758,7 +794,7 @@ could have multiple hits, run BS-Seeker2 with parameter "--multiple-hit".
 Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, two mates are in length of 100bp
 
 A: I suggest a pre-step for merging two overlapped reads into one. Such tools include
-[SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/sstephenson/stitch), etc.
+[SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
 
 
 ###(7) Adapter related issue

@@ -1,13 +1,20 @@
+==========================================
+    THE RELEASE NOTE OF BS-SEEKER2
+==========================================
 
 v2.0.3 - May 19, 2013
 1. Fix bug in utils.py
 2. Add UPDATE file
+
+------------------------------------------
 
 v2.0.4 - July 29, 2013
 1. Update README.md (Definition of ATCGmap format)
 2. Fix the "None" output when no parameter
 3. Fix error report when using wrong path for short reads aligner
 4. MIT License
+
+------------------------------------------
 
 V2.0.5 - Nov 31, 2013
 1. Fix bug in "bs_single_end.py" for "numbers_premapped_lst[0] += len(Unique_FW_C2T)"
@@ -21,6 +28,21 @@ V2.0.5 - Nov 31, 2013
 9. Support input file in both TEXT or Compressed (.gz) format
 10. "-m" allow both INT and FLOAT as input. Ex: '-m 5' or '-m 0.05'
 11. Add mode information in output
+
+------------------------------------------
+
+V2.0.6 - Jun 9, 2014
+1. Add/Revise option "-M"/"-U" for output multiple-/un-mapped reads
+2. Fix a bug in "bs_seeker2-call_methylation.py".
+    In the version V2.0.5, CGmap file will show A, T, C, G sites; in this version and following,
+    CGmap file will only show the C and G sites (with enough coverage).
+3. Fix a bug in the output format "BS_Seeker_1"
+    In the v2.0.5, the "BS_Seeker_1" format has 3 more columns than previous format defined in "BS Seeker (1)".
+    In this version, the "BS_Seeker_1" format is revised to be consistent with the one in "BS Seeker (1)".
+    New definition of "BS_Seeker_1" format is add in "README.md".
+
+
+------------------------------------------
 
 
 

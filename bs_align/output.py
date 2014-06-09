@@ -43,10 +43,10 @@ class outfile:
             r_start, r_end, _ = get_read_start_end_and_genome_length(cigar)
             original_BS = original_BS[r_start : r_end]
 
-            if rrbs:
+            if not rrbs:
                 self.f.write('%s\t%2d\t%s\t%s%s%s\t%s\t%s\t%s\t%d\n' % (qname, N_mismatch, FR, refname, strand, str(pos+1).zfill(10), output_genome, original_BS, methy, STEVE))
             else:
-                self.f.write('%s\t%2d\t%s\t%s%s%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n' % (qname, N_mismatch, FR, refname, strand, str(pos+1).zfill(10), output_genome, original_BS, methy, my_region_serial, my_region_start, my_region_end, STEVE))
+                self.f.write('%s\t%2d\t%s\t%s%s%s\t%s\t%s\t%s\t%d\t%d\t%d\t%d\n' % (qname, N_mismatch, FR, refname, strand, str(pos+1).zfill(10), output_genome, original_BS, methy, STEVE, my_region_serial, my_region_start, my_region_end))
 
 
         elif self.format == BAM or self.format == SAM:

@@ -50,7 +50,7 @@ def extract_mapping(ali_file):
 
 def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines,
                   max_mismatch_no, aligner_command, db_path, tmp_path, outfile,
-                  XS_pct, XS_count, adapter_mismatch, show_multiple_hit=False):
+                  XS_pct, XS_count, adapter_mismatch, show_multiple_hit, show_unmapped_hit):
     #----------------------------------------------------------------
     # adapter : strand-specific or not
     adapter=""
@@ -331,12 +331,21 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 else :
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
-            if show_multiple_hit :
-                outf_MH=open("Multiple_hit.fa",'w')
+            if show_multiple_hit is not None :
+                outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
                 outf_MH.close()
+
+            # write unmapped reads to file
+            if show_unmapped_hit is not None :
+                outf_UH=open(show_unmapped_hit,'w')
+                for i in original_bs_reads :
+                    if i not in Union_set :
+                        outf_UH.write(">%s\n" % i)
+                        outf_UH.write("%s\n" % original_bs_reads[i])
+                outf_UH.close()
 
             del Union_set
             del FW_C2T_R
@@ -606,13 +615,21 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                 else :
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
-            if show_multiple_hit :
-                outf_MH=open("Multiple_hit.fa",'w')
+            if show_multiple_hit is not None:
+                outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
                 outf_MH.close()
 
+            # write unmapped reads to file
+            if show_unmapped_hit is not None :
+                outf_UH=open(show_unmapped_hit,'w')
+                for i in original_bs_reads :
+                    if i not in Union_set :
+                        outf_UH.write(">%s\n" % i)
+                        outf_UH.write("%s\n" % original_bs_reads[i])
+                outf_UH.close()
 
             FW_C2T_uniq_lst=[[FW_C2T_U[u][1],u] for u in Unique_FW_C2T]
             RC_C2T_uniq_lst=[[RC_C2T_U[u][1],u] for u in Unique_RC_C2T]
@@ -685,12 +702,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
     delete_files(tmp_path)
 
-    logm("Number of raw reads: %d \n"% all_raw_reads)
-    if all_raw_reads >0:
-        logm("Number of bases in total: %d "%all_base_before_trim)
+    logm("Number of raw reads: %d \n" % all_raw_reads)
+    if all_raw_reads > 0 :
+        logm("Number of bases in total: %d " % all_base_before_trim)
         if adapter != "" :
             logm("Number of reads having adapter removed: %d \n" % all_trimmed )
-            logm("Number of bases after trimming the adapters: %d (%1.3f)"%(all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
+            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
         logm("Number of reads are rejected because of multiple hits: %d\n" % len(Multiple_hits) )
         logm("Number of unique-hits reads (before post-filtering): %d\n" % all_mapped)
         if asktag=="Y":

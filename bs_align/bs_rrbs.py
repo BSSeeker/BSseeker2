@@ -36,8 +36,9 @@ def my_mappable_region(chr_regions, mapped_location, FR): # start_position (firs
 #----------------------------------------------------------------
 
 def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, max_mismatch_no,
-            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch, cut_format="C-CGG",
-            show_multiple_hit=False):
+            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch,
+            show_multiple_hit, show_unmapped_hit, cut_format="C-CGG"
+            ):
     #----------------------------------------------------------------
     # For double enzyme: cut_format="C-CGG,A-CTG"; ApekI:"G^CWGC"
     #cut_context = re.sub("-", "", cut_format)
@@ -313,12 +314,21 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                 else :
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
-            if show_multiple_hit :
-                outf_MH=open("Multiple_hit.fa",'w')
+            if show_multiple_hit is not None :
+                outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
                 outf_MH.close()
+
+            # write unmapped reads to file
+            if show_unmapped_hit is not None :
+                outf_UH=open(show_unmapped_hit,'w')
+                for i in original_bs_reads :
+                    if i not in Union_set :
+                        outf_UH.write(">%s\n" % i)
+                        outf_UH.write("%s\n" % original_bs_reads[i])
+                outf_UH.close()
 
             del Union_set
             del FW_C2T_R
@@ -689,12 +699,21 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                 else :
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
-            if show_multiple_hit :
-                outf_MH = open("Multiple_hit.fa",'w')
+            if show_multiple_hit is not None :
+                outf_MH = open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
                 outf_MH.close()
+
+            # write unmapped reads to file
+            if show_unmapped_hit is not None :
+                outf_UH=open(show_unmapped_hit,'w')
+                for i in original_bs_reads :
+                    if i not in Union_set :
+                        outf_UH.write(">%s\n" % i)
+                        outf_UH.write("%s\n" % original_bs_reads[i])
+                outf_UH.close()
 
             del Union_set
             del FW_C2T_R

@@ -57,7 +57,9 @@ if __name__ == '__main__':
     opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
     opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = tempfile.gettempdir())
     opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
-    opt_group.add_option("--multiple-hit", action="store_true", dest="Output_multiple_hit", default = False, help = 'Output reads with multiple hits to file\"Multiple_hit.fa\"')
+
+    opt_group.add_option("-M", "--multiple-hit", metavar="FileName", type="string", dest="Output_multiple_hit", default = None, help = 'File to store reads with multiple-hits')
+    opt_group.add_option("-u", "--unmapped", metavar="FileName", type="string", dest="Output_unmapped_hit", default = None, help = 'File to store unmapped reads')
 
     opt_group.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
 
@@ -93,9 +95,7 @@ if __name__ == '__main__':
             bs_seeker_options.append(arg)
         i += 1
 
-
     (options, args) = parser.parse_args(args = bs_seeker_options)
-
 
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
@@ -243,6 +243,7 @@ if __name__ == '__main__':
 #    tmp_path = (options.outfilename or options.infilename or options.infilename_1) +'-'+ options.aligner+ '-TMP'
 #    clear_dir(tmp_path)
 
+    options.output_format = options.output_format.lower()
     if options.output_format not in output.formats:
         error('Output format should be one of: ' + ', '.join(output.formats))
 
@@ -315,8 +316,9 @@ if __name__ == '__main__':
                     XS_pct,
                     XS_count,
                     options.adapter_mismatch,
-                    options.cut_format,
-                    options.Output_multiple_hit
+                    options.Output_multiple_hit,
+                    options.Output_unmapped_hit,
+                    options.cut_format
                     )
         else: # Normal single end scan
             bs_single_end(  options.infilename,
@@ -333,7 +335,8 @@ if __name__ == '__main__':
                             XS_pct,
                             XS_count,
                             options.adapter_mismatch,
-                            options.Output_multiple_hit
+                            options.Output_multiple_hit,
+                            options.Output_unmapped_hit
                             )
     else:
         logm('Pair end')
@@ -387,7 +390,8 @@ if __name__ == '__main__':
                     XS_pct,
                     XS_count,
                     options.adapter_mismatch,
-                    options.Output_multiple_hit
+                    options.Output_multiple_hit,
+                    options.Output_unmapped_hit
              )
 
     outfile.close()
