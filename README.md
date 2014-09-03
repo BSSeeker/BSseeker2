@@ -566,6 +566,7 @@ threads using parameter "--bt-p"/"--bt2-p". For example, "--bt-p 4" will require
 ####QA1.4
 
 Q: "I check my storage using $df –Th. and /tmp storage using 100%. Why these happening?"
+
 A: You can solve it by specifying the parameter "--temp_dir=<your_path>". By default, BS-Seeker2 will
 save the temporary files under /tmp, and delete them when finishing. If your system's storage is not
 enough, try to replace <your_path> by another folder with enough space. Also don't forget to delete
@@ -796,6 +797,22 @@ Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, t
 A: I suggest a pre-step for merging two overlapped reads into one. Such tools include
 [SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
 
+####QA6.2
+
+Q: I found low portion of pairs could both be mapped to reference genome, but using single-end mode would map more reads.
+Is there any way for mapping the discordant reads in Paired-end mode?
+
+A: BS-Seeker2's Paired-end mode would only report concordantly mapped pairs. But you can specify the parameter "--unmapped"
+to get the unmapped reads, and then mapping them with the single-end mode by yourself.
+Note: The 2nd mate should be converted to its reversed complementary sequence before being feeded to BS-Seeker2. We provide
+a script named "Antisense.py" for this function.
+Examples:
+
+        bs_seeker2-align.py -1 FN1 -2 FN2  -g genome.fa -o PE.bam -u unmapped
+        bs_seeker2-align.py -i unmapped_1.fa -g genome.fa -o unmapped_1.bam
+        Antisense.py -i unmapped_2.fa -o unmapped_2_antisense.fa
+        bs_seeker2-align.py -i unmapped_2_antisense.fa -g mm9_phage.fa -o unmapped_2.bam
+
 
 ###(7) Adapter related issue
 
@@ -841,4 +858,19 @@ A: BS-Seeker2 has built-in algorithm for removing the adapter, which is develope
         - - G G C|C - -         - - G G C          - - G G C
 
     In our algorithm, the "CG" in "--CCG" (upper strand) was trimmed, in order to get accurate methylation level.
+
+
+####QA7.2
+
+Q: For RRBS library, the methylation levels of C at 5'-CCGG-3' sites are biased. Do BS-Seeker2 provides function for avoiding such bias?
+
+A: From the version v2.0.7 or later, BS-Seeker2 provide parameter "--rm-CCGG" in "bs_seeker2-call-methylation.py".
+    For RRBS library, the orginal sequences would be cut as sticky ends:
+         5'-CGGNNNN.....NNNNC-3'
+           3'-CNNNN.....NNNNGGC-5'
+    Then artificial nucleotides will be added :
+         5'-CGGNNNN.....NNNNCcg-3'
+         3'-cgCNNNN.....NNNNGGC-5'
+    Thus, the status of artificial cytosine will cause the bias.
+    The parameter "--rm-CCGG" will remove all the "5'-CCGG-3'" sites in the outputs.
 

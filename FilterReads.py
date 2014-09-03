@@ -11,12 +11,18 @@ import re
 # 
 def FilterFastq (infile, outfile) :
     try:
-        INFILE = open(infile, 'r')
+        if infile.endswith(".gz") :
+            INFILE = gzip.open(infile, 'rb')
+        else :
+            INFILE = open(infile, 'r')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
     try:
-        OUTFILE = open(outfile, 'w')
+        if outfile.endswith(".gz") :
+            OUTFILE = gzip.open(outfile, 'wb')
+        else :
+            OUTFILE = open(outfile, 'w')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
@@ -51,15 +57,22 @@ def FilterFastq (infile, outfile) :
 
 # ===============================
 #
+import gzip
 
 def FilterSequence (infile, outfile) :
     try:
-        INFILE = open(infile, 'r')
+        if infile.endswith(".gz") :
+            INFILE = gzip.open(infile, 'rb')
+        else :
+            INFILE = open(infile, 'r')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
     try:
-        OUTFILE = open(outfile, 'w')
+        if outfile.endswith(".gz") :
+            OUTFILE = gzip.open(outfile, 'wb')
+        else :
+            OUTFILE = open(outfile, 'w')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
@@ -91,12 +104,18 @@ def FilterQseq (infile, outfile, keepquality) :
         print "Reads with PF=0 will be filtered"
 
     try:
-        INFILE = open(infile, 'r')
+        if infile.endswith(".gz") :
+            INFILE = gzip.open(infile, 'rb')
+        else :
+            INFILE = open(infile, 'r')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
     try:
-        OUTFILE = open(outfile, 'w')
+        if outfile.endswith(".gz") :
+            OUTFILE = gzip.open(outfile, 'wb')
+        else :
+            OUTFILE = open(outfile, 'w')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
@@ -126,12 +145,18 @@ def FilterQseq (infile, outfile, keepquality) :
 
 def FilterFasta (infile, outfile) :
     try:
-        INFILE = open(infile, 'r')
+        if infile.endswith(".gz") :
+            INFILE = gzip.open(infile, 'rb')
+        else :
+            INFILE = open(infile, 'r')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
     try:
-        OUTFILE = open(outfile, 'w')
+        if outfile.endswith(".gz") :
+            OUTFILE = gzip.open(outfile, 'wb')
+        else :
+            OUTFILE = open(outfile, 'w')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
@@ -175,7 +200,10 @@ def FilterFasta (infile, outfile) :
 
 def FilterReads (infile, outfile, keepquality):
     try:
-        INFILE = open(infile, 'r')
+        if infile.endswith(".gz") :
+            INFILE = gzip.open(infile, 'rb')
+        else :
+            INFILE = open(infile, 'r')
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
@@ -213,7 +241,7 @@ from optparse import OptionParser
 def main():
     usage = "Usage: %prog -i <input> -o <output> [-k]\n" \
             "Author : Guo, Weilong; guoweilong@gmail.com; 2012-11-10\n" \
-            "Last Update: 2013-04-01" \
+            "Last Update: 2014-06-18\n" \
             "Description: Unique reads for qseq/fastq/fasta/sequencce,\n" \
             "       and filter low quality reads in qseq file."
     parser = OptionParser(usage)

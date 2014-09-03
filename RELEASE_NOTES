@@ -44,6 +44,13 @@ V2.0.6 - Jun 9, 2014
 
 ------------------------------------------
 
+V2.0.7 - Sep 4, 2014
+1. [bs_seeker2-call_methylation.py] : add the parameter "--rm-CCGG", in order to avoid the biased caused by
+    artifact methylated C at the ends of fragments
+2. [bs_seeker2-align.py] : Fix bugs under related with the parameter "--unmapped".
+3. [bs_seeker2-call_methylation.py] : round the "methylation level" to 2-digits in all the output (ATCGmap, CGmap,
+    wiggle) formats
+
 
 
 

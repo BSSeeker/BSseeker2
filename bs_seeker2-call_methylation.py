@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_option("--ATCGmap", type="string", dest="ATCGmap_file",help="The output .ATCGmap file [INFILE.ATCGmap]", metavar="OUTFILE")
 
     parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
+    parser.add_option("--rm-CCGG", action="store_true", dest="RM_CCGG",help="Removed sites located in CCGG, avoiding the bias introduced by artificial DNA methylation status \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
     parser.add_option("--txt", action="store_true", dest="text",help="Show CGmap and ATCGmap in .gz [Default: %default]", default = False)
 
     parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1)
@@ -125,6 +126,7 @@ if __name__ == '__main__':
             chrom = col_chrom
             chrom_seq = deserialize(db_d(chrom))
             wiggle.write('variableStep chrom=%s\n' % chrom)
+            logm('Processing chromosome: %s' % chrom)
 
         for n in nucs:
             ATCG_fwd[n] = 0
@@ -132,6 +134,14 @@ if __name__ == '__main__':
 
         nuc, context, subcontext = context_calling(chrom_seq, col.pos)
         total_reads = 0
+
+        if options.RM_CCGG :
+            check_start_pos = (col.pos - 3) if col.pos>3 else 0
+            check_end_pos = (col.pos + 4) if col.pos+4<len(chrom_seq) else len(chrom_seq)
+            check_seq = chrom_seq[check_start_pos:check_end_pos].upper()
+            if "CCGG" in check_seq :
+                #print "Remove\t%s\n" % check_seq # for debug
+                continue
 
         for pr in col.pileups:
         #     print pr
@@ -181,16 +191,16 @@ if __name__ == '__main__':
 
         pos = col.pos + 1
 
-        meth_level_string = str(meth_level) if meth_level is not None else 'na'
+        meth_level_string = str(round(meth_level, 2)) if meth_level is not None else 'na'
         ATCGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(fwd_counts)s\t%(rev_counts)s\t%(meth_level_string)s\n' % locals())
 
         all_cytosines = meth_cytosines + unmeth_cytosines 
         if (meth_level is not None) and (all_cytosines >= options.read_no):
         #    print all_cytosines
             if nuc == 'C':
-                wiggle.write('%d\t%f\n' % (pos, meth_level))
+                wiggle.write('%d\t%.2f\n' % (pos, meth_level))
             else :
-                wiggle.write('%d\t-%f\n' % (pos, meth_level))
+                wiggle.write('%d\t-%.2f\n' % (pos, meth_level))
             #
             CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
             # CGmap file only show CG sites
@@ -198,7 +208,10 @@ if __name__ == '__main__':
     CGmap.close()
     wiggle.close()
 
-    logm('Wiggle: %s'% wiggle_fname)
-    logm('ATCGMap: %s' % ATCGmap_fname)
-    logm('CGmap: %s' % CGmap_fname)
+    logm('Call methylation is finished. ')
+    logm('==============================')
+    logm('Files are saved as:')
+    logm('  Wiggle: %s'% wiggle_fname)
+    logm('  ATCGMap: %s' % ATCGmap_fname)
+    logm('  CGmap: %s' % CGmap_fname)
 
