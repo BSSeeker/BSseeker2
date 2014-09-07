@@ -51,6 +51,11 @@ V2.0.7 - Sep 4, 2014
 3. [bs_seeker2-call_methylation.py] : round the "methylation level" to 2-digits in all the output (ATCGmap, CGmap,
     wiggle) formats
 
+------------------------------------------
+
+V2.0.8 - Sep 7, 2014
+1. [bs_align/*.py] : Fix bug with "-m" and "-u" when splitting large input files internally.
+2. [bs_seeker2-align.py] : Update the help information
 
 
 

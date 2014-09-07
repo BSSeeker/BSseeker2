@@ -205,6 +205,15 @@ def bs_pair_end(main_read_file_1,
 
     #----------------------------------------------------------------
     print "== Start mapping =="
+    if show_multiple_hit is not None:
+        outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
+        outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
+
+    if show_unmapped_hit is not None :
+        unmapped_fn1 = show_unmapped_hit+"_1.fa"
+        unmapped_fn2 = show_unmapped_hit+"_2.fa"
+        outf_UH_1=open(unmapped_fn1,'w')
+        outf_UH_2=open(unmapped_fn2,'w')
 
     for read_file_1, read_file_2 in my_files:
 
@@ -438,28 +447,28 @@ def bs_pair_end(main_read_file_1,
 
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None:
-                outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
-                outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
+                #outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
+                #outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
                 for i in Multiple_hits :
                     outf_MH_1.write(">%s\n" % read_id_lst_1[i] )
                     outf_MH_1.write("%s\n" % original_bs_reads_1[i])
                     outf_MH_2.write(">%s\n" % read_id_lst_2[i] )
                     outf_MH_2.write("%s\n" % original_bs_reads_2[i])
-                outf_MH_1.close()
-                outf_MH_2.close()
+                #outf_MH_1.close()
+                #outf_MH_2.close()
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                outf_UH_1=open(show_unmapped_hit+"_1.fa",'w')
-                outf_UH_2=open(show_unmapped_hit+"_2.fa",'w')
+                #outf_UH_1=open(show_unmapped_hit+"_1.fa",'w')
+                #outf_UH_2=open(show_unmapped_hit+"_2.fa",'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH_1.write(">%s\n" % read_id_lst_1[i])
                         outf_UH_1.write("%s\n" % original_bs_reads_1[i])
                         outf_UH_2.write(">%s\n" % read_id_lst_2[i])
                         outf_UH_2.write("%s\n" % original_bs_reads_2[i])
-                outf_UH_1.close()
-                outf_UH_2.close()
+                #outf_UH_1.close()
+                #outf_UH_2.close()
 
 
             del Union_set
@@ -814,32 +823,32 @@ def bs_pair_end(main_read_file_1,
 
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None:
-                outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
-                outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
+                #outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
+                #outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
                 for i in Multiple_hits :
                     outf_MH_1.write(">%s\n" % read_id_lst_1[i] )
                     outf_MH_1.write("%s\n" % original_bs_reads_1[i])
                     outf_MH_2.write(">%s\n" % read_id_lst_2[i] )
                     outf_MH_2.write("%s\n" % original_bs_reads_2[i])
-                outf_MH_1.close()
-                outf_MH_2.close()
+                #outf_MH_1.close()
+                #outf_MH_2.close()
 
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                unmapped_fn1 = show_unmapped_hit+"_1.fa"
-                unmapped_fn2 = show_unmapped_hit+"_2.fa"
+                #unmapped_fn1 = show_unmapped_hit+"_1.fa"
+                #unmapped_fn2 = show_unmapped_hit+"_2.fa"
 
-                outf_UH_1=open(unmapped_fn1,'w')
-                outf_UH_2=open(unmapped_fn2,'w')
+                #outf_UH_1=open(unmapped_fn1,'w')
+                #outf_UH_2=open(unmapped_fn2,'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH_1.write(">%s\n" % read_id_lst_1[i])
                         outf_UH_1.write("%s\n" % original_bs_reads_1[i])
                         outf_UH_2.write(">%s\n" % read_id_lst_2[i])
                         outf_UH_2.write("%s\n" % original_bs_reads_2[i])
-                outf_UH_1.close()
-                outf_UH_2.close()
+                #outf_UH_1.close()
+                #outf_UH_2.close()
 
             FW_C2T_fr_uniq_lst = [[FW_C2T_fr_U[u][1],u] for u in Unique_FW_fr_C2T]
             RC_C2T_fr_uniq_lst = [[RC_G2A_fr_U[u][1],u] for u in Unique_RC_fr_G2A]
@@ -965,6 +974,13 @@ def bs_pair_end(main_read_file_1,
 
     #==================================================================================================
     delete_files(tmp_path)
+
+    if show_multiple_hit is not None:
+        outf_MH_1.close()
+        outf_MH_2.close()
+    if show_unmapped_hit is not None :
+        outf_UH_1.close()
+        outf_UH_2.close()
 
     logm("-------------------------------- " )
     logm("Number of raw BS-read pairs: %d " %(all_raw_reads/2) )

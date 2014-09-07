@@ -131,6 +131,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
     #----------------------------------------------------------------
     logm("== Start mapping ==")
 
+    if show_multiple_hit is not None:
+        outf_MH=open(show_multiple_hit,'w')
+
+    if show_unmapped_hit is not None :
+        outf_UH=open(show_unmapped_hit,'w')
+
     for read_file in isplit_file(main_read_file, tmp_d(input_fname)+'-s-', no_small_lines):
 #    for read_file in my_files:
         original_bs_reads = {}
@@ -332,20 +338,20 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None :
-                outf_MH=open(show_multiple_hit,'w')
+                #outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
-                outf_MH.close()
+                #outf_MH.close()
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                outf_UH=open(show_unmapped_hit,'w')
+                #outf_UH=open(show_unmapped_hit,'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH.write(">%s\n" % i)
                         outf_UH.write("%s\n" % original_bs_reads[i])
-                outf_UH.close()
+                #outf_UH.close()
 
             del Union_set
             del FW_C2T_R
@@ -616,20 +622,20 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None:
-                outf_MH=open(show_multiple_hit,'w')
+                #outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
-                outf_MH.close()
+                #outf_MH.close()
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                outf_UH=open(show_unmapped_hit,'w')
+                #outf_UH=open(show_unmapped_hit,'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH.write(">%s\n" % i)
                         outf_UH.write("%s\n" % original_bs_reads[i])
-                outf_UH.close()
+                #outf_UH.close()
 
             FW_C2T_uniq_lst=[[FW_C2T_U[u][1],u] for u in Unique_FW_C2T]
             RC_C2T_uniq_lst=[[RC_C2T_U[u][1],u] for u in Unique_RC_C2T]
@@ -701,6 +707,12 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
     #----------------------------------------------------------------
 
     delete_files(tmp_path)
+
+    if show_multiple_hit is not None:
+        outf_MH.close()
+
+    if show_unmapped_hit is not None :
+        outf_UH.close()
 
     logm("Number of raw reads: %d \n" % all_raw_reads)
     if all_raw_reads > 0 :

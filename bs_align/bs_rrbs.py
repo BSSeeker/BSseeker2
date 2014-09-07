@@ -139,6 +139,12 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
     # directional sequencing
     #===============================================
 
+    if show_multiple_hit is not None :
+        outf_MH=open(show_multiple_hit,'w')
+
+    if show_unmapped_hit is not None :
+        outf_UH=open(show_unmapped_hit,'w')
+
     if asktag=="N" :
         #----------------------------------------------------------------
         logm("== Start mapping ==")
@@ -315,20 +321,20 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None :
-                outf_MH=open(show_multiple_hit,'w')
+                #outf_MH=open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
-                outf_MH.close()
+                #outf_MH.close()
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                outf_UH=open(show_unmapped_hit,'w')
+                #outf_UH=open(show_unmapped_hit,'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH.write(">%s\n" % i)
                         outf_UH.write("%s\n" % original_bs_reads[i])
-                outf_UH.close()
+                #outf_UH.close()
 
             del Union_set
             del FW_C2T_R
@@ -700,20 +706,20 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                     Multiple_hits.add(x)
             # write reads rejected by Multiple Hits to file
             if show_multiple_hit is not None :
-                outf_MH = open(show_multiple_hit,'w')
+                #outf_MH = open(show_multiple_hit,'w')
                 for i in Multiple_hits :
                     outf_MH.write(">%s\n" % i)
                     outf_MH.write("%s\n" % original_bs_reads[i])
-                outf_MH.close()
+                #outf_MH.close()
 
             # write unmapped reads to file
             if show_unmapped_hit is not None :
-                outf_UH=open(show_unmapped_hit,'w')
+                #outf_UH=open(show_unmapped_hit,'w')
                 for i in original_bs_reads :
                     if i not in Union_set :
                         outf_UH.write(">%s\n" % i)
                         outf_UH.write("%s\n" % original_bs_reads[i])
-                outf_UH.close()
+                #outf_UH.close()
 
             del Union_set
             del FW_C2T_R
@@ -1029,6 +1035,11 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
     delete_files(tmp_path)
 
+    if show_multiple_hit is not None :
+        outf_MH.close()
+
+    if show_unmapped_hit is not None :
+        outf_UH.close()
 
     logm("Number of raw reads: %d "% all_raw_reads)
     if all_raw_reads>0:
