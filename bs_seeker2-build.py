@@ -53,7 +53,11 @@ if __name__ == '__main__':
         error('Fasta file for the reference genome must be supported')
 
     if not os.path.isfile(fasta_file):
-        error('%s cannot be found' % fasta_file)
+        if os.path.isfile(os.path.join(os.dbpath, fasta_file)):
+            # Search for os.dbpath to check if the genome file is stored there.
+            fasta_file = os.path.join(os.dbpath, fasta_file)
+        else:
+            error('%s cannot be found' % fasta_file)
 
     if options.aligner not in supported_aligners:
         error('-a option should be: %s' % ' ,'.join(supported_aligners)+'.')
