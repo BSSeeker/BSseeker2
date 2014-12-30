@@ -57,5 +57,12 @@ V2.0.8 - Sep 7, 2014
 1. [bs_align/*.py] : Fix bug with "-m" and "-u" when splitting large input files internally.
 2. [bs_seeker2-align.py] : Update the help information
 
+------------------------------------------
 
-
+V2.0.9 - Dec 30, 2014
+1. [bs_seeker2-call_methylation] : Add the parameter "--rm-overlap", the overlapped region of two mates in
+    paired-end library will be counted only once.
+2. [bs_seeker2-call_methylation] : All the first line "type wiggle_0" for wiggle output
+3. [bs_seeker2-call_methylation] : Modified codes for speed improvements
+4. [bs_seeker2-call_methylation] : Add the parameter"--sorted"
+5. [bs_align/*.py] : Fix input empty line problem

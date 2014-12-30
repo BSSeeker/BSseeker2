@@ -52,7 +52,7 @@ if __name__ == '__main__':
         metavar="PATH"
     )
     opt_group.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
-    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [Default: %default]", default = 4000000)
+    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [Default: %default]", default = 4000000, metavar="INT")
     opt_group.add_option("-o", "--output", type="string", dest="outfilename",help="The name of output file [INFILE.bs(se|pe|rrbs)]", metavar="OUTFILE")
     opt_group.add_option("-f", "--output-format", type="string", dest="output_format",help="Output format: "+', '.join(output.formats)+" [Default: %default]", metavar="FORMAT", default = output.BAM)
     opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
@@ -73,9 +73,8 @@ if __name__ == '__main__':
     opt_group = OptionGroup(parser, "Aligner Options",
         "You may specify any additional options for the aligner. You just have to prefix them with " +
         ', '.join('%s for %s' % (aligner_options_prefixes[aligner], aligner) for aligner in supported_aligners)+
-        ', and BS Seeker will pass them on. For example: --bt-p 4 will increase the number of threads for bowtie to 4, '
-        '--bt--tryhard will instruct bowtie to try as hard as possible to find valid alignments when they exist, and so on. '
-        'Be sure that you know what you are doing when using these options! Also, we don\'t do any validation on the values.')
+        ', and BS-Seeker2 will pass them on. For example: --bt-p 4 will increase the number of threads for bowtie to 4, '
+        '--bt--tryhard will instruct bowtie to try as hard as possible to find valid alignments when they exist, and so on. ')
     parser.add_option_group(opt_group)
 
 

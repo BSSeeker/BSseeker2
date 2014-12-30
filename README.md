@@ -574,6 +574,20 @@ the files be saved in your /tmp folders, which was failed to be deleted as the p
 improperly.
 
 
+####QA1.5
+
+Q: "It takes long time to run call-methylation step for large BAM file. How could I speed up?"
+
+A: You can split the BAM files into different files by different chromosome, and then call the methylations
+using parallel CPU running. Afterwards, you can merge them together. 
+Here is an example of commands :
+
+        for CHR in chr[1-9] chr1[0-9] chr2[0-2] chr[XY]; do
+          samtools view -h merge.bam | gawk -vCHR=$CHR '/^@/||($3==CHR)' | samtools view -Sb - > $CHR.bam
+          bs_seeker2-call_methylation.py -i $CHR.bam -d path_to_BSseeker2/bs_utils/reference_genomes/hg18.fa_bowtie/ -o $CHR
+        done
+        zcat chr[1-9].ATCGmap.gz chr1[0-9].ATCGmap.gz chr2[0-2].ATCGmap.gz chr[XY].ATCGmap.gz | gzip > whole.ATCGmap.gz
+
 
 ###(2)  Input/Output formats
 

@@ -145,7 +145,7 @@ def bs_pair_end(main_read_file_1,
         logm("Un-directional library" )
     else :
         logm("Directional library")
-    logm("Number of mismatches allowed: %s"% max_mismatch_no  )
+    logm("Number of mismatches allowed: %s"% str(max_mismatch_no)  )
 
     if adapter_file !="":
         if asktag=="Y":
@@ -243,6 +243,8 @@ def bs_pair_end(main_read_file_1,
                 print "[Error] Cannot open file : %s" % tmp_d(read_file_1)
                 exit(-1)
             oneline = read_inf.readline()
+            if oneline == "" :
+                oneline = "NNNN"
             l = oneline.split()
             input_format = ""
 
@@ -274,6 +276,8 @@ def bs_pair_end(main_read_file_1,
                 seq_ready = "N"
                 line_no = 0
                 for line in fileinput.input(tmp_d(read_file)):
+                    if line == "" :
+                        line = "NNNN"
                     l = line.split()
                     line_no += 1
                     if input_format=="seq":
@@ -369,10 +373,10 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr = tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            WC2T_rf = tmp_d("W_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
-            CG2A_fr = tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T_rf = tmp_d("C_C2T_rf_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_fr = tmp_d("W_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
+            WC2T_rf = tmp_d("W_C2T_rf_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CG2A_fr = tmp_d("C_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CC2T_rf = tmp_d("C_C2T_rf_m"+str(max_mismatch_no)+".mapping"+random_id)
 
             run_in_parallel([aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                       'input_file_1' : outfile_1FCT,
@@ -643,6 +647,8 @@ def bs_pair_end(main_read_file_1,
 
             oneline = read_inf.readline()
             l = oneline.split()
+            if l == "" :
+                l = "NNNN"
             input_format = ""
 
             if oneline[0]=="@" :
@@ -674,6 +680,8 @@ def bs_pair_end(main_read_file_1,
                 seq_ready = "N"
                 line_no = 0
                 for line in fileinput.input(tmp_d(read_file)):
+                    if l == "" :
+                        l = "NNNN"
                     l = line.split()
                     line_no += 1
                     if input_format=="seq":
@@ -767,8 +775,8 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
-            WC2T_fr = tmp_d("W_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
-            CG2A_fr = tmp_d("C_C2T_fr_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T_fr = tmp_d("W_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CG2A_fr = tmp_d("C_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                          'input_file_1' : outfile_1FCT,
@@ -984,6 +992,7 @@ def bs_pair_end(main_read_file_1,
 
     logm("-------------------------------- " )
     logm("Number of raw BS-read pairs: %d " %(all_raw_reads/2) )
+    logm("Number of bases in total: %d " % all_base_before_trim)
     #print "AdapterA=", adapterA, "; AdapterB=", adapterB
     if adapterA != "" or adapterB != "" :
         logm("Number of reads having adapter removed: %d \n"% all_trimmed)

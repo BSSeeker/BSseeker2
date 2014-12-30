@@ -171,6 +171,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                 exit(-1)
 
             oneline = read_inf.readline()
+            if oneline == "" :
+                oneline = "NNNN"
             l = oneline.split()
             input_format = ""
             if oneline[0]=="@":
@@ -190,6 +192,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
             seq_ready = 0
             line_no = 0
             for line in fileinput.input(read_file, openhook=fileinput.hook_compressed):
+                if l == "" :
+                    l = "NNNN"
                 l = line.split()
                 line_no += 1
                 if input_format=="seq":
@@ -267,8 +271,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
             # mapping
             #--------------------------------------------------------------------------------
-            WC2T=tmp_d("W_C2T_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T=tmp_d("C_C2T_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T=tmp_d("W_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CC2T=tmp_d("C_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                    'input_file' : outfile2,
@@ -539,6 +543,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                 exit(-1)
 
             oneline = read_inf.readline()
+            if oneline == "" :
+                oneline = "NNNN"
             l = oneline.split()
             input_format = ""
             if oneline[0]=="@":
@@ -557,6 +563,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
             seq_ready = 0
             line_no = 0
             for line in fileinput.input(read_file, openhook=fileinput.hook_compressed):
+                if line == "" :
+                    line = "NNNN"
                 l = line.split()
                 line_no += 1
                 if input_format=="seq":
@@ -635,10 +643,10 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
             # mapping
             #--------------------------------------------------------------------------------
-            WC2T = tmp_d("W_C2T_m"+max_mismatch_no+".mapping"+random_id)
-            CC2T = tmp_d("C_C2T_m"+max_mismatch_no+".mapping"+random_id)
-            WG2A = tmp_d("W_G2A_m"+max_mismatch_no+".mapping"+random_id)
-            CG2A = tmp_d("C_G2A_m"+max_mismatch_no+".mapping"+random_id)
+            WC2T = tmp_d("W_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CC2T = tmp_d("C_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
+            WG2A = tmp_d("W_G2A_m"+str(max_mismatch_no)+".mapping"+random_id)
+            CG2A = tmp_d("C_G2A_m"+str(max_mismatch_no)+".mapping"+random_id)
 
             run_in_parallel([ aligner_command % {'reference_genome' : os.path.join(db_path,'W_C2T'),
                                                  'input_file' : outfile2,
@@ -1056,7 +1064,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
         logm("------ %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))
         logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads))
-        logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
+        #logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
 
         if asktag=="Y": # un-diretional
             logm(" ---- %7d FW reads mapped to Watson strand"%(num_mapped_FW_C2T) )
