@@ -237,7 +237,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                     all_base_before_trim += len(seq)
                     if (adapter_fw !="") and (adapter_rc !="") :
                         new_read = RemoveAdapter(seq, adapter_fw, adapter_mismatch)
-                        new_read = Remove_5end_Adapter(new_read, adapter_rc)
+                        new_read = Remove_5end_Adapter(new_read, adapter_rc, adapter_mismatch)
                         if len(new_read) < len(seq) :
                             all_trimmed += 1
                         seq = new_read
