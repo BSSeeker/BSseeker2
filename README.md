@@ -52,7 +52,7 @@ BS Seeker 2 is a seamless and versatile pipeline for accurately and fast mapping
 
   It is normally pre-installed in Linux. Type " python -V" to see the installed version.
 
-* [pysam](http://code.google.com/p/pysam/) package (Version 0.6+).
+* [pysam](http://code.google.com/p/pysam/) package (Version 0.6.x).
 
   Read "Questions & Answers" if you have problem when installing this package.
 
@@ -692,7 +692,7 @@ Q: I came up with the errors
             a.rnext = rnext if rnext == -1 else self.chrom_ids[rnext]
         AttributeError: 'csamtools.AlignedRead' object has no attribute 'rnext'
 
-A: Your pysam seems out of date. I would use pysam version 0.6+.
+A: Your pysam seems out of date. I would use pysam version 0.6.x.
 
 ####QA3.3
 
