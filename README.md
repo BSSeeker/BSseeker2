@@ -574,20 +574,6 @@ the files be saved in your /tmp folders, which was failed to be deleted as the p
 improperly.
 
 
-####QA1.5
-
-Q: "It takes long time to run call-methylation step for large BAM file. How could I speed up?"
-
-A: You can split the BAM files into different files by different chromosome, and then call the methylations
-using parallel CPU running. Afterwards, you can merge them together. 
-Here is an example of commands :
-
-        for CHR in chr[1-9] chr1[0-9] chr2[0-2] chr[XY]; do
-          samtools view -h merge.bam | gawk -vCHR=$CHR '/^@/||($3==CHR)' | samtools view -Sb - > $CHR.bam
-          bs_seeker2-call_methylation.py -i $CHR.bam -d path_to_BSseeker2/bs_utils/reference_genomes/hg18.fa_bowtie/ -o $CHR
-        done
-        zcat chr[1-9].ATCGmap.gz chr1[0-9].ATCGmap.gz chr2[0-2].ATCGmap.gz chr[XY].ATCGmap.gz | gzip > whole.ATCGmap.gz
-
 
 ###(2)  Input/Output formats
 
@@ -810,22 +796,6 @@ Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, t
 
 A: I suggest a pre-step for merging two overlapped reads into one. Such tools include
 [SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
-
-####QA6.2
-
-Q: I found low portion of pairs could both be mapped to reference genome, but using single-end mode would map more reads.
-Is there any way for mapping the discordant reads in Paired-end mode?
-
-A: BS-Seeker2's Paired-end mode would only report concordantly mapped pairs. But you can specify the parameter "--unmapped"
-to get the unmapped reads, and then mapping them with the single-end mode by yourself.
-Note: The 2nd mate should be converted to its reversed complementary sequence before being feeded to BS-Seeker2. We provide
-a script named "Antisense.py" for this function.
-Examples:
-
-        bs_seeker2-align.py -1 FN1 -2 FN2  -g genome.fa -o PE.bam -u unmapped
-        bs_seeker2-align.py -i unmapped_1.fa -g genome.fa -o unmapped_1.bam
-        Antisense.py -i unmapped_2.fa -o unmapped_2_antisense.fa
-        bs_seeker2-align.py -i unmapped_2_antisense.fa -g mm9_phage.fa -o unmapped_2.bam
 
 
 ###(7) Adapter related issue

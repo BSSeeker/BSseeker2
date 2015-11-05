@@ -66,3 +66,10 @@ V2.0.9 - Dec 30, 2014
 3. [bs_seeker2-call_methylation] : Modified codes for speed improvements
 4. [bs_seeker2-call_methylation] : Add the parameter"--sorted"
 5. [bs_align/*.py] : Fix input empty line problem
+
+
+------------------------------------------
+
+V2.0.10 - Nov 5, 2015
+1. [bs_seeker2-align.py] : Fix bug with "-s" and "-e"
+1. [bs_seeker2-call_methylation.py] : Fix error with pysam version higher than 0.8.0

@@ -58,6 +58,8 @@ Success & return!
 def RemoveAdapter ( read, adapter, no_mismatch, rm_back=0) :
     lr = len(read)
     la = len(adapter)
+    if la == 0 :
+        return read
     # Check the empty adapter, namely, the reads start with the 2nd base of adapter,
     # not including the 'A' base in front of the adapter.
     if adapter[2:] == read[0:(la-1)] :
@@ -95,6 +97,8 @@ def RemoveAdapter ( read, adapter, no_mismatch, rm_back=0) :
 def Remove_5end_Adapter ( read, adapter, no_mismatch) :
     lr = len(read)
     la = len(adapter)
+    if la == 0 :
+        return read
     for i in xrange (la - no_mismatch) :
         read_pos = 0
         adapter_pos = i
@@ -113,6 +117,7 @@ def Remove_5end_Adapter ( read, adapter, no_mismatch) :
         # while_end
         if adapter_pos == la :
             return read[(la-i):]
+    return read
 
 
 def next_nuc(seq, pos, n):

@@ -107,68 +107,61 @@ def bs_pair_end(main_read_file_1,
                 outfile, XS_pct, XS_count, adapter_mismatch,
                 show_multiple_hit, show_unmapped_hit):
 
-    #----------------------------------------------------------------
+    logm("----------------------------------------------" )
     adapter  = ""
     adapterA = ""
     adapterB = ""
     if adapter_file !="":
         try :
-            adapter_inf=open(adapter_file,"r")
-            if asktag=="N": #<--- directional library
-                adapter=adapter_inf.readline()
+            adapter_inf = open(adapter_file,"r")
+            if asktag == "N": #<--- directional library
+                adapter = adapter_inf.readline()
                 adapter_inf.close()
-                adapter=adapter.rstrip("\n")
-                adapterA=adapter
-                adapterB=adapter
-            elif asktag=="Y":#<--- un-directional library
-                adapterA=adapter_inf.readline()
-                adapterB=adapter_inf.readline()
+                adapter = adapter.rstrip("\n")
+                adapterA = adapter
+                adapterB = adapter
+            elif asktag == "Y":#<--- un-directional library
+                adapterA = adapter_inf.readline()
+                adapterB = adapter_inf.readline()
                 adapter_inf.close()
-                adapterA=adapterA.rstrip("\n")
-                adapterB=adapterB.rstrip("\n")
+                adapterA = adapterA.rstrip("\n")[0:10]
+                adapterB = adapterB.rstrip("\n")[-10::]
+                #if adapterB == "" :
+                #    adapterB = reverse_compl_seq(adapterA)
         except IOError :
             print "[Error] Cannot find adapter file : %s" % adapter_file
             exit(-1)
-
-
+    # end-of-if
     #----------------------------------------------------------------
 
-    logm("End 1 filename: %s"% main_read_file_1  )
-    logm("End 2 filename: %s"% main_read_file_2  )
-    logm("The first base (for mapping): %d"% cut1  )
-    logm("The  last base (for mapping): %d"% cut2  )
-
-    logm("Path for short reads aligner: %s"% aligner_command + '\n')
-    logm("Reference genome library path: %s"% db_path  )
-
+    logm("Filename for 1st mate: %s" % main_read_file_1  )
+    logm("Filename for 2nd mate: %s" % main_read_file_2  )
+    logm("The first base (for mapping): %d" % cut1  )
+    logm("The  last base (for mapping): %d" % cut2  )
+    logm("Path for short reads aligner: %s" % aligner_command + "\n")
+    logm("Reference genome library path: %s" % db_path  )
     if asktag == "Y" :
         logm("Un-directional library" )
     else :
         logm("Directional library")
-    logm("Number of mismatches allowed: %s"% str(max_mismatch_no)  )
-
-    if adapter_file !="":
-        if asktag=="Y":
-            logm("Adapters to be removed from 3' of the reads:" )
-            logm("-- A: %s" % adapterA  )
-            logm("-- B: %s" % adapterB  )
-        elif asktag=="N":
-            logm("Adapter to be removed from 3' of the reads:" )
-            logm("-- %s" % adapter  )
-
+    # end-of-if
+    logm("Number of mismatches allowed: %s" % str(max_mismatch_no)  )
+    if adapter_file != "":
+        if asktag == "Y":
+            logm("3\' end adapter sequence: %s" % adapterA)
+            logm("5\' end adapter sequence: %s" % adapterB)
+        elif asktag == "N":
+            logm("Adapter sequence: %s" % adapter)
+    # end-of-if
     logm("-------------------------------- " )
 
-    #----------------------------------------------------------------
 
     # helper method to join fname with tmp_path
     tmp_d = lambda fname: os.path.join(tmp_path, fname)
-
     db_d = lambda fname: os.path.join(db_path, fname)
-
 
     #----------------------------------------------------------------
     # splitting the 2 big read files
-
     input_fname1 = os.path.split(main_read_file_1)[1]
     input_fname2 = os.path.split(main_read_file_2)[1]
 
@@ -181,30 +174,24 @@ def bs_pair_end(main_read_file_1,
                    sorted(filter(lambda fname: fname.startswith("%s-E2-" % input_fname2), dirList)))
 
 
-
     #---- Stats ------------------------------------------------------------
-    all_raw_reads=0
-    all_trimmed=0
-    all_mapped=0
-    all_mapped_passed=0
-    all_base_before_trim=0
-    all_base_after_trim=0
-    all_base_mapped=0
-
-    all_unmapped=0
-
-    numbers_premapped_lst=[0,0,0,0]
-    numbers_mapped_lst=[0,0,0,0]
-
-    mC_lst=[0,0,0]
-    uC_lst=[0,0,0]
-
-    no_my_files=0
+    all_raw_reads = 0
+    all_trimmed = 0
+    all_mapped = 0
+    all_mapped_passed = 0
+    all_base_before_trim = 0
+    all_base_after_trim = 0
+    all_base_mapped = 0
+    all_unmapped = 0
+    numbers_premapped_lst = [0, 0, 0, 0]
+    numbers_mapped_lst = [0, 0, 0, 0]
+    mC_lst = [0, 0, 0]
+    uC_lst = [0, 0, 0]
+    no_my_files = 0
     read_id_lst_1 = dict()
     read_id_lst_2 = dict()
 
     #----------------------------------------------------------------
-    print "== Start mapping =="
     if show_multiple_hit is not None:
         outf_MH_1 = open(show_multiple_hit+"_1.fa",'w')
         outf_MH_2 = open(show_multiple_hit+"_2.fa",'w')
@@ -218,16 +205,14 @@ def bs_pair_end(main_read_file_1,
     for read_file_1, read_file_2 in my_files:
 
         no_my_files+=1
-
         random_id=".tmp-"+str(random.randint(1000000,9999999))
 
         original_bs_reads_1 = {}
         original_bs_reads_2 = {}
         original_bs_reads_lst= [original_bs_reads_1, original_bs_reads_2]
 
-
         if asktag == "Y" :
-
+            logm("Start reading and trimming the input sequences")
             #----------------------------------------------------------------
             outfile_1FCT = tmp_d('Trimmed_FCT_1.fa'+random_id)
             outfile_1RCT = tmp_d('Trimmed_RCT_1.fa'+random_id)
@@ -338,13 +323,16 @@ def bs_pair_end(main_read_file_1,
 
                         #--striping BS adapter from 3' read --------------------------------------------------------------
                         all_base_before_trim += len(seq)
-                        if f==0 and adapterA!="" :
+                        if f==0 :#and adapterA!="" :
                             new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            new_read = Remove_5end_Adapter(new_read, adapterB, adapter_mismatch)
                             if len(new_read)<len(seq) :
                                 all_trimmed += 1
                             seq = new_read
-                        if f==1 and adapterB!="" :
-                            new_read = RemoveAdapter(seq, adapterB, adapter_mismatch)
+                        if f==1:# and adapterB!="" :
+                            #new_read = RemoveAdapter(seq, adapterB, adapter_mismatch)
+                            new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            new_read = Remove_5end_Adapter(new_read, adapterB, adapter_mismatch)
                             if len(new_read)<len(seq) :
                                 all_trimmed += 1
                             seq = new_read
@@ -373,6 +361,7 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
+            logm("Start mapping")
             WC2T_fr = tmp_d("W_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
             WC2T_rf = tmp_d("W_C2T_rf_m"+str(max_mismatch_no)+".mapping"+random_id)
             CG2A_fr = tmp_d("C_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
@@ -632,6 +621,7 @@ def bs_pair_end(main_read_file_1,
         #  Directional library
         if asktag=="N":
 
+            logm("Start reading and trimming the input sequences")
             #----------------------------------------------------------------
             outfile_1FCT = tmp_d('Trimed_FCT_1.fa'+random_id)
             outfile_2RGA = tmp_d('Trimed_RGA_2.fa'+random_id)
@@ -744,11 +734,13 @@ def bs_pair_end(main_read_file_1,
                         all_base_before_trim += len(seq)
                         if f==0 and adapterA!="" :
                             new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            new_read = RemoveAdapter(new_read, adapterB, adapter_mismatch)
                             if len(new_read) < len(seq) :
                                 all_trimmed += 1
                             seq = new_read
                         if f==1 and adapterB!="" :
-                            new_read = RemoveAdapter(seq, adapterB, adapter_mismatch)
+                            new_read = RemoveAdapter(seq, adapterA, adapter_mismatch)
+                            new_read = RemoveAdapter(new_read, adapterB, adapter_mismatch)
                             if len(new_read)<len(seq) :
                                 all_trimmed += 1
                             seq = new_read
@@ -775,6 +767,7 @@ def bs_pair_end(main_read_file_1,
             #--------------------------------------------------------------------------------
             # Bowtie mapping
             #--------------------------------------------------------------------------------
+            logm("Start mapping")
             WC2T_fr = tmp_d("W_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
             CG2A_fr = tmp_d("C_C2T_fr_m"+str(max_mismatch_no)+".mapping"+random_id)
 
@@ -995,45 +988,46 @@ def bs_pair_end(main_read_file_1,
     logm("Number of bases in total: %d " % all_base_before_trim)
     #print "AdapterA=", adapterA, "; AdapterB=", adapterB
     if adapterA != "" or adapterB != "" :
-        logm("Number of reads having adapter removed: %d \n"% all_trimmed)
+        logm("Number of reads having adapter removed: %d "% all_trimmed)
         logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
 
     if all_raw_reads >0:
-
-        logm("Number of reads rejected because of multiple hits: %d\n" % len(Multiple_hits) )
+        logm("Number of reads rejected because of multiple hits: %d" % len(Multiple_hits) )
         logm("Number of unique-hits reads (before post-filtering): %d" % all_mapped + "\n")
         if asktag=="Y":
-            logm("-- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
-            logm("-- %7d RC-FW pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[1]) )
-            logm("-- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[2]) )
-            logm("-- %7d RC-FW pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[3]) )
+            logm("  %7d FW-RC pairs mapped to Watson strand (before post-filtering)" % (numbers_premapped_lst[0]) )
+            logm("  %7d RC-FW pairs mapped to Watson strand (before post-filtering)" % (numbers_premapped_lst[1]) )
+            logm("  %7d FW-RC pairs mapped to Crick strand (before post-filtering)" % (numbers_premapped_lst[2]) )
+            logm("  %7d RC-FW pairs mapped to Crick strand (before post-filtering)" % (numbers_premapped_lst[3]) )
         elif asktag=="N":
-            logm("-- %7d FW-RC pairs mapped to Watson strand (before post-filtering)"%(numbers_premapped_lst[0]) )
-            logm("-- %7d FW-RC pairs mapped to Crick strand (before post-filtering)"%(numbers_premapped_lst[1]) )
-        logm("--- %d uniquely aligned pairs, where each end has mismatches <= %s"%(all_mapped_passed, max_mismatch_no) )
+            logm("  %7d FW-RC pairs mapped to Watson strand (before post-filtering)" % (numbers_premapped_lst[0]) )
+            logm("  %7d FW-RC pairs mapped to Crick strand (before post-filtering)" % (numbers_premapped_lst[1]) )
+        logm("  %d uniquely aligned pairs, where each end has mismatches <= %s" % (all_mapped_passed, max_mismatch_no) )
         if asktag=="Y":
-            logm("----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
-            logm("----- %7d RC-FW pairs mapped to Watson strand"%(numbers_mapped_lst[1]) )
-            logm("----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[2]) )
-            logm("----- %7d RC-FW pairs mapped to Crick strand"%(numbers_mapped_lst[3]) )
+            logm("  %7d FW-RC pairs mapped to Watson strand" % (numbers_mapped_lst[0]) )
+            logm("  %7d RC-FW pairs mapped to Watson strand" % (numbers_mapped_lst[1]) )
+            logm("  %7d FW-RC pairs mapped to Crick strand" % (numbers_mapped_lst[2]) )
+            logm("  %7d RC-FW pairs mapped to Crick strand" % (numbers_mapped_lst[3]) )
         elif asktag=="N":
-            logm("----- %7d FW-RC pairs mapped to Watson strand"%(numbers_mapped_lst[0]) )
-            logm("----- %7d FW-RC pairs mapped to Crick strand"%(numbers_mapped_lst[1]) )
+            logm("  %7d FW-RC pairs mapped to Watson strand" % (numbers_mapped_lst[0]) )
+            logm("  %7d FW-RC pairs mapped to Crick strand" % (numbers_mapped_lst[1]) )
 
-        logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)*2/all_raw_reads) )
-        logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
-        logm("Unmapped read pairs: %d"% all_unmapped+"\n")
-
-        n_CG=mC_lst[0]+uC_lst[0]
-        n_CHG=mC_lst[1]+uC_lst[1]
-        n_CHH=mC_lst[2]+uC_lst[2]
-
+        logm("Mappability = %1.4f%%" % (100*float(all_mapped_passed)*2/all_raw_reads) )
+        logm("Total bases of uniquely mapped reads : %7d" % all_base_mapped )
+        logm("Unmapped read pairs: %d" % all_unmapped+"\n")
+        #
+        n_CG  = mC_lst[0] + uC_lst[0]
+        n_CHG = mC_lst[1] + uC_lst[1]
+        n_CHH = mC_lst[2] + uC_lst[2]
+        #
         logm("-------------------------------- " )
         logm("Methylated C in mapped reads " )
-        logm(" mCG %1.3f%%"%((100*float(mC_lst[0])/n_CG) if n_CG != 0 else 0) )
-        logm(" mCHG %1.3f%%"%((100*float(mC_lst[1])/n_CHG) if n_CHG != 0 else 0) )
-        logm(" mCHH %1.3f%%"%((100*float(mC_lst[2])/n_CHH) if n_CHH != 0 else 0) )
-
-    logm("----------------------------------------------" )
-    logm("------------------- END ----------------------" )
-    elapsed("=== END %s %s ===" % (main_read_file_1, main_read_file_2))
+        logm(" mCG  %1.3f%%" % ((100*float(mC_lst[0])/n_CG) if n_CG != 0 else 0) )
+        logm(" mCHG %1.3f%%" % ((100*float(mC_lst[1])/n_CHG) if n_CHG != 0 else 0) )
+        logm(" mCHH %1.3f%%" % ((100*float(mC_lst[2])/n_CHH) if n_CHH != 0 else 0) )
+        #
+    logm("-------------------------------- " )
+    logm("Files : %s and %s" % (main_read_file_1, main_read_file_2) )
+    elapsed("Resource / CPU time")
+    logm("------------------- END ----------------------")
+    close_log()

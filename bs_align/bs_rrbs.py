@@ -43,7 +43,6 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
     # For double enzyme: cut_format="C-CGG,A-CTG"; ApekI:"G^CWGC"
     #cut_context = re.sub("-", "", cut_format)
     # Ex. cut_format="C-CGG,AT-CG,G-CWGC"
-
     cut_format_lst = EnumerateIUPAC(cut_format.upper().split(",")) # ['G-CAGC', 'AT-CG', 'C-CGG', 'G-CTGC']
     cut_context = [i.replace("-","") for i in cut_format_lst] # ['GCAGC', 'ATCG', 'CCGG', 'GCTGC']
     cut5_context = [re.match( r'(.*)\-(.*)', i).group(1) for i in cut_format_lst] # ['G', 'AT', 'C', 'G']
@@ -53,62 +52,69 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
     #print cut_format_lst
     #print cut_format
     #print cut5_context
-
     cut_tag_lst = Enumerate_C_to_CT(cut_format_lst) # ['G-TTGC', 'AT-TG', 'G-CAGT', 'T-CGG', 'G-TAGC', 'C-TGG', 'G-CAGC', 'G-CTGC', 'AT-CG', 'T-TGG', 'G-TTGT', 'G-TAGT', 'C-CGG', 'G-CTGT']
     cut5_tag_lst = [re.match(r'(.*)\-(.*)', i).group(1) for i in cut_tag_lst]
     cut3_tag_lst = [re.match(r'(.*)\-(.*)', i).group(2) for i in cut_tag_lst]
     check_pattern = [ i[-2:]+"_"+j for i,j in zip(cut5_tag_lst, cut3_tag_lst) ]
-
     #print "======="
     #print cut_tag_lst
     #print cut3_tag_lst
     #print cut5_tag_lst
     #print check_pattern
-
     # set region[gx,gy] for checking_genome_context
     gx = [ 0 if j>2 else 2-j for j in [len(i) for i in cut5_tag_lst] ] # [XC-CGG]
     gy = [ 3+len(i) for i in cut3_tag_lst ]
-
-
     #----------------------------------------------------------------
-
     # helper method to join fname with tmp_path
     tmp_d = lambda fname: os.path.join(tmp_path, fname)
     db_d = lambda fname: os.path.join(db_path, fname)
-
     MAX_TRY = 500 # For finding the serial_no
-    whole_adapter_seq = ""
-    #----------------------------------------------------------------
-    adapter_seq=""
+    logm("----------------------------------------------" )
+    adapter = ""
+    adapter_fw = ""
+    adapter_rc = ""
     if adapter_file:
         try :
             adapter_inf = open(adapter_file,"r")
-            whole_adapter_seq = adapter_inf.readline().strip()
-            adapter_seq = whole_adapter_seq[0:10] # only use first 10bp of adapter
+            if asktag == "N": #<--- directional library
+                adapter = adapter_inf.readline().strip()
+                adapter = adapter[0:10] # only use first 10bp of adapter
+                adapter_inf.close()
+            elif asktag == "Y":#<--- un-directional library
+                adapter_fw = adapter_inf.readline()
+                adapter_rc = adapter_inf.readline()
+                adapter_inf.close()
+                adapter_fw = adapter_fw.rstrip("\n")[0:10]
+                adapter_rc = adapter_rc.rstrip("\n")[-10::]
+                if adapter_rc == "" :
+                    adapter_rc = reverse_compl_seq(adapter_fw)
             adapter_inf.close()
         except IOError:
             print "[Error] Cannot find adapter file : %s !" % adapter_file
             exit(-1)
-
+    # end-of-if
     logm("Read filename: %s" % main_read_file)
-    logm("The first base (for mapping): %d"% cut_s  )
-    logm("The  last base (for mapping): %d"% cut_e  )
-
-    logm("Path for short reads aligner: %s"% aligner_command + '\n')
-    logm("Reference genome library path: %s"% db_path  )
-
+    logm("The first base (for mapping): %d" % cut_s  )
+    logm("The  last base (for mapping): %d" % cut_e  )
+    logm("Path for short reads aligner: %s" % aligner_command + '\n')
+    logm("Reference genome library path: %s" % db_path  )
     if asktag == "Y" :
         logm("Un-directional library" )
     else :
         logm("Directional library")
+    # end-of-if
+    logm("Number of mismatches allowed: %s" % max_mismatch_no  )
 
-    logm("Number of mismatches allowed: %s"% max_mismatch_no  )
-
-    if adapter_file !="":
-        logm("Adapter seq: %s" % whole_adapter_seq)
+    if adapter_file != "":
+        if asktag == "N": #<--- directional library
+            logm("Adapter sequence: %s" % adapter)
+        elif asktag == "Y":
+            logm("3\' end adapter sequence: %s" % adapter_fw)
+            logm("5\' end adapter sequence: %s" % adapter_rc)
+    #if adapter_file !="":
+    #    logm("Adapter seq: %s" % adapter)
     logm("-------------------------------- " )
 
-    #----------------------------------------------------------------
     all_raw_reads=0
     all_tagged=0
     all_tagged_trimmed=0
@@ -147,7 +153,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
     if asktag=="N" :
         #----------------------------------------------------------------
-        logm("== Start mapping ==")
+        logm("Start reading and trimming the input sequences")
 
         input_fname = os.path.split(main_read_file)[1]
         for read_file in isplit_file(main_read_file, tmp_d(input_fname)+'-s-', no_small_lines):
@@ -247,8 +253,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                     #-- Trimming adapter sequence ---
 
                     all_base_before_trim += len(seq)
-                    if adapter_seq != "" :
-                        new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch, Extra_base_cut_5end_adapter)
+                    if adapter != "" :
+                        new_read = RemoveAdapter(seq, adapter, adapter_mismatch, Extra_base_cut_5end_adapter)
                         if len(new_read) < len(seq) :
                             all_tagged_trimmed += 1
                         seq = new_read
@@ -271,6 +277,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
             # mapping
             #--------------------------------------------------------------------------------
+            logm("Start mapping")
             WC2T=tmp_d("W_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
             CC2T=tmp_d("C_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
 
@@ -517,7 +524,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
     elif asktag=="Y" :
         #----------------------------------------------------------------
-        logm("== Start mapping ==")
+        logm("Start reading and trimming the input sequences")
 
         input_fname = os.path.split(main_read_file)[1]
         for read_file in isplit_file(main_read_file, tmp_d(input_fname)+'-s-', no_small_lines):
@@ -617,8 +624,8 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
                     #-- Trimming adapter sequence ---
                     all_base_before_trim += len(seq)
-                    if adapter_seq != "" :
-                        new_read = RemoveAdapter(seq, adapter_seq, adapter_mismatch, Extra_base_cut_5end_adapter)
+                    if adapter != "" :
+                        new_read = RemoveAdapter(seq, adapter, adapter_mismatch, Extra_base_cut_5end_adapter)
                         if len(new_read) < len(seq) :
                             all_tagged_trimmed += 1
                         seq = new_read
@@ -643,6 +650,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
             # mapping
             #--------------------------------------------------------------------------------
+            logm("Start mapping")
             WC2T = tmp_d("W_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
             CC2T = tmp_d("C_C2T_m"+str(max_mismatch_no)+".mapping"+random_id)
             WG2A = tmp_d("W_G2A_m"+str(max_mismatch_no)+".mapping"+random_id)
@@ -1045,53 +1053,50 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
 
     if show_multiple_hit is not None :
         outf_MH.close()
-
     if show_unmapped_hit is not None :
         outf_UH.close()
 
-    logm("Number of raw reads: %d "% all_raw_reads)
+    logm("----------------------------------------------")
+    logm("Number of raw reads: %d " % all_raw_reads)
     if all_raw_reads>0:
-        logm("Number of raw reads with CGG/TGG at 5' end: %d (%1.3f)"%(all_tagged,float(all_tagged)/all_raw_reads))
+        logm("Number of raw reads with CGG/TGG at 5' end: %d (%1.3f)" % (all_tagged, float(all_tagged)/all_raw_reads))
         for kk in range(len(n_cut_tag_lst)):
-            logm("Number of raw reads with tag %s: %d (%1.3f)"%(cut3_tag_lst[kk],n_cut_tag_lst[cut3_tag_lst[kk]],float(n_cut_tag_lst[cut3_tag_lst[kk]])/all_raw_reads))
-        if adapter_seq!="" :
-            logm("Number of reads having adapter removed: %d "%all_tagged_trimmed)
-        logm("Number of bases in total: %d "%all_base_before_trim)
-        if adapter_seq!="" :
-            logm("Number of bases after trimming the adapters: %d (%1.3f)"%(all_base_after_trim, float(all_base_after_trim)/all_base_before_trim ) )
+            logm("Number of raw reads with tag %s: %d (%1.3f)" % (cut3_tag_lst[kk],n_cut_tag_lst[cut3_tag_lst[kk]],float(n_cut_tag_lst[cut3_tag_lst[kk]])/all_raw_reads))
+        logm("Number of bases in total: %d " % all_base_before_trim)
+        if adapter!="" :
+            logm("Number of reads having adapter removed: %d " % all_tagged_trimmed)
+            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim ) )
         logm("Number of reads are rejected because of multiple hits: %d\n" % len(Multiple_hits) )
-        logm("Number of unique-hits reads (before post-filtering): %d"%all_mapped)
-
-        logm("------ %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))
-        logm("Mappability= %1.4f%%"%(100*float(all_mapped_passed)/all_raw_reads))
+        logm("Number of unique-hits reads (before post-filtering): %d" % all_mapped)
+        logm("  %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))
+        logm("Mappability = %1.4f%%" % (100*float(all_mapped_passed)/all_raw_reads))
         #logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
-
-        if asktag=="Y": # un-diretional
-            logm(" ---- %7d FW reads mapped to Watson strand"%(num_mapped_FW_C2T) )
-            logm(" ---- %7d RC reads mapped to Watson strand"%(num_mapped_FW_G2A) )
-            logm(" ---- %7d FW reads mapped to Crick strand"%(num_mapped_RC_C2T) )
-            logm(" ---- %7d RC reads mapped to Crick strand"%(num_mapped_RC_G2A) )
+        if asktag == "Y": # un-diretional
+            logm("  %7d FW reads mapped to Watson strand" % (num_mapped_FW_C2T) )
+            logm("  %7d RC reads mapped to Watson strand" % (num_mapped_FW_G2A) )
+            logm("  %7d FW reads mapped to Crick strand" % (num_mapped_RC_C2T) )
+            logm("  %7d RC reads mapped to Crick strand" % (num_mapped_RC_G2A) )
             # the variable name 'num_mapped_RC_G2A' seems not consistent with illustration
             # according to literal meaning
-        elif asktag=="N": # directional
-            logm(" ---- %7d FW reads mapped to Watson strand"%(num_mapped_FW_C2T) )
-            logm(" ---- %7d FW reads mapped to Crick strand"%(num_mapped_RC_C2T) )
-        logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
-
-        n_CG = mC_lst[0] + uC_lst[0]
+        elif asktag == "N": # directional
+            logm("  %7d FW reads mapped to Watson strand" % (num_mapped_FW_C2T) )
+            logm("  %7d FW reads mapped to Crick strand" % (num_mapped_RC_C2T) )
+        logm("Total bases of uniquely mapped reads : %7d" % all_base_mapped )
+        #
+        n_CG  = mC_lst[0] + uC_lst[0]
         n_CHG = mC_lst[1] + uC_lst[1]
         n_CHH = mC_lst[2] + uC_lst[2]
-
+        #
         logm("----------------------------------------------")
         logm("Methylated C in mapped reads ")
-        logm(" mCG %1.3f%%"%( (100 * float(mC_lst[0]) / n_CG) if n_CG!=0 else 0))
-        logm(" mCHG %1.3f%%"%( (100 * float(mC_lst[1]) / n_CHG) if n_CHG!=0 else 0))
-        logm(" mCHH %1.3f%%"%( (100 * float(mC_lst[2]) / n_CHH) if n_CHH!=0 else 0))
-    logm("----------------------------------------------")
+        logm(" mCG  %1.3f%%" % ( (100 * float(mC_lst[0]) / n_CG) if n_CG!=0 else 0))
+        logm(" mCHG %1.3f%%" % ( (100 * float(mC_lst[1]) / n_CHG) if n_CHG!=0 else 0))
+        logm(" mCHH %1.3f%%" % ( (100 * float(mC_lst[2]) / n_CHH) if n_CHH!=0 else 0))
+        #
+    logm("-------------------------------- " )
+    logm("File : %s" % main_read_file )
+    elapsed("Resource / CPU time")
     logm("------------------- END ----------------------")
-
-    elapsed(main_read_file)
-
     close_log()
 
 

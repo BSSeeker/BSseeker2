@@ -227,6 +227,11 @@ if __name__ == '__main__':
 
         for pr in col.pileups:
         #     print pr
+            if pysam.__version__ > "0.8.0" :
+                pr_qpos = pr.query_position
+            else :
+                pr_qpos =pr.qpos
+            #
             if (not pr.indel) : # skip indels
                 pr_alignment = pr.alignment
                 #if ( (options_RM_SX) and (pr.alignment.tags[1][1] == 1) ):
@@ -239,7 +244,9 @@ if __name__ == '__main__':
                     # when need to filter and read with tag (XS==1), then remove the reads
                     continue
                 #print pr_alignment.tags
-                if pr.qpos >= len(pr_alignment.seq):
+                #if pr.qpos >= len(pr_alignment.seq):
+                #if pr.query_position >= len(pr_alignment.seq):
+                if pr_qpos >= len(pr_alignment.seq):
                     print 'WARNING: read %s has an invalid alignment. Discarding.. ' % pr_alignment.qname
                     continue
                 #print "qname= %s" % pr.alignment.qname
@@ -255,7 +262,9 @@ if __name__ == '__main__':
                         #print "Remove the read with duplicate qname : %s" % qname
                         continue
                     qname_pool.append(qname)
-                read_nuc = pr_alignment.seq[pr.qpos]
+                #read_nuc = pr_alignment.seq[pr.qpos]
+                #read_nuc = pr_alignment.seq[pr.query_position]
+                read_nuc = pr_alignment.seq[pr_qpos]
                 if pr_alignment.is_reverse:
                     ATCG_rev[read_nuc] += 1
                 else:
