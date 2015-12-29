@@ -264,12 +264,16 @@ if __name__ == '__main__':
                     qname_pool.append(qname)
                 #read_nuc = pr_alignment.seq[pr.qpos]
                 #read_nuc = pr_alignment.seq[pr.query_position]
-                read_nuc = pr_alignment.seq[pr_qpos]
+                try :
+                    read_nuc = pr_alignment.seq[pr_qpos]
+                except :
+                    continue
+                #
                 if pr_alignment.is_reverse:
                     ATCG_rev[read_nuc] += 1
                 else:
                     ATCG_fwd[read_nuc] += 1
-
+                #
                 if read_nuc != 'N':
                     total_reads += 1
             #print col_pos, qname_pool
