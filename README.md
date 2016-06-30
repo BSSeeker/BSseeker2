@@ -224,7 +224,9 @@ Module to map reads on 3-letter converted genome.
                             Name of the reference genome (should be the same as
                             "-f" in bs_seeker2-build.py ) [ex. chr21_hg18.fa]
         -m NO_MISMATCHES, --mismatches=NO_MISMATCHES
-                            Number of mismatches in one read [Default: 4]
+                            Number(>=1)/Percentage([0, 1)) of mismatches in one
+                            read. Ex: 4 (allow 4 mismatches) or 0.04 (allow 4%
+                            mismatches) [Default: 4]
         --aligner=ALIGNER   Aligner program for short reads mapping: bowtie,
                             bowtie2, soap, rmap [Default: bowtie]
         -p PATH, --path=PATH
@@ -237,7 +239,7 @@ Module to map reads on 3-letter converted genome.
                             Path to the reference genome library (generated in
                             preprocessing genome) [Default: ~/i
                             nstall/BSseeker2/bs_utils/reference_genomes]
-        -l NO_SPLIT, --split_line=NO_SPLIT
+        -l INT, --split_line=INT
                             Number of lines per split (the read file will be split
                             into small files for mapping. The result will be
                             merged. [Default: 4000000]
@@ -251,19 +253,20 @@ Module to map reads on 3-letter converted genome.
                             y=5 indicate that for one read, if #(mCH sites)/#(all
                             CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or
                             else tag XS=0. [Default: 0.5,5]
-        --multiple-hit      Output reads with multiple hits to
-                            file"Multiple_hit.fa"
+        -M FileName, --multiple-hit=FileName
+                            File to store reads with multiple-hits
+        -u FileName, --unmapped=FileName
+                            File to store unmapped reads
         -v, --version       show version of BS-Seeker2
-
+    
       Aligner Options:
         You may specify any additional options for the aligner. You just have
         to prefix them with --bt- for bowtie, --bt2- for bowtie2, --soap- for
-        soap, --rmap- for rmap, and BS Seeker will pass them on. For example:
+        soap, --rmap- for rmap, and BS-Seeker2 will pass them on. For example:
         --bt-p 4 will increase the number of threads for bowtie to 4, --bt--
         tryhard will instruct bowtie to try as hard as possible to find valid
-        alignments when they exist, and so on. Be sure that you know what you
-        are doing when using these options! Also, we don't do any validation
-        on the values.
+        alignments when they exist, and so on.
+
 
 
 ####Examples :
@@ -410,17 +413,26 @@ This module calls methylation levels from the mapping result.
           -o OUTFILE, --output-prefix=OUTFILE
                                 The output prefix to create ATCGmap and wiggle files
                                 [INFILE]
+          --sorted              Specify when the input bam file is already sorted, the
+                                sorting step will be skipped [Default: False]
           --wig=OUTFILE         The output .wig file [INFILE.wig]
           --CGmap=OUTFILE       The output .CGmap file [INFILE.CGmap]
           --ATCGmap=OUTFILE     The output .ATCGmap file [INFILE.ATCGmap]
           -x, --rm-SX           Removed reads with tag 'XS:i:1', which would be
                                 considered as not fully converted by bisulfite
                                 treatment [Default: False]
+          --rm-CCGG             Removed sites located in CCGG, avoiding the bias
+                                introduced by artificial DNA methylation status
+                                'XS:i:1', which would be considered as not fully
+                                converted by bisulfite treatment [Default: False]
+          --rm-overlap          Removed one mate if two mates are overlapped, for
+                                paired-end data [Default: False]
           --txt                 Show CGmap and ATCGmap in .gz [Default: False]
           -r READ_NO, --read-no=READ_NO
                                 The least number of reads covering one site to be
                                 shown in wig file [Default: 1]
           -v, --version         show version of BS-Seeker2
+
 
 
 ####Example :
@@ -796,6 +808,42 @@ Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, t
 
 A: I suggest a pre-step for merging two overlapped reads into one. Such tools include
 [SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
+
+
+####QA6.2
+
+Q: Any recommendation for mapping paired-end BS-seq data?
+
+A: For paired-end BS-seq data, mapping each mate in single-end mode is recommended. 
+
+For methylC-seq or RRBS library, you can run following commands:
+
+        bs_seeker-align.py -i mate_1.fq -o mate_1.bam ....           # align the mate 1 as single-end mode
+        Antisense.py -i mate_2.fq -o mate_2.anti.fq                  # convert the mate 2 to antisense sequences
+        bs_seeker-align.py -i mate_2.anti.fq -o mate_2.bam ....      # align the mate 2 as single-end mode
+        samtools merge merge.bam mate_1.bam mate_2.bam               # merge the bam files together
+        bs_seeker2-call_methylation.py -i merge.bam --rm-overlap ... # call the methylation levels
+         
+For PBAT library, you can run following commands:
+
+        Antisense.py -i mate_1.fq -o mate_1.anti.fq                  # convert the mate 1 to antisense sequences
+        bs_seeker-align.py -i mate_1.anti.fq -o mate_1.bam ....      # align the mate 1 as single-end mode
+        bs_seeker-align.py -i mate_2.fq -o mate_2.bam ....           # align the mate 2 as single-end mode
+        samtools merge merge.bam mate_1.bam mate_2.bam               # merge the bam files together
+        bs_seeker2-call_methylation.py -i merge.bam --rm-overlap ... # call the methylation levels
+         
+
+####QA6.3
+
+Q: If the two mates in paired-end library have overlaps, will BS-Seeker2 remove the overlapped regions?
+
+A: You can specify the parameter "--rm-overlap" when running "bs_seeker2-call_methylation.py".
+
+        Mate1 :       ACCGCGTTGATCGAGTACGTACGTGGGTC
+        Mate2 :                  GCTCATGCATGCACCCAGCGGATTACCGA
+        Overlapped regions :     ==================
+
+   When specifying the parameter "--rm-overlap", the nucleotides within the overlapped regions will only be counted once.
 
 
 ###(7) Adapter related issue
