@@ -989,7 +989,8 @@ def bs_pair_end(main_read_file_1,
     #print "AdapterA=", adapterA, "; AdapterB=", adapterB
     if adapterA != "" or adapterB != "" :
         logm("Number of reads having adapter removed: %d "% all_trimmed)
-        logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
+        trim_percent = (float(all_base_after_trim) / all_base_before_trim) if all_base_before_trim>0 else 0
+        logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, trim_percent)  )
 
     if all_raw_reads >0:
         logm("Number of reads rejected because of multiple hits: %d" % len(Multiple_hits) )
@@ -1011,8 +1012,8 @@ def bs_pair_end(main_read_file_1,
         elif asktag=="N":
             logm("  %7d FW-RC pairs mapped to Watson strand" % (numbers_mapped_lst[0]) )
             logm("  %7d FW-RC pairs mapped to Crick strand" % (numbers_mapped_lst[1]) )
-
-        logm("Mappability = %1.4f%%" % (100*float(all_mapped_passed)*2/all_raw_reads) )
+        Mappability = (100*float(all_mapped_passed)*2/all_raw_reads) if all_raw_reads > 0 else 0
+        logm("Mappability = %1.4f%%" % Mappability )
         logm("Total bases of uniquely mapped reads : %7d" % all_base_mapped )
         logm("Unmapped read pairs: %d" % all_unmapped+"\n")
         #

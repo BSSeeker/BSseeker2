@@ -726,7 +726,9 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         logm("Number of bases in total: %d " % all_base_before_trim)
         if (asktag == "N" and adapter != "") or (asktag == "Y" and adapter_fw != "") :
             logm("Number of reads having adapter removed: %d" % all_trimmed )
-            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim) )
+            trim_percent = (float(all_base_after_trim)/all_base_before_trim) if all_base_before_trim>0 else 0
+            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, trim_percent) )
+        #
         logm("Number of reads are rejected because of multiple hits: %d" % len(Multiple_hits) )
         logm("Number of unique-hits reads (before post-filtering): %d" % all_mapped)
         if asktag == "Y":
@@ -747,7 +749,8 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
         elif asktag == "N":
             logm("  %7d FW reads mapped to Watson strand" % (numbers_mapped_lst[0]) )
             logm("  %7d FW reads mapped to Crick strand" % (numbers_mapped_lst[1]) )
-        logm("Mappability = %1.4f%%" % (100*float(all_mapped_passed)/all_raw_reads) )
+        Mappability = (100 * float(all_mapped_passed) / all_raw_reads)  if all_raw_reads>0 else 0
+        logm("Mappability = %1.4f%%" % Mappability )
         logm("Total bases of uniquely mapped reads : %7d" % all_base_mapped )
         #
         n_CG  = mC_lst[0] + uC_lst[0]

@@ -72,4 +72,10 @@ V2.0.9 - Dec 30, 2014
 
 V2.0.10 - Nov 5, 2015
 1. [bs_seeker2-align.py] : Fix bug with "-s" and "-e"
-1. [bs_seeker2-call_methylation.py] : Fix error with pysam version higher than 0.8.0
+2. [bs_seeker2-call_methylation.py] : Fix error with pysam version higher than 0.8.0
+
+------------------------------------------
+
+V2.1.0 - Dec 9, 2016
+1. fixed bug related with pysam version
+2. fixed bug related with output information

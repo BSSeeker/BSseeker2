@@ -1012,13 +1012,13 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                                                     try_pos, FR)
                             try_pos += 1
                             try_count += 1
-
+                        #
                         #if my_region_serial == 0 :
                         #    print "[For debug]: chr=", mapped_chr
                         #    print "[For debug]: RC_C2A read still cannot find fragment serial"
-
+                    #
                     N_mismatch = N_MIS(r_aln, g_aln)
-#                    if N_mismatch <= int(max_mismatch_no) :
+                    #if N_mismatch <= int(max_mismatch_no) :
                     mm_no=float(max_mismatch_no)
                     if (mm_no>=1 and N_mismatch<=mm_no) or (mm_no<1 and N_mismatch<=(mm_no*len(r_aln)) ):
                         all_mapped_passed += 1
@@ -1059,19 +1059,23 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
     logm("----------------------------------------------")
     logm("Number of raw reads: %d " % all_raw_reads)
     if all_raw_reads>0:
-        logm("Number of raw reads with CGG/TGG at 5' end: %d (%1.3f)" % (all_tagged, float(all_tagged)/all_raw_reads))
+        tag_percent = (float(all_tagged)/all_raw_reads) if all_raw_reads>0 else 0
+        logm("Number of raw reads with CGG/TGG at 5' end: %d (%1.3f)" % (all_tagged, tag_percent) )
         for kk in range(len(n_cut_tag_lst)):
-            logm("Number of raw reads with tag %s: %d (%1.3f)" % (cut3_tag_lst[kk],n_cut_tag_lst[cut3_tag_lst[kk]],float(n_cut_tag_lst[cut3_tag_lst[kk]])/all_raw_reads))
+            tag_percent = (float(n_cut_tag_lst[cut3_tag_lst[kk]])/all_raw_reads) if all_raw_reads>0 else 0
+            logm("Number of raw reads with tag %s: %d (%1.3f)" % (cut3_tag_lst[kk],n_cut_tag_lst[cut3_tag_lst[kk]], tag_percent) )
         logm("Number of bases in total: %d " % all_base_before_trim)
         if adapter!="" :
             logm("Number of reads having adapter removed: %d " % all_tagged_trimmed)
-            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, float(all_base_after_trim)/all_base_before_trim ) )
+            trim_percent = (float(all_base_after_trim)/all_base_before_trim ) if all_base_before_trim>0 else 0
+            logm("Number of bases after trimming the adapters: %d (%1.3f)" % (all_base_after_trim, trim_percent ) )
         logm("Number of reads are rejected because of multiple hits: %d\n" % len(Multiple_hits) )
         logm("Number of unique-hits reads (before post-filtering): %d" % all_mapped)
         logm("  %d uniquely aligned reads, passed fragment check, with mismatches <= %s"%(all_mapped_passed, max_mismatch_no))
-        logm("Mappability = %1.4f%%" % (100*float(all_mapped_passed)/all_raw_reads))
+        Mappability = (100*float(all_mapped_passed)/all_raw_reads) if all_raw_reads>0 else 0
+        logm("Mappability = %1.4f%%" % Mappability )
         #logm("Total bases of uniquely mapped reads %7d"% all_base_mapped )
-        if asktag == "Y": # un-diretional
+        if asktag == "Y": # un-directional
             logm("  %7d FW reads mapped to Watson strand" % (num_mapped_FW_C2T) )
             logm("  %7d RC reads mapped to Watson strand" % (num_mapped_FW_G2A) )
             logm("  %7d FW reads mapped to Crick strand" % (num_mapped_RC_C2T) )

@@ -8,7 +8,7 @@ try :
 except ImportError :
     print "[Error] Cannot import \"pysam\" package. Have you installed it?"
     exit(-1)
-
+#
 import gzip
 
 
@@ -52,7 +52,7 @@ def context_calling(seq, position):
 
 
 if __name__ == '__main__':
-
+    #
     parser = OptionParser()
     parser.add_option("-i", "--input", type="string", dest="infilename",help="BAM output from bs_seeker2-align.py", metavar="INFILE")
     parser.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
@@ -72,74 +72,78 @@ if __name__ == '__main__':
     parser.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
 
     (options, args) = parser.parse_args()
-
+    #
 
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
         parser.print_help()
         exit(0)
-
+    #
     if options.version :
         show_version()
         exit (-1)
     else :
         show_version()
-
-
+    #
+    #
     if options.infilename is None:
         error('-i option is required')
     if not os.path.isfile(options.infilename):
         error('Cannot find input file: %s' % options.infilename)
-
+    #
     open_log(options.infilename+'.call_methylation_log')
     db_d = lambda fname:  os.path.join( os.path.expanduser(options.dbpath), fname) # bug fixed, weilong
-
+    #
     if options.RM_OVERLAP :
         logm("The option \"--rm-overlap\" is specified, thus overlap regions of two mates would be discarded.")
-
+    #
     if options.sorted :
         logm('The option \"--sorted\" is specified, thus sorting step is skipped')
         sorted_input_filename = options.infilename
     else :
         logm('sorting BS-Seeker alignments')
         sorted_input_filename = options.infilename+'_sorted'
-        pysam.sort(options.infilename, sorted_input_filename)
+        if pysam.__version__ > '0.7' :
+            pysam.sort(options.infilename, sorted_input_filename)
+        else :
+            pysam.sort("-o", sorted_input_filename + '.bam', "-T", sorted_input_filename, options.infilename)
+        #
         sorted_input_filename += '.bam'
     # end_of if
     logm('indexing sorted alignments')
     pysam.index(sorted_input_filename)
-
+    #
     logm('calculating methylation levels')
     if options.text :
         ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap')
         ATCGmap = open(ATCGmap_fname, 'w')
-
+        #
         CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap')
         CGmap = open(CGmap_fname, 'w')
     else :
         ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap.gz')
         ATCGmap = gzip.open(ATCGmap_fname, 'wb')
-
+        #
         CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap.gz')
         CGmap = gzip.open(CGmap_fname, 'wb')
-
+    #
     # to improve the performance
     options_RM_CCGG = options.RM_CCGG
     options_read_no = options.read_no
     options_RM_SX = options.RM_SX
     options_RM_OVERLAP = options.RM_OVERLAP
-
+    #
     wiggle_fname = options.wig_file or ((options.output_prefix or options.infilename) + '.wig')
     wiggle = open(wiggle_fname, 'w')
     wiggle.write('type wiggle_0\n')
-
+    #
     sorted_input = pysam.Samfile(sorted_input_filename, 'rb')
-    
+    #
     chrom = None
     nucs = ['A', 'T', 'C', 'G', 'N']
     ATCG_fwd = dict((n, 0) for n in nucs)
     ATCG_rev = dict((n, 0) for n in nucs)
-
+    #
     # Define the context and subcontext exchanging dictionary
     ContextTable={"CAA":"CHH", "CAC":"CHH", "CAG":"CHG", "CAT":"CHH",
                   "CCA":"CHH", "CCC":"CHH", "CCG":"CHG", "CCT":"CHH",
@@ -165,9 +169,9 @@ if __name__ == '__main__':
     #
     #PileUp = sorted_input.pileup()
     #for col in PileUp:
-
+    #
     cnts = lambda d: '\t'.join(str(d[n]) for n in nucs)
-
+    #
     for col in sorted_input.pileup():
         col_chrom = sorted_input.getrname(col.tid)
         col_pos = col.pos
@@ -183,7 +187,7 @@ if __name__ == '__main__':
         #
         #nuc, context, subcontext = context_calling(chrom_seq, col_pos)
         # Need to validate the following codes
-
+        #
         if 1 < col_pos < len(chrom_seq) - 2 :
             FiveMer = chrom_seq[(col_pos-2):(col_pos+3)].upper()
             nuc = FiveMer[2]
@@ -198,6 +202,7 @@ if __name__ == '__main__':
             else :
                 context = "--"
                 subcontext = "--"
+            #
         else :
             nuc = chrom_seq[col_pos].upper()
             context = "--"
@@ -224,7 +229,7 @@ if __name__ == '__main__':
         if options_RM_OVERLAP :
             qname_pool = []
             del qname_pool[:]
-
+        #
         for pr in col.pileups:
         #     print pr
             if pysam.__version__ > "0.8.0" :
@@ -234,6 +239,7 @@ if __name__ == '__main__':
             #
             if (not pr.indel) : # skip indels
                 pr_alignment = pr.alignment
+                #print pr.alignment
                 #if ( (options_RM_SX) and (pr.alignment.tags[1][1] == 1) ):
                 ##=== Fixed error reported by Roberto
                 #print options_RM_SX,  dict(pr.alignment.tags)["XS"]
@@ -277,34 +283,34 @@ if __name__ == '__main__':
                 if read_nuc != 'N':
                     total_reads += 1
             #print col_pos, qname_pool
-
+        #
         #cnts = lambda d: '\t'.join(str(d[n]) for n in nucs)
         fwd_counts = cnts(ATCG_fwd)
         rev_counts = cnts(ATCG_rev)
-
+        #
         meth_level = None
         meth_cytosines = 0
         unmeth_cytosines = 0
-
+        #
         if nuc == 'C':
             # plus strand: take the ratio of C's to T's from reads that come from the forward strand
             meth_cytosines = ATCG_fwd['C']
             unmeth_cytosines = ATCG_fwd['T']
-
         elif nuc == 'G':
             # minus strand: take the ratio of G's to A's from reads that come from the reverse strand
             meth_cytosines = ATCG_rev['G']
             unmeth_cytosines = ATCG_rev['A']
-
+            #print("%s\t%d\t%d" % (nuc, ATCG_rev['G'], ATCG_rev['A'] ) )
+        #
         all_cytosines = meth_cytosines + unmeth_cytosines
         if all_cytosines > 0:
             meth_level = float(meth_cytosines)/all_cytosines
-
+        #
         pos = col_pos + 1
-
+        #
         meth_level_string = str(round(meth_level, 2)) if meth_level is not None else 'na'
         ATCGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(fwd_counts)s\t%(rev_counts)s\t%(meth_level_string)s\n' % locals())
-
+        #
         try :
             #if (meth_level is not None) and (all_cytosines >= options_read_no):
             if (all_cytosines >= options_read_no):
@@ -318,15 +324,16 @@ if __name__ == '__main__':
                 # CGmap file only show CG sites
         except TypeError :
             continue
-
+        #
+    #
     ATCGmap.close()
     CGmap.close()
     wiggle.close()
-
+    #
     logm('Call methylation is finished. ')
     logm('==============================')
     logm('Files are saved as:')
     logm('  Wiggle: %s'% wiggle_fname)
     logm('  ATCGMap: %s' % ATCGmap_fname)
     logm('  CGmap: %s' % CGmap_fname)
-
+#
