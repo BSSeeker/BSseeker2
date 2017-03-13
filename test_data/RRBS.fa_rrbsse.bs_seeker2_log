@@ -1,0 +1,54 @@
+[2015-11-05 15:20:43] Mode: Bowtie
+[2015-11-05 15:20:43] Filter for tag XS: #(mCH)/#(all CH)>50.00% and #(mCH)>5
+[2015-11-05 15:20:43] Temporary directory: /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP
+[2015-11-05 15:20:43] Reduced Representation Bisulfite Sequencing: True
+[2015-11-05 15:20:43] Single end
+[2015-11-05 15:20:43] Aligner command: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 %(reference_genome)s  -f %(input_file)s %(output_file)s
+[2015-11-05 15:20:43] ----------------------------------------------
+[2015-11-05 15:20:43] Read filename: test_data/RRBS.fa
+[2015-11-05 15:20:43] The first base (for mapping): 1
+[2015-11-05 15:20:43] The  last base (for mapping): 200
+[2015-11-05 15:20:43] Path for short reads aligner: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 %(reference_genome)s  -f %(input_file)s %(output_file)s
+
+[2015-11-05 15:20:43] Reference genome library path: /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie
+[2015-11-05 15:20:43] Directional library
+[2015-11-05 15:20:43] Number of mismatches allowed: 4
+[2015-11-05 15:20:43] Adapter sequence: AGATCGGAAG
+[2015-11-05 15:20:43] -------------------------------- 
+[2015-11-05 15:20:43] Start reading and trimming the input sequences
+[2015-11-05 15:20:43] Processing read file: /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/RRBS.fa-s-1
+[2015-11-05 15:20:43] Processing input is done
+[2015-11-05 15:20:43] Start mapping
+[2015-11-05 15:20:43] Starting commands:
+[2015-11-05 15:20:43] Launched: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/W_C2T  -f /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/Trimmed_C2T.fa.tmp-9027360 /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/W_C2T_m4.mapping.tmp-9027360
+[2015-11-05 15:20:43] Launched: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T  -f /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/Trimmed_C2T.fa.tmp-9027360 /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/C_C2T_m4.mapping.tmp-9027360
+[2015-11-05 15:20:43] Finished: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/W_C2T  -f /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/Trimmed_C2T.fa.tmp-9027360 /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/W_C2T_m4.mapping.tmp-9027360
+[2015-11-05 15:20:43] Finished: /home/guoweilong/Software/bowtie-1.0.1/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T  -f /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/Trimmed_C2T.fa.tmp-9027360 /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/C_C2T_m4.mapping.tmp-9027360
+[2015-11-05 15:20:43] Aligning reads is done
+[2015-11-05 15:20:43] Extracting alignments is done
+[2015-11-05 15:20:43] Done: /tmp/bs_seeker2_RRBS.fa_rrbsse.bam_-bowtie-TMP-s11pQP/RRBS.fa-s-1 (1) 
+
+[2015-11-05 15:20:43] ----------------------------------------------
+[2015-11-05 15:20:43] Number of raw reads: 1000 
+[2015-11-05 15:20:43] Number of raw reads with CGG/TGG at 5' end: 1000 (1.000)
+[2015-11-05 15:20:43] Number of raw reads with tag CGG: 745 (0.745)
+[2015-11-05 15:20:43] Number of raw reads with tag TGG: 255 (0.255)
+[2015-11-05 15:20:43] Number of bases in total: 100000 
+[2015-11-05 15:20:43] Number of reads having adapter removed: 630 
+[2015-11-05 15:20:43] Number of bases after trimming the adapters: 88317 (0.883)
+[2015-11-05 15:20:43] Number of reads are rejected because of multiple hits: 0
+
+[2015-11-05 15:20:43] Number of unique-hits reads (before post-filtering): 981
+[2015-11-05 15:20:43]   981 uniquely aligned reads, passed fragment check, with mismatches <= 4
+[2015-11-05 15:20:43] Mappability = 98.1000%
+[2015-11-05 15:20:43]       467 FW reads mapped to Watson strand
+[2015-11-05 15:20:43]       514 FW reads mapped to Crick strand
+[2015-11-05 15:20:43] Total bases of uniquely mapped reads :   87025
+[2015-11-05 15:20:43] ----------------------------------------------
+[2015-11-05 15:20:43] Methylated C in mapped reads 
+[2015-11-05 15:20:43]  mCG  75.911%
+[2015-11-05 15:20:43]  mCHG 1.922%
+[2015-11-05 15:20:43]  mCHH 0.812%
+[2015-11-05 15:20:43] -------------------------------- 
+[2015-11-05 15:20:43] File : test_data/RRBS.fa
+[2015-11-05 15:20:43] ------------------- END ----------------------

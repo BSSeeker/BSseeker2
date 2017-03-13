@@ -79,3 +79,9 @@ V2.0.10 - Nov 5, 2015
 V2.1.0 - Dec 9, 2016
 1. fixed bug related with pysam version
 2. fixed bug related with output information
+
+------------------------------------------
+
+V2.1.1 - Apr. 13th, 2017
+1. [bs_seeker2-call_methylation.py] : fixed bug related with pysam version
+2. [bs_seeker2-call_methylation.py] : modified output strategies

@@ -1,0 +1,10 @@
+[2015-11-05 15:35:22] sorting BS-Seeker alignments
+[2015-11-05 15:35:22] indexing sorted alignments
+[2015-11-05 15:35:22] calculating methylation levels
+[2015-11-05 15:35:22] Processing chromosome: chr1
+[2015-11-05 15:35:22] Call methylation is finished. 
+[2015-11-05 15:35:22] ==============================
+[2015-11-05 15:35:22] Files are saved as:
+[2015-11-05 15:35:22]   Wiggle: test_data/RRBS.rm_SX.wig
+[2015-11-05 15:35:22]   ATCGMap: test_data/RRBS.rm_SX.ATCGmap.gz
+[2015-11-05 15:35:22]   CGmap: test_data/RRBS.rm_SX.CGmap.gz

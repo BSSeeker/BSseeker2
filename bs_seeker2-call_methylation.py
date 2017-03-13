@@ -54,22 +54,48 @@ def context_calling(seq, position):
 if __name__ == '__main__':
     #
     parser = OptionParser()
-    parser.add_option("-i", "--input", type="string", dest="infilename",help="BAM output from bs_seeker2-align.py", metavar="INFILE")
-    parser.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
-    parser.add_option("-o", "--output-prefix", type="string", dest="output_prefix",help="The output prefix to create ATCGmap and wiggle files [INFILE]", metavar="OUTFILE")
-    parser.add_option("--sorted", action="store_true", dest="sorted",help="Specify when the input bam file is already sorted, the sorting step will be skipped [Default: %default]", default = False)
-
-    parser.add_option("--wig", type="string", dest="wig_file",help="The output .wig file [INFILE.wig]", metavar="OUTFILE")
-    parser.add_option("--CGmap", type="string", dest="CGmap_file",help="The output .CGmap file [INFILE.CGmap]", metavar="OUTFILE")
-    parser.add_option("--ATCGmap", type="string", dest="ATCGmap_file",help="The output .ATCGmap file [INFILE.ATCGmap]", metavar="OUTFILE")
-
-    parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
-    parser.add_option("--rm-CCGG", action="store_true", dest="RM_CCGG",help="Removed sites located in CCGG, avoiding the bias introduced by artificial DNA methylation status \'XS:i:1\', which would be considered as not fully converted by bisulfite treatment [Default: %default]", default = False)
-    parser.add_option("--rm-overlap", action="store_true", dest="RM_OVERLAP",help="Removed one mate if two mates are overlapped, for paired-end data [Default: %default]", default = False)
-    parser.add_option("--txt", action="store_true", dest="text",help="Show CGmap and ATCGmap in .gz [Default: %default]", default = False)
-
-    parser.add_option("-r", "--read-no",type = "int", dest="read_no",help="The least number of reads covering one site to be shown in wig file [Default: %default]", default = 1)
-    parser.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
+    parser.add_option("-i", "--input", type="string", dest="infilename",help="BAM output from bs_seeker2-align.py",
+                      metavar="INFILE")
+    parser.add_option("-d", "--db", type="string", dest="dbpath",
+                      help="Path to the reference genome library (generated in preprocessing genome) "
+                           "[Default: %default]" , metavar="DBPATH", default = reference_genome_path)
+    parser.add_option("-o", "--output-prefix", type="string", dest="output_prefix", default = None,
+                      help="The output prefix to create ATCGmap and wiggle files. "
+                           "Three files (ATCGmap, CGmap, wig) will be generated if specified. "
+                           "Omit this if only to generate specific format.",
+                      metavar="OUTFILE")
+    parser.add_option("--sorted", action="store_true", dest="sorted",
+                      help="Specify when the input bam file is already sorted, the sorting step will be skipped "
+                           "[Default: %default]", default = False)
+    parser.add_option("--wig", type="string", dest="wig_file",
+                      help="Filename for wig file. Ex: output.wig, or output.wig.gz. Can be overwritten by \"-o\".",
+                      metavar="OUTFILE", default = None)
+    parser.add_option("--CGmap", type="string", dest="CGmap_file", default = None,
+                      help="Filename for CGmap file. Ex: output.CGmap, or output.CGmap.gz. "
+                           "Can be overwritten by \"-o\".",
+                      metavar="OUTFILE")
+    parser.add_option("--ATCGmap", type="string", dest="ATCGmap_file", default = None,
+                      help="Filename for ATCGmap file. Ex: output.ATCGmap, or output.ATCGmap.gz. "
+                           "Can be overwritten by \"-o\".",
+                      metavar="OUTFILE")
+    parser.add_option("-x", "--rm-SX", action="store_true", dest="RM_SX",
+                      help="Removed reads with tag \'XS:i:1\', which would be considered as not fully converted "
+                           "by bisulfite treatment [Default: %default]", default = False)
+    parser.add_option("--rm-CCGG", action="store_true", dest="RM_CCGG",
+                      help="Removed sites located in CCGG, avoiding the bias introduced by artificial"
+                           " DNA methylation status \'XS:i:1\', which would be considered as not fully converted "
+                           "by bisulfite treatment [Default: %default]", default = False)
+    parser.add_option("--rm-overlap", action="store_true", dest="RM_OVERLAP",
+                      help="Removed one mate if two mates are overlapped, for paired-end data"
+                           " [Default: %default]", default = False)
+    parser.add_option("--txt", action="store_true", dest="text",
+                      help="When specified, output file will be stored in plain text instead of compressed version (.gz)",
+                      default = False)
+    parser.add_option("-r", "--read-no",type = "int", dest="read_no",
+                      help="The least number of reads covering one site to be shown in wig file "
+                           "[Default: %default]", default = 1)
+    parser.add_option("-v", "--version", action="store_true", dest="version",
+                      help="show version of BS-Seeker2", metavar="version", default = False)
 
     (options, args) = parser.parse_args()
     #
@@ -101,9 +127,9 @@ if __name__ == '__main__':
         logm('The option \"--sorted\" is specified, thus sorting step is skipped')
         sorted_input_filename = options.infilename
     else :
-        logm('sorting BS-Seeker alignments')
+        logm('sorting BS-Seeker2 alignments')
         sorted_input_filename = options.infilename+'_sorted'
-        if pysam.__version__ > '0.7' :
+        if pysam.__version__ < '0.7' :
             pysam.sort(options.infilename, sorted_input_filename)
         else :
             pysam.sort("-o", sorted_input_filename + '.bam', "-T", sorted_input_filename, options.infilename)
@@ -112,20 +138,50 @@ if __name__ == '__main__':
     # end_of if
     logm('indexing sorted alignments')
     pysam.index(sorted_input_filename)
+    if options.output_prefix is not None :
+        if options.text :
+            options.ATCGmap_file = options.output_prefix + '.ATCGmap'
+            options.CGmap_file = options.output_prefix + '.CGmap'
+            options.wig_file = options.output_prefix + '.wig'
+        else :
+            options.ATCGmap_file = options.output_prefix + '.ATCGmap.gz'
+            options.CGmap_file = options.output_prefix + '.CGmap.gz'
+            options.wig_file = options.output_prefix + '.wig.gz'
+        #
+    else :
+        if (options.ATCGmap_file is None) and (options.CGmap_file is None) and (options.wig_file is None) :
+            if options.text :
+                options.ATCGmap_file = options.infilename + '.ATCGmap'
+                options.CGmap_file = options.infilename + '.CGmap'
+                options.wig_file = options.infilename + '.wig'
+            else :
+                options.ATCGmap_file = options.infilename + '.ATCGmap.gz'
+                options.CGmap_file = options.infilename + '.CGmap.gz'
+                options.wig_file = options.infilename + '.wig.gz'
+            #
+        #
     #
     logm('calculating methylation levels')
-    if options.text :
-        ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap')
-        ATCGmap = open(ATCGmap_fname, 'w')
+    if options.ATCGmap_file is not None :
+        if options.ATCGmap_file.endswith(".gz") :
+            ATCGmap = gzip.open(options.ATCGmap_file, 'wb')
+        else :
+            ATCGmap = open(options.ATCGmap_file, 'w')
         #
-        CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap')
-        CGmap = open(CGmap_fname, 'w')
-    else :
-        ATCGmap_fname = options.ATCGmap_file or ((options.output_prefix or options.infilename) + '.ATCGmap.gz')
-        ATCGmap = gzip.open(ATCGmap_fname, 'wb')
+    #
+    if options.CGmap_file is not None :
+        if options.CGmap_file.endswith(".gz") :
+            CGmap = gzip.open(options.CGmap_file, 'wb')
+        else :
+            CGmap = open(options.CGmap_file, 'w')
         #
-        CGmap_fname = options.CGmap_file or ((options.output_prefix or options.infilename) + '.CGmap.gz')
-        CGmap = gzip.open(CGmap_fname, 'wb')
+    #
+    if options.wig_file is not None :
+        if options.wig_file.endswith(".gz") :
+            wiggle = gzip.open(options.wig_file, 'wb')
+        else :
+            wiggle = open(options.wig_file, 'w')
+        #
     #
     # to improve the performance
     options_RM_CCGG = options.RM_CCGG
@@ -133,9 +189,8 @@ if __name__ == '__main__':
     options_RM_SX = options.RM_SX
     options_RM_OVERLAP = options.RM_OVERLAP
     #
-    wiggle_fname = options.wig_file or ((options.output_prefix or options.infilename) + '.wig')
-    wiggle = open(wiggle_fname, 'w')
-    wiggle.write('type wiggle_0\n')
+    if options.wig_file is not None :
+        wiggle.write('type wiggle_0\n')
     #
     sorted_input = pysam.Samfile(sorted_input_filename, 'rb')
     #
@@ -167,9 +222,6 @@ if __name__ == '__main__':
                   "CTG":"CA", "CGG":"CC", "CCG":"CG", "CAG":"CT",
                   "ATG":"CA", "AGG":"CC", "ACG":"CG", "AAG":"CT"}
     #
-    #PileUp = sorted_input.pileup()
-    #for col in PileUp:
-    #
     cnts = lambda d: '\t'.join(str(d[n]) for n in nucs)
     #
     for col in sorted_input.pileup():
@@ -178,15 +230,14 @@ if __name__ == '__main__':
         if chrom != col_chrom:
             chrom = col_chrom
             chrom_seq = deserialize(db_d(chrom))
-            wiggle.write('variableStep chrom=%s\n' % chrom)
+            if options.wig_file is not None :
+                wiggle.write('variableStep chrom=%s\n' % chrom)
+            #
             logm('Processing chromosome: %s' % chrom)
         #
         for n in nucs:
             ATCG_fwd[n] = 0
             ATCG_rev[n] = 0
-        #
-        #nuc, context, subcontext = context_calling(chrom_seq, col_pos)
-        # Need to validate the following codes
         #
         if 1 < col_pos < len(chrom_seq) - 2 :
             FiveMer = chrom_seq[(col_pos-2):(col_pos+3)].upper()
@@ -255,6 +306,7 @@ if __name__ == '__main__':
                 if pr_qpos >= len(pr_alignment.seq):
                     print 'WARNING: read %s has an invalid alignment. Discarding.. ' % pr_alignment.qname
                     continue
+                #
                 #print "qname= %s" % pr.alignment.qname
                 #qname = pr_alignment.qname.replace( "#1", "").replace(".1", "")
                 if options_RM_OVERLAP :
@@ -268,8 +320,7 @@ if __name__ == '__main__':
                         #print "Remove the read with duplicate qname : %s" % qname
                         continue
                     qname_pool.append(qname)
-                #read_nuc = pr_alignment.seq[pr.qpos]
-                #read_nuc = pr_alignment.seq[pr.query_position]
+                #
                 try :
                     read_nuc = pr_alignment.seq[pr_qpos]
                 except :
@@ -309,31 +360,44 @@ if __name__ == '__main__':
         pos = col_pos + 1
         #
         meth_level_string = str(round(meth_level, 2)) if meth_level is not None else 'na'
-        ATCGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(fwd_counts)s\t%(rev_counts)s\t%(meth_level_string)s\n' % locals())
+        #
+        if options.ATCGmap_file is not None:
+            ATCGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(fwd_counts)s\t%(rev_counts)s\t%(meth_level_string)s\n' % locals())
         #
         try :
             #if (meth_level is not None) and (all_cytosines >= options_read_no):
             if (all_cytosines >= options_read_no):
-            #    print all_cytosines
-                if nuc == 'C':
-                    wiggle.write('%d\t%.2f\n' % (pos, meth_level))
-                else :
-                    wiggle.write('%d\t-%.2f\n' % (pos, meth_level))
+                #    print all_cytosines
+                if options.wig_file is not None:
+                    if nuc == 'C':
+                        wiggle.write('%d\t%.2f\n' % (pos, meth_level))
+                    else :
+                        wiggle.write('%d\t-%.2f\n' % (pos, meth_level))
+                    #
                 #
-                CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
+                if options.CGmap_file is not None:
+                    CGmap.write('%(chrom)s\t%(nuc)s\t%(pos)d\t%(context)s\t%(subcontext)s\t%(meth_level_string)s\t%(meth_cytosines)s\t%(all_cytosines)s\n' % locals())
                 # CGmap file only show CG sites
         except TypeError :
             continue
         #
     #
-    ATCGmap.close()
-    CGmap.close()
-    wiggle.close()
+    if options.ATCGmap_file is not None:
+        ATCGmap.close()
+    #
+    if options.CGmap_file is not None:
+        CGmap.close()
+    #
+    if options.wig_file is not None:
+        wiggle.close()
     #
     logm('Call methylation is finished. ')
     logm('==============================')
     logm('Files are saved as:')
-    logm('  Wiggle: %s'% wiggle_fname)
-    logm('  ATCGMap: %s' % ATCGmap_fname)
-    logm('  CGmap: %s' % CGmap_fname)
+    if options.wig_file is not None:
+        logm('  Wiggle: %s'% options.wig_file)
+    if options.ATCGmap_file is not None:
+        logm('  ATCGMap: %s' % options.ATCGmap_file)
+    if options.CGmap_file is not None:
+        logm('  CGmap: %s' % options.CGmap_file)
 #

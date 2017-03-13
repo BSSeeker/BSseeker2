@@ -1,0 +1,42 @@
+[2013-11-28 16:39:34] Mode: Bowtie
+[2013-11-28 16:39:34] Filter for tag XS: #(mCH)/#(all CH)>50.00% and #(mCH)>5
+[2013-11-28 16:39:34] Temporary directory: /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs
+[2013-11-28 16:39:34] Reduced Representation Bisulfite Sequencing: False
+[2013-11-28 16:39:34] Single end
+[2013-11-28 16:39:34] Aligner command: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 %(reference_genome)s  -f %(input_file)s %(output_file)s
+[2013-11-28 16:39:34] Read filename: test_data/end1.fa.gz
+[2013-11-28 16:39:34] The first base (for mapping): 1
+[2013-11-28 16:39:34] The  last base (for mapping): 200
+[2013-11-28 16:39:34] Path for short reads aligner: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 %(reference_genome)s  -f %(input_file)s %(output_file)s
+
+[2013-11-28 16:39:34] Reference genome library path: /home/guoweilong/program/BSseeker2/bs_utils/reference_genomes/genome.fa_bowtie
+[2013-11-28 16:39:34] Directional library
+[2013-11-28 16:39:34] Number of mismatches allowed: 4
+[2013-11-28 16:39:34] -------------------------------- 
+[2013-11-28 16:39:34] == Start mapping ==
+[2013-11-28 16:39:34] Starting commands:
+[2013-11-28 16:39:34] Launched: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/program/BSseeker2/bs_utils/reference_genomes/genome.fa_bowtie/W_C2T  -f /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/Trimmed_C2T.fa.tmp-5703729 /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/W_C2T_m4.mapping.tmp-5703729
+[2013-11-28 16:39:34] Launched: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/program/BSseeker2/bs_utils/reference_genomes/genome.fa_bowtie/C_C2T  -f /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/Trimmed_C2T.fa.tmp-5703729 /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/C_C2T_m4.mapping.tmp-5703729
+[2013-11-28 16:39:34] Finished: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/program/BSseeker2/bs_utils/reference_genomes/genome.fa_bowtie/W_C2T  -f /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/Trimmed_C2T.fa.tmp-5703729 /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/W_C2T_m4.mapping.tmp-5703729
+[2013-11-28 16:39:34] Finished: /home/guoweilong/Install/bowtie-1.0.0/bowtie -e 160 --quiet --norc --sam-nohead --best -p 2 --nomaqround --sam  -k 2 /home/guoweilong/program/BSseeker2/bs_utils/reference_genomes/genome.fa_bowtie/C_C2T  -f /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/Trimmed_C2T.fa.tmp-5703729 /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/C_C2T_m4.mapping.tmp-5703729
+[2013-11-28 16:39:34] --> /tmp/bs_seeker2_end1.fa.gz_bsse.bam_-bowtie-TMP-9rOdEs/end1.fa.gz-s-1 (1) 
+[2013-11-28 16:39:34] Number of raw reads: 1000 
+
+[2013-11-28 16:39:34] Number of bases in total: 100000 
+[2013-11-28 16:39:34] Number of reads are rejected because of multiple hits: 1
+
+[2013-11-28 16:39:34] Number of unique-hits reads (before post-filtering): 988
+
+[2013-11-28 16:39:34]  ----     508 FW reads mapped to Watson strand (before post-filtering)
+[2013-11-28 16:39:34]  ----     480 FW reads mapped to Crick strand (before post-filtering)
+[2013-11-28 16:39:34] Post-filtering 988 uniquely aligned reads with mismatches <= 4
+[2013-11-28 16:39:34]  ----     508 FW reads mapped to Watson strand
+[2013-11-28 16:39:34]  ----     480 FW reads mapped to Crick strand
+[2013-11-28 16:39:34] Mappability= 98.8000%
+[2013-11-28 16:39:34] Total bases of uniquely mapped reads   98800
+[2013-11-28 16:39:34] ----------------------------------------------
+[2013-11-28 16:39:34] Methylated C in mapped reads 
+[2013-11-28 16:39:34]  mCG 81.353%
+[2013-11-28 16:39:34]  mCHG 2.366%
+[2013-11-28 16:39:34]  mCHH 0.974%
+[2013-11-28 16:39:34] ------------------- END --------------------
