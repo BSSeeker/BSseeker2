@@ -1,5 +1,5 @@
 Settings:
-  Output files: "/home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.*.ebwt"
+  Output files: "/Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.*.ebwt"
   Line rate: 6 (line is 64 bytes)
   Lines per side: 1 (side is 64 bytes)
   Offset rate: 5 (one in 32)
@@ -16,14 +16,14 @@ Settings:
   Random seed: 0
   Sizeofs: void*:8, int:4, long:8, size_t:8
 Input files DNA, FASTA:
-  /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.fa
+  /Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.fa
 Reading reference sizes
   Time reading reference sizes: 00:00:00
 Calculating joined length
 Writing header
 Reserving space for joined string
 Joining reference sequences
-  Time to join reference sequences: 00:00:00
+  Time to join reference sequences: 00:00:01
 bmax according to bmaxDivN setting: 10078
 Using parameters --bmax 7559 --dcv 1024
   Doing ahead-of-time memory usage test
@@ -230,8 +230,8 @@ fchr[T]: 19825
 fchr[$]: 40313
 Exiting Ebwt::buildToDisk()
 Returning from initFromVector
-Wrote 4207226 bytes to primary EBWT file: /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.1.ebwt
-Wrote 5044 bytes to secondary EBWT file: /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.2.ebwt
+Wrote 4207226 bytes to primary EBWT file: /Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.1.ebwt
+Wrote 5044 bytes to secondary EBWT file: /Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.2.ebwt
 Re-opening _in1 and _in2 as input streams
 Returning from Ebwt constructor
 Headers:
@@ -264,7 +264,7 @@ Headers:
     ebwtTotLen: 11520
     ebwtTotSz: 11520
     reverse: 0
-Total time for call to driver() for forward index: 00:00:00
+Total time for call to driver() for forward index: 00:00:01
 Reading reference sizes
   Time reading reference sizes: 00:00:00
 Calculating joined length
@@ -478,8 +478,8 @@ fchr[T]: 19825
 fchr[$]: 40313
 Exiting Ebwt::buildToDisk()
 Returning from initFromVector
-Wrote 4207226 bytes to primary EBWT file: /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.rev.1.ebwt
-Wrote 5044 bytes to secondary EBWT file: /home/guoweilong/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.rev.2.ebwt
+Wrote 4207226 bytes to primary EBWT file: /Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.rev.1.ebwt
+Wrote 5044 bytes to secondary EBWT file: /Users/weilongguo/Documents/program/BSseeker2/bs_utils/reference_genomes/genome.fa_rrbs_20_500_bowtie/C_C2T.rev.2.ebwt
 Re-opening _in1 and _in2 as input streams
 Returning from Ebwt constructor
 Headers:
