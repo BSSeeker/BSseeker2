@@ -129,7 +129,7 @@ if __name__ == '__main__':
     else :
         logm('sorting BS-Seeker2 alignments')
         sorted_input_filename = options.infilename+'_sorted'
-        if [int(i) for i in pysam.__version__.split(".")] < [0, 7] :
+        if [int(i) for i in pysam.__version__.split(".")] < [0, 7, 7] :
             pysam.sort(options.infilename, sorted_input_filename)
         else :
             pysam.sort("-o", sorted_input_filename + '.bam', "-T", sorted_input_filename, options.infilename)
