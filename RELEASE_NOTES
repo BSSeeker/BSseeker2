@@ -85,3 +85,8 @@ V2.1.0 - Dec 9, 2016
 V2.1.1 - Apr. 13th, 2017
 1. [bs_seeker2-call_methylation.py] : fixed bug related with pysam version
 2. [bs_seeker2-call_methylation.py] : modified output strategies
+
+------------------------------------------
+
+V2.1.2 - Apr. 13th, 2017
+1. [bs_seeker2-align.py] : Add option "--XSteve", alternative filtering method proposed by Prof.ß Steve Jacobson

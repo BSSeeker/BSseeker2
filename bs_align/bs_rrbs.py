@@ -36,7 +36,7 @@ def my_mappable_region(chr_regions, mapped_location, FR): # start_position (firs
 #----------------------------------------------------------------
 
 def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, max_mismatch_no,
-            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, adapter_mismatch,
+            aligner_command, db_path, tmp_path, outfile, XS_pct, XS_count, XSteve, adapter_mismatch,
             show_multiple_hit, show_unmapped_hit, cut_format="C-CGG"
             ):
     #----------------------------------------------------------------
@@ -492,10 +492,17 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
                         #---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        if XSteve :
+                            if ('ZZZ' in methy.translate(None, "-XxYy")):
+                                XS = 1
+                            #
+                        else :
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
+                                XS = 1
+                            #
+                        #
                         num_mapped_RC_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,

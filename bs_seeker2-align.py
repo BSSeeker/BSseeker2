@@ -17,56 +17,94 @@ if __name__ == '__main__':
     parser = OptionParser(usage="Usage: %prog {-i <single> | -1 <mate1> -2 <mate2>} -g <genome.fa> [options]")
     # option group 1
     opt_group = OptionGroup(parser, "For single end reads")
-    opt_group.add_option("-i", "--input", type="string", dest="infilename",help="Input read file (FORMAT: sequences, qseq, fasta, fastq). Ex: read.fa or read.fa.gz", metavar="INFILE")
+    opt_group.add_option("-i", "--input", type="string", dest="infilename",
+                         help="Input read file (FORMAT: sequences, qseq, fasta, fastq). Ex: read.fa or read.fa.gz", metavar="INFILE")
     parser.add_option_group(opt_group)
 
     # option group 2
     opt_group = OptionGroup(parser, "For pair end reads")
-    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",help="Input read file, mate 1 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",help="Input read file, mate 2 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
-    opt_group.add_option("-I", "--minins",type = "int",dest = "min_insert_size", help="The minimum insert size for valid paired-end alignments [Default: %default]", default = 0)
-    opt_group.add_option("-X", "--maxins",type = "int",dest = "max_insert_size", help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 500)
+    opt_group.add_option("-1", "--input_1", type="string", dest="infilename_1",
+                         help="Input read file, mate 1 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-2", "--input_2", type="string", dest="infilename_2",
+                         help="Input read file, mate 2 (FORMAT: sequences, qseq, fasta, fastq)", metavar="FILE")
+    opt_group.add_option("-I", "--minins",type = "int",dest = "min_insert_size",
+                         help="The minimum insert size for valid paired-end alignments [Default: %default]", default = 0)
+    opt_group.add_option("-X", "--maxins",type = "int",dest = "max_insert_size",
+                         help="The maximum insert size for valid paired-end alignments [Default: %default]", default = 500)
     parser.add_option_group(opt_group)
 
     # option group 3
     opt_group = OptionGroup(parser, "Reduced Representation Bisulfite Sequencing Options")
-    opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False, help = 'Map reads to the Reduced Representation genome')
-    opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format", help="Cutting sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", metavar="pattern", default = "C-CGG")
-    opt_group.add_option("-L", "--low", type = "int", dest="rrbs_low_bound", help="Lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 20)
-    opt_group.add_option("-U", "--up", type = "int", dest="rrbs_up_bound", help="Upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 500)
+    opt_group.add_option("-r", "--rrbs", action="store_true", dest="rrbs", default = False,
+                         help = 'Map reads to the Reduced Representation genome')
+    opt_group.add_option("-c", "--cut-site", type="string",dest="cut_format",
+                         help="Cutting sites of restriction enzyme. Ex: MspI(C-CGG), Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG). [Default: %default]", metavar="pattern", default = "C-CGG")
+    opt_group.add_option("-L", "--low", type = "int", dest="rrbs_low_bound",
+                         help="Lower bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 20)
+    opt_group.add_option("-U", "--up", type = "int", dest="rrbs_up_bound",
+                         help="Upper bound of fragment length (excluding C-CGG ends) [Default: %default]", default = 500)
     parser.add_option_group(opt_group)
 
     # option group 4
     opt_group = OptionGroup(parser, "General options")
-    opt_group.add_option("-t", "--tag", type="string", dest="taginfo",help="[Y]es for undirectional lib, [N]o for directional [Default: %default]", metavar="TAG", default = 'N')
-    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1", help="The first cycle of the read to be mapped [Default: %default]", default = 1)
-    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2", help="The last cycle of the read to be mapped [Default: %default]", default = 200)
-    opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",help="Input text file of your adaptor sequences (to be trimmed from the 3'end of the reads, ). "
+    opt_group.add_option("-t", "--tag", type="string", dest="taginfo",
+                         help="[Y]es for undirectional lib, [N]o for directional [Default: %default]", metavar="TAG", default = 'N')
+    opt_group.add_option("-s","--start_base",type = "int",dest = "cutnumber1",
+                         help="The first cycle of the read to be mapped [Default: %default]", default = 1)
+    opt_group.add_option("-e","--end_base",type = "int",dest = "cutnumber2",
+                         help="The last cycle of the read to be mapped [Default: %default]", default = 200)
+    opt_group.add_option("-a", "--adapter", type="string", dest="adapter_file",
+                         help="Input text file of your adaptor sequences (to be trimmed from the 3'end of the reads, ). "
                                                                                     "Input one seq for dir. lib., twon seqs for undir. lib. One line per sequence. "
                                                                                     "Only the first 10bp will be used", metavar="FILE", default = '')
-    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch", help="Number of mismatches allowed in adapter [Default: %default]", default = 0)
-    opt_group.add_option("-g", "--genome", type="string", dest="genome",help="Name of the reference genome (should be the same as \"-f\" in bs_seeker2-build.py ) [ex. chr21_hg18.fa]")
-    opt_group.add_option("-m", "--mismatches",type = "float", dest="no_mismatches",help="Number(>=1)/Percentage([0, 1)) of mismatches in one read. Ex: 4 (allow 4 mismatches) or 0.04 (allow 4% mismatches) [Default: %default]", default = 4)
-    opt_group.add_option("--aligner", dest="aligner",help="Aligner program for short reads mapping: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE)
-    opt_group.add_option("-p", "--path", dest="aligner_path", help="Path to the aligner program. Detected: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
+    opt_group.add_option("--am",type = "int",dest = "adapter_mismatch",
+                         help="Number of mismatches allowed in adapter [Default: %default]", default = 0)
+    opt_group.add_option("-g", "--genome", type="string", dest="genome",
+                         help="Name of the reference genome (should be the same as \"-f\" in bs_seeker2-build.py ) [ex. chr21_hg18.fa]")
+    opt_group.add_option("-m", "--mismatches",type = "float", dest="no_mismatches",
+                         help="Number(>=1)/Percentage([0, 1)) of mismatches in one read. Ex: 4 (allow 4 mismatches) or 0.04 (allow 4% mismatches) [Default: %default]", default = 4)
+    opt_group.add_option("--aligner", dest="aligner",
+                         help="Aligner program for short reads mapping: " + ', '.join(supported_aligners) + " [Default: %default]", metavar="ALIGNER", default = BOWTIE)
+    opt_group.add_option("-p", "--path", dest="aligner_path",
+                         help="Path to the aligner program. Detected: " +' '*70+ '\t'.join(('%s: %s '+' '*70) % (al, aligner_path[al]) for al in sorted(supported_aligners)),
         metavar="PATH"
     )
-    opt_group.add_option("-d", "--db", type="string", dest="dbpath",help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
-    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [Default: %default]", default = 4000000, metavar="INT")
-    opt_group.add_option("-o", "--output", type="string", dest="outfilename",help="The name of output file [INFILE.bs(se|pe|rrbs)]", metavar="OUTFILE")
-    opt_group.add_option("-f", "--output-format", type="string", dest="output_format",help="Output format: "+', '.join(output.formats)+" [Default: %default]", metavar="FORMAT", default = output.BAM)
-    opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",help="Suppress SAM header lines [Default: %default]", default = False)
+    opt_group.add_option("-d", "--db", type="string", dest="dbpath",
+                         help="Path to the reference genome library (generated in preprocessing genome) [Default: %default]" , metavar="DBPATH", default = reference_genome_path)
+    opt_group.add_option("-l", "--split_line",type = "int", dest="no_split",
+                         help="Number of lines per split (the read file will be split into small files for mapping. The result will be merged. [Default: %default]", default = 4000000, metavar="INT")
+    opt_group.add_option("-o", "--output", type="string", dest="outfilename",
+                         help="The name of output file [INFILE.bs(se|pe|rrbs)]", metavar="OUTFILE")
+    opt_group.add_option("-f", "--output-format", type="string", dest="output_format",
+                         help="Output format: "+', '.join(output.formats)+" [Default: %default]", metavar="FORMAT", default = output.BAM)
+    opt_group.add_option("--no-header", action="store_true", dest="no_SAM_header",
+                         help="Suppress SAM header lines [Default: %default]", default = False)
     try:
-        opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = os.environ["TMPDIR"])
+        opt_group.add_option("--temp_dir", type="string", dest="temp_dir",
+                             help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = os.environ["TMPDIR"])
     except:
-        opt_group.add_option("--temp_dir", type="string", dest="temp_dir",help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = tempfile.gettempdir())
-    opt_group.add_option("--XS",type = "string", dest="XS_filter",help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS=1; or else tag XS=0. [Default: %default]", default = "0.5,5") # added by weilong
-
-    opt_group.add_option("-M", "--multiple-hit", metavar="FileName", type="string", dest="Output_multiple_hit", default = None, help = 'File to store reads with multiple-hits')
-    opt_group.add_option("-u", "--unmapped", metavar="FileName", type="string", dest="Output_unmapped_hit", default = None, help = 'File to store unmapped reads')
-
-    opt_group.add_option("-v", "--version", action="store_true", dest="version",help="show version of BS-Seeker2", metavar="version", default = False)
-
+        opt_group.add_option("--temp_dir", type="string", dest="temp_dir",
+                             help="The path to your temporary directory [Detected: %default]", metavar="PATH", default = tempfile.gettempdir())
+    #
+    opt_group.add_option("--XS",type = "string", dest="XS_filter",
+                         help="Filter definition for tag XS, format X,Y. X=0.8 and y=5 indicate that for one read, "
+                              "if #(mCH sites)/#(all CH sites)>0.8 and #(mCH sites)>5, then tag XS:i:1;"
+                              " or else tag XS:i:0. [Default: %default]", default = "0.5,5") # added by weilong
+    #
+    opt_group.add_option("--XSteve", action="store_true", dest="XSteve",
+                         help="Filter definition for tag XS, proposed by Prof. Steve Jacobson, "
+                              "reads with at least 3 successive mCHH will be labeled as XS:i:1,"
+                              "useful for plant genome, which have high mCHG level. "
+                              "Will override --XS option.", default = False) # added by weilong
+    #
+    opt_group.add_option("-M", "--multiple-hit", metavar="FileName", type="string", dest="Output_multiple_hit",
+                         default = None, help = 'File to store reads with multiple-hits')
+    opt_group.add_option("-u", "--unmapped", metavar="FileName", type="string", dest="Output_unmapped_hit",
+                         default = None, help = 'File to store unmapped reads')
+    #
+    opt_group.add_option("-v", "--version", action="store_true", dest="version",
+                         help="show version of BS-Seeker2", metavar="version", default = False)
+    #
     parser.add_option_group(opt_group)
 
     # option group 5
@@ -282,15 +320,19 @@ if __name__ == '__main__':
             logm("Mode: Bowtie2, end-to-end alignment")
 
 
-    tmp_path = tempfile.mkdtemp(prefix='bs_seeker2_%s_-%s-TMP-' % (os.path.split(outfilename)[1], aligner_title ), dir = options.temp_dir)
-
+    tmp_path = tempfile.mkdtemp(prefix='bs_seeker2_%s_-%s-TMP-' % (os.path.split(outfilename)[1], aligner_title ),
+                                dir = options.temp_dir)
 
     (XS_x, XS_y) = options.XS_filter.split(",")
     XS_pct = float(XS_x)
     XS_count = int(XS_y)
-    logm('Filter for tag XS: #(mCH)/#(all CH)>%.2f%% and #(mCH)>%d' % (XS_pct*100, XS_count))
-
-
+    XSteve=options.XSteve
+    if XSteve :
+        logm('Filter for tag XS: Steve mode:'
+             '    reads with at least 3 successive mCHH will be marked as XS:i:1')
+    else :
+        logm('Filter for tag XS: #(mCH)/#(all CH)>%.2f%% and #(mCH)>%d' % (XS_pct*100, XS_count))
+    #
     logm('Temporary directory: %s' % tmp_path)
     logm('Reduced Representation Bisulfite Sequencing: %s' % str(options.rrbs))
     if options.infilename is not None:
@@ -318,6 +360,7 @@ if __name__ == '__main__':
                     outfile,
                     XS_pct,
                     XS_count,
+                    XSteve,
                     options.adapter_mismatch,
                     options.Output_multiple_hit,
                     options.Output_unmapped_hit,
@@ -337,6 +380,7 @@ if __name__ == '__main__':
                             outfile,
                             XS_pct,
                             XS_count,
+                            XSteve,
                             options.adapter_mismatch,
                             options.Output_multiple_hit,
                             options.Output_unmapped_hit
@@ -392,6 +436,7 @@ if __name__ == '__main__':
                     outfile,
                     XS_pct,
                     XS_count,
+                    XSteve,
                     options.adapter_mismatch,
                     options.Output_multiple_hit,
                     options.Output_unmapped_hit

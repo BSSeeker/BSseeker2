@@ -50,7 +50,7 @@ def extract_mapping(ali_file):
 
 def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lines,
                   max_mismatch_no, aligner_command, db_path, tmp_path, outfile,
-                  XS_pct, XS_count, adapter_mismatch, show_multiple_hit, show_unmapped_hit):
+                  XS_pct, XS_count, XSteve, adapter_mismatch, show_multiple_hit, show_unmapped_hit):
     logm("----------------------------------------------" )
     logm("Read filename: %s" % main_read_file)
     logm("The first base (for mapping): %d" % cut1  )
@@ -697,11 +697,17 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                             #---XS FILTER----------------
                             XS = 0
-                            nCH = methy.count('y') + methy.count('z')
-                            nmCH = methy.count('Y') + methy.count('Z')
-                            if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                                XS = 1
-
+                            if XSteve :
+                                if ('ZZZ' in methy.translate(None, "-XxYy") ) :
+                                    XS=1
+                                #
+                            else :
+                                nCH = methy.count('y') + methy.count('z')
+                                nmCH = methy.count('Y') + methy.count('Z')
+                                if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
+                                    XS = 1
+                                #
+                            #
                             outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand, mapped_location, cigar, original_BS, methy, XS, output_genome = output_genome)
                             all_base_mapped += len(original_BS)
 
