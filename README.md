@@ -255,7 +255,7 @@ Module to map reads on 3-letter converted genome.
                             CH sites)>0.8 and #(mCH sites)>5, then tag XS:i:1; or
                             else tag XS:i:0. [Default: 0.5,5]
         --XSteve            Filter definition for tag XS, proposed by Prof. Steve
-                            Jacobson, reads with at least 3 successive mCHH will
+                            Jacobsen, reads with at least 3 successive mCHH will
                             be labeled as XS:i:1,useful for plant genome, which
                             have high mCHG level. Will override --XS option.
         -M FileName, --multiple-hit=FileName

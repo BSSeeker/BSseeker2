@@ -92,7 +92,7 @@ if __name__ == '__main__':
                               " or else tag XS:i:0. [Default: %default]", default = "0.5,5") # added by weilong
     #
     opt_group.add_option("--XSteve", action="store_true", dest="XSteve",
-                         help="Filter definition for tag XS, proposed by Prof. Steve Jacobson, "
+                         help="Filter definition for tag XS, proposed by Prof. Steve Jacobsen, "
                               "reads with at least 3 successive mCHH will be labeled as XS:i:1,"
                               "useful for plant genome, which have high mCHG level. "
                               "Will override --XS option.", default = False) # added by weilong
