@@ -190,7 +190,7 @@ if __name__ == '__main__':
     options_RM_OVERLAP = options.RM_OVERLAP
     #
     if options.wig_file is not None :
-        wiggle.write('type wiggle_0\n')
+        wiggle.write('track type=wiggle_0\n')
     #
     sorted_input = pysam.Samfile(sorted_input_filename, 'rb')
     #
