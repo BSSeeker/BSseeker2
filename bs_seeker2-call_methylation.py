@@ -283,7 +283,8 @@ if __name__ == '__main__':
         #
         for pr in col.pileups:
         #     print pr
-            if pysam.__version__ > "0.8.0" :
+            #if pysam.__version__ > "0.8.0" :
+            if [int(i) for i in pysam.__version__.split(".")] > [0, 7, 7] :
                 pr_qpos = pr.query_position
             else :
                 pr_qpos =pr.qpos
