@@ -420,10 +420,15 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
                         #---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        if XSteve :
+                            if ('ZZZ' in methy.translate(None, "-XY")):
+                                XS = 1
+                            #
+                        else :
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
+                                XS = 1
                         num_mapped_FW_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
@@ -493,7 +498,7 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         #---XS FILTER----------------
                         XS = 0
                         if XSteve :
-                            if ('ZZZ' in methy.translate(None, "-XxYy")):
+                            if ('ZZZ' in methy.translate(None, "-XY")):
                                 XS = 1
                             #
                         else :
@@ -819,12 +824,19 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         all_mapped_passed += 1
                         methy = methy_seq(r_aln, g_aln + next2bp)
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
-                        #---XS FILTER----------------
+                        # ---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        if XSteve:
+                            if ('ZZZ' in methy.translate(None, "-XY")):
+                                XS = 1
+                                #
+                        else:
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if ((nmCH > XS_count) and nmCH / float(nCH + nmCH) > XS_pct):
+                                XS = 1
+                                #
+                        #
                         num_mapped_FW_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
@@ -887,10 +899,17 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
                         #---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        if XSteve:
+                            if ('ZZZ' in methy.translate(None, "-XY")):
+                                XS = 1
+                                #
+                        else:
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if ((nmCH > XS_count) and nmCH / float(nCH + nmCH) > XS_pct):
+                                XS = 1
+                                #
+                        #
                         num_mapped_RC_C2T += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
@@ -961,10 +980,19 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
                         #---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        # ---XS FILTER----------------
+                        XS = 0
+                        if XSteve:
+                            if ('ZZZ' in methy.translate(None, "-XY")):
+                                XS = 1
+                                #
+                        else:
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if ((nmCH > XS_count) and nmCH / float(nCH + nmCH) > XS_pct):
+                                XS = 1
+                                #
+                        #
                         num_mapped_FW_G2A += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,
@@ -1031,12 +1059,19 @@ def bs_rrbs(main_read_file, asktag, adapter_file, cut_s, cut_e, no_small_lines, 
                         all_mapped_passed += 1
                         methy = methy_seq(r_aln, g_aln + next2bp)
                         mC_lst, uC_lst = mcounts(methy, mC_lst, uC_lst)
-                        #---XS FILTER----------------
+                        # ---XS FILTER----------------
                         XS = 0
-                        nCH = methy.count('y') + methy.count('z')
-                        nmCH = methy.count('Y') + methy.count('Z')
-                        if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                            XS = 1
+                        if XSteve:
+                            if ('ZZZ' in methy.translate(None, "-XY")):
+                                XS = 1
+                                #
+                        else:
+                            nCH = methy.count('y') + methy.count('z')
+                            nmCH = methy.count('Y') + methy.count('Z')
+                            if ((nmCH > XS_count) and nmCH / float(nCH + nmCH) > XS_pct):
+                                XS = 1
+                                #
+                        #
                         num_mapped_RC_G2A += 1
                         outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand,
                                       mapped_location, cigar, original_BS, methy, XS,

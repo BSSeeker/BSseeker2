@@ -575,18 +575,35 @@ def bs_pair_end(main_read_file_1,
                         mC_lst, uC_lst = mcounts(methy_1, mC_lst, uC_lst)
                         mC_lst, uC_lst = mcounts(methy_2, mC_lst, uC_lst)
 
+                        #
                         #---XS FILTER----------------
+                        #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                         XS_1 = 0
-                        nCH_1 = methy_1.count('y') + methy_1.count('z')
-                        nmCH_1 = methy_1.count('Y') + methy_1.count('Z')
-                        if( (nmCH_1>XS_count) and nmCH_1/float(nCH_1+nmCH_1)>XS_pct ) :
-                            XS_1 = 1
+                        if XSteve:
+                            if ('ZZZ' in methy_1.translate(None, "-XY")):
+                                XS_1 = 1
+                                #
+                            #
+                        else:
+                            nCH_1 = methy_1.count('y') + methy_1.count('z')
+                            nmCH_1 = methy_1.count('Y') + methy_1.count('Z')
+                            if( (nmCH_1>XS_count) and nmCH_1/float(nCH_1+nmCH_1)>XS_pct ) :
+                                XS_1 = 1
+                            #
+                        #
                         XS_2 = 0
-                        nCH_2 = methy_2.count('y') + methy_2.count('z')
-                        nmCH_2 = methy_2.count('Y') + methy_2.count('Z')
-                        if( (nmCH_2>XS_count) and nmCH_2/float(nCH_2+nmCH_2)>XS_pct ) :
-                            XS_2 = 1
-
+                        if XSteve:
+                            if ('ZZZ' in methy_2.translate(None, "-XY")):
+                                XS_2 = 1
+                                #
+                            #
+                        else:
+                            nCH_2 = methy_2.count('y') + methy_2.count('z')
+                            nmCH_2 = methy_2.count('Y') + methy_2.count('Z')
+                            if ((nmCH_2 > XS_count) and nmCH_2 / float(nCH_2 + nmCH_2) > XS_pct):
+                                XS_2 = 1
+                            #
+                        #
                         if mapped_strand_1=='+' :
                             flag_1 = 67     # 1000011   : 1st read, + strand
                             flag_2 = 131    #10000011   : 2nd read, + strand
@@ -934,7 +951,7 @@ def bs_pair_end(main_read_file_1,
                         #XS = 1 if "ZZZ" in methy.replace('-', '') else 0
                         XS_1 = 0
                         if XSteve:
-                            if ('ZZZ' in methy_1.translate(None, "-XxYy")):
+                            if ('ZZZ' in methy_1.translate(None, "-XY")):
                                 XS_1 = 1
                                 #
                             #
@@ -947,7 +964,7 @@ def bs_pair_end(main_read_file_1,
                         #
                         XS_2 = 0
                         if XSteve:
-                            if ('ZZZ' in methy_2.translate(None, "-XxYy")):
+                            if ('ZZZ' in methy_2.translate(None, "-XY")):
                                 XS_2 = 1
                                 #
                             #

@@ -449,11 +449,17 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
 
                             #---XS FILTER----------------
                             XS = 0
-                            nCH = methy.count('y') + methy.count('z')
-                            nmCH = methy.count('Y') + methy.count('Z')
-                            if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
-                                XS = 1
-
+                            if XSteve :
+                                if ('ZZZ' in methy.translate(None, "-XY") ) :
+                                    XS=1
+                                #
+                            else :
+                                nCH = methy.count('y') + methy.count('z')
+                                nmCH = methy.count('Y') + methy.count('Z')
+                                if( (nmCH>XS_count) and nmCH/float(nCH+nmCH)>XS_pct ) :
+                                    XS = 1
+                                #
+                            #
                             outfile.store(header, N_mismatch, FR, mapped_chr, mapped_strand, mapped_location, cigar, original_BS, methy, XS, output_genome = output_genome)
                             all_base_mapped += len(original_BS)
 
@@ -698,7 +704,7 @@ def bs_single_end(main_read_file, asktag, adapter_file, cut1, cut2, no_small_lin
                             #---XS FILTER----------------
                             XS = 0
                             if XSteve :
-                                if ('ZZZ' in methy.translate(None, "-XxYy") ) :
+                                if ('ZZZ' in methy.translate(None, "-XY") ) :
                                     XS=1
                                 #
                             else :
