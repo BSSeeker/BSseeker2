@@ -1,6 +1,6 @@
 BS-Seeker2
 =========
-[Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) | [Published Paper](http://www.biomedcentral.com/1471-2164/14/774) |
+[Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) | [Mirror](http://guoweilong.github.io/BS_Seeker2/index.html) | [Published Paper](http://www.biomedcentral.com/1471-2164/14/774) |
 [Source code](https://github.com/BSSeeker/BSseeker2) |
 [Galaxy Toolshed](http://toolshed.g2.bx.psu.edu/repository?repository_id=e435334e4e9e19c1) |
 [UCLA Galaxy](http://galaxy.hoffman2.idre.ucla.edu)
