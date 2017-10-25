@@ -94,12 +94,16 @@ if __name__ == '__main__':
     parser.add_option("-r", "--read-no",type = "int", dest="read_no",
                       help="The least number of reads covering one site to be shown in wig file "
                            "[Default: %default]", default = 1)
+    parser.add_option("-D", "--pileup-maxdepth",type = "int", dest="PileupMaxDepth",
+                      help="The max number of read depth can be called for each position. Parameter passing to pysam. "
+                           "Large number costs more time."
+                           "[Default: %default]", default = 8000)
     parser.add_option("-v", "--version", action="store_true", dest="version",
                       help="show version of BS-Seeker2", metavar="version", default = False)
-
+    #
     (options, args) = parser.parse_args()
     #
-
+    #
     # if no options were given by the user, print help and exit
     if len(sys.argv) == 1:
         parser.print_help()
@@ -188,6 +192,7 @@ if __name__ == '__main__':
     options_read_no = options.read_no
     options_RM_SX = options.RM_SX
     options_RM_OVERLAP = options.RM_OVERLAP
+    PileupMaxDepth = options.PileupMaxDepth
     #
     if options.wig_file is not None :
         wiggle.write('track type=wiggle_0\n')
@@ -224,7 +229,7 @@ if __name__ == '__main__':
     #
     cnts = lambda d: '\t'.join(str(d[n]) for n in nucs)
     #
-    for col in sorted_input.pileup():
+    for col in sorted_input.pileup(max_depth=PileupMaxDepth):
         col_chrom = sorted_input.getrname(col.tid)
         col_pos = col.pos
         if chrom != col_chrom:
@@ -401,4 +406,5 @@ if __name__ == '__main__':
         logm('  ATCGMap: %s' % options.ATCGmap_file)
     if options.CGmap_file is not None:
         logm('  CGmap: %s' % options.CGmap_file)
+    #
 #

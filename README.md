@@ -555,9 +555,9 @@ Questions & Answers
 
 
 
-###(1) Performance
+### (1) Performance
 
-####QA1.1
+#### QA1.1
 
 Q: "It takes me days to do the alignment for one lane" ... (Speed-up your alignment)
 
@@ -572,7 +572,7 @@ A: Yes, alignment is a time-consuming work, especially because the sequencing de
 
         Ex: samtools merge out.bam in1.bam in2.bam in3.bam
 
-####QA1.2
+#### QA1.2
 
 Q: "I would run lots of BS-Seeker2 at the same time on cluster (multiple nodes), how could I reduce the disk load?"
 
@@ -587,7 +587,7 @@ un-directional library), and each process would run with 2 threads. User can cha
 threads using parameter "--bt-p"/"--bt2-p". For example, "--bt-p 4" will require 8 CPUs in total.
 
 
-####QA1.4
+#### QA1.4
 
 Q: "I check my storage using "df –Th". and /tmp storage using 100%. Why these happening?"
 
@@ -599,9 +599,9 @@ improperly.
 
 
 
-###(2)  Input/Output formats
+### (2)  Input/Output formats
 
-####QA2.1
+#### QA2.1
 
 Q: Is the read sequence in BAM/SAM file is the same as my original one?
 
@@ -610,7 +610,7 @@ A: NO. They are different for several reasons.
     i. For RRBS, some reads are short because of trimming of the adapters
     ii. For read mapping on Crick (-) strand, the reads are in fact the complementary of the original sequence, opposite both in nucleotides and direction
 
-####QA2.2
+#### QA2.2
 
 Q: In CGmap files, why some lines shown "--" but not a motif (CG/CHG/CHH), for example:
 
@@ -620,13 +620,13 @@ Q: In CGmap files, why some lines shown "--" but not a motif (CG/CHG/CHH), for e
 A: In this example, the site 4303713 is "N" in genome, thus we could not decide the explict pattern.
 
 
-####QA2.3
+#### QA2.3
 
 Q: Can BS Seeker 2 accept gzipped INPUT files?
 
 A: From v2.0.5, BS-Seeker2 is able to support input file in gzipped format, with file name end in ".gz".
 
-####QA2.4
+#### QA2.4
 
 Q: Each of my CGmap files has between 1,000 and 2,000 positions at which the nucleotide is given without a motif, but
 instead just "--" for example:
@@ -637,7 +637,7 @@ instead just "--" for example:
 A: That's because chr1:4303713 on reference genome is 'N'. BS-Seeker2 can not tell it as "CHG" or "CHH".
 
 
-####QA2.5
+#### QA2.5
 
 Q: When using bs_seeker2-call_methylation.py, can I only generate CGmap files, without generating other formats?
 
@@ -666,9 +666,9 @@ See folowing examples.
 		python bs_seeker2-call_methylation.py -i WGBS.bam --output=output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_bowtie/
 
 
-###(3) "Pysam" package related problem
+### (3) "Pysam" package related problem
 
-####QA3.1
+#### QA3.1
 
 Q: I'm normal account user for Linux(Cluster). I can't install "pysam". I get following error massages:
 
@@ -718,7 +718,7 @@ A: You can ask the administrator of your cluster to install pysam. If you don't 
         unzip BSSeeker2.zip
         cd BSseeker2-master/
 
-####QA3.2
+#### QA3.2
 
 Q: I came up with the errors
 
@@ -733,7 +733,7 @@ Q: I came up with the errors
 
 A: Your pysam seems out of date. I would use pysam version 0.6.x.
 
-####QA3.3
+#### QA3.3
 
 Q: I came up with the following error:
 
@@ -747,7 +747,7 @@ Q: I came up with the following error:
 A: It is very likely that your input file is in a wrong format.
 
 
-####QA3.4
+#### QA3.4
 
 Q: When running bs_seeker2-call_methylation.py with -x option, an error occurred as following:
 
@@ -762,7 +762,7 @@ error when using pysam v0.7.4. We haven't test other pysam versions, and are ver
 it works on other versions.
 
 
-####QA3.5
+#### QA3.5
 
 Q: What's my pysam version?
 
@@ -770,6 +770,16 @@ A: Open python interpreter, and enter the following commands:
 
         >>import pysam
         >>pysam.__version__
+
+
+#### QA3.6
+
+Q: I tried  bs_seeker2-call_methylation.py, found the read depth in CGmap file is always lower than 8000,
+where the reads shall be much higher. (Thanks Xuning Wang for figuring this problem and solve it)
+
+A: It is related by with parameter in pileup function parsing to "pysam". In the v2.1.3 and later, option "-D" is added
+for "bs_seeker2-call_methylation.py". User could specify higher number of coverage limitation, in trade of costing more
+time for processing.
 
 
 ###(4) Configuration of BS-Seeker2
