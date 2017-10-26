@@ -782,9 +782,9 @@ for "bs_seeker2-call_methylation.py". User could specify higher number of covera
 time for processing.
 
 
-###(4) Configuration of BS-Seeker2
+### (4) Configuration of BS-Seeker2
 
-####QA4.1
+#### QA4.1
 
 Q: Can I add the path of BS-Seeker2's *.py to the $PATH, so I can call
 BS-Seeker2 from anywhere?
@@ -815,7 +815,7 @@ Then you can use BS-Seeker2 globally by typing:
 
 
 
-####QA4.2
+#### QA4.2
 
 Q: I used the following command:
 
@@ -839,9 +839,9 @@ However, I receive the following error:
 A: This error message indicate that you haven't install bowtie2, or you haven't made bowtie2 been included in $PATH.
 
 
-###(5) Unique alignment
+### (5) Unique alignment
 
-####QA5.1
+#### QA5.1
 
 Q: If I want to only keep alignments that map uniquely, is this an argument I should supply directly
 to Bowtie2 (via BS Seeker 2's command line option), or is this an option that's available in
@@ -851,9 +851,9 @@ A: BS-Seeker2 reports unique alignment by default already. If you want to know h
 could have multiple hits, run BS-Seeker2 with parameter "--multiple-hit".
 
 
-###(6) Paired-end sequencing alignment
+### (6) Paired-end sequencing alignment
 
-####QA6.1
+#### QA6.1
 
 Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, two mates are in length of 100bp
 
@@ -861,7 +861,7 @@ A: I suggest a pre-step for merging two overlapped reads into one. Such tools in
 [SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
 
 
-####QA6.2
+#### QA6.2
 
 Q: Any recommendation for mapping paired-end BS-seq data?
 
@@ -884,7 +884,7 @@ For PBAT library, you can run following commands:
         bs_seeker2-call_methylation.py -i merge.bam --rm-overlap ... # call the methylation levels
          
 
-####QA6.3
+#### QA6.3
 
 Q: If the two mates in paired-end library have overlaps, will BS-Seeker2 remove the overlapped regions?
 
@@ -897,9 +897,9 @@ A: You can specify the parameter "--rm-overlap" when running "bs_seeker2-call_me
    When specifying the parameter "--rm-overlap", the nucleotides within the overlapped regions will only be counted once.
 
 
-###(7) Adapter related issue
+### (7) Adapter related issue
 
-####QA7.1
+#### QA7.1
 
 Q: What's the algorithm to remove the adapter?
 
@@ -943,7 +943,7 @@ A: BS-Seeker2 has built-in algorithm for removing the adapter, which is develope
     In our algorithm, the "CG" in "--CCG" (upper strand) was trimmed, in order to get accurate methylation level.
 
 
-####QA7.2
+#### QA7.2
 
 Q: For RRBS library, the methylation levels of C at 5'-CCGG-3' sites are biased. Do BS-Seeker2 provides function for avoiding such bias?
 
