@@ -1,21 +1,56 @@
 BS-Seeker2
 =========
-[Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) | [Mirror](http://guoweilong.github.io/BS_Seeker2/index.html) | [Published Paper](http://www.biomedcentral.com/1471-2164/14/774) |
-[Source code](https://github.com/BSSeeker/BSseeker2) |
-[Galaxy Toolshed](http://toolshed.g2.bx.psu.edu/repository?repository_id=e435334e4e9e19c1) |
-[UCLA Galaxy](http://galaxy.hoffman2.idre.ucla.edu)
 
-BS Seeker 2 is a seamless and versatile pipeline for accurately and fast mapping the bisulfite-treated short reads.
+**BS-Seeker2 is a seamless and versatile pipeline for accurately and fast mapping the bisulfite-treated reads.**
 
-1. Remarkable new features
-============
+**[CGmapTools](https://cgmaptools.github.io) is suggested for downstream analysis of BS-Seeker2.**  
+
+---
+
+  [Homepage](http://pellegrini.mcdb.ucla.edu/BS_Seeker2/) 
+| [Mirror](http://guoweilong.github.io/BS_Seeker2/index.html) 
+| [Published Paper](http://www.biomedcentral.com/1471-2164/14/774) 
+| [Source code](https://github.com/BSSeeker/BSseeker2) 
+| [Galaxy Toolshed](http://toolshed.g2.bx.psu.edu/repository?repository_id=e435334e4e9e19c1) 
+| [UCLA Galaxy](http://galaxy.hoffman2.idre.ucla.edu)
+| [CGmapTools](https://cgmaptools.github.io)
+
+
+---
+
+# Contents
+
+
+1. [Remarkable new features](#1-remarkable-new-features)
+2. [Supports](#2-supports)
+3. [System requirements](#3-system-requirements)
+4. [Module descriptions](#4-module-descriptions)
+
+	* 4.1 [FilterReads.py](#4.1-filterReads.py)
+	* 4.2 [bs_seeker2-build.py](#4.2-bs_seeker2-build.py)
+	* 4.3 [bs_seeker2-align.py](#4.3-bs_seeker2-align.py)
+	* 4.4 [bs_seeker2-call_methylation.py](#4.4-bs_seeker2-call_methylation.py)
+	
+5. [Contact Information](#5-contact-information)
+6. [Questions and Answers](#6-questions-and-answers)
+
+	* (1) [Performance](#1-performance)
+	* (2) [Input/Output formats](#2-input-output-formats)
+	* (3) ["Pysam" package related problem](#3-pysam-package-related-problem)
+	* (4) [Configuration of BS-Seeker2](#4-configuration-of-bs-seeker2)
+	* (5) [Unique alignment](#5-unique-alignment)
+	* (6) [Paired-end sequencing alignment](#6-paired-end-sequencing)
+	* (7) [Adapter related issue](#7-adapter-related-issue)
+	* (8) [Others](#8-others)
+
+# 1 Remarkable new features
+
 
 * Reduced index for RRBS, accelerating the mapping speed and increasing mappability
-* Allowing local/gapped alignment with Bowtie 2, increased the mappability
+* Allowing local/gapped alignment with Bowtie2, increased the mappability
 * Option for removing reads suffering from bisulfite conversion failure
 
-2. Supports
-============
+# 2 Supports
 
 * Supported library types
 	- Whole Genome-wide Bisulfite Sequencing (WGBS)
@@ -39,8 +74,7 @@ BS Seeker 2 is a seamless and versatile pipeline for accurately and fast mapping
 	- [SAM](http://samtools.sourceforge.net/)
 	- [BS-seeker](http://pellegrini.mcdb.ucla.edu/BS_Seeker/USAGE.html)
 
-3. System requirements
-============
+# 3 System requirements
 
 * Linux/Unix or Mac OS platform
 
@@ -56,17 +90,16 @@ BS Seeker 2 is a seamless and versatile pipeline for accurately and fast mapping
 
   Read "Questions & Answers" if you have problem when installing this package.
 
-4. Modules' descriptions
-============
+# 4 Module descriptions
 
-(0) FilterReads.py
-------------
+
+## 4.1 FilterReads.py
 
 Optional and independent module.
 Some reads would be extremely amplified during the PCR. This script helps you get unique reads before doing the mapping.
 You can decide whether or not to filter reads before doing the mapping.
 
-####Usage :
+* Usage :
 
 	$ python FilterReads.py
 	Usage: FilterReads.py -i <input> -o <output> [-k]
@@ -81,18 +114,17 @@ You can decide whether or not to filter reads before doing the mapping.
 	  -k          Would not filter low quality reads if specified
 
 
-####Tip :
+* Tip :
 
-- This step is not suggested for RRBS library, as reads from RRBS library would more likely from the same location.
+> This step is not suggested for RRBS library, as reads from RRBS library would more likely from the same location.
 
 
-(1) bs_seeker2-build.py
-------------
+## 4.2 bs_seeker2-build.py
 
 Module to build the index for BS-Seeker2.
 
 
-####Usage :
+* Usage :
 
 
 
@@ -133,42 +165,44 @@ Module to build the index for BS-Seeker2.
                             [Default: C-CGG]
 
 
-####Example
+* Example
 
-* Build genome index for WGBS using bowtie, path of bowtie should be included in $PATH
 
-        python bs_seeker2-build.py -f genome.fa --aligner=bowtie
+```bash
 
-* Build genome index for RRBS with default parameters specifying the path for bowtie2
+    # Build genome index for WGBS using bowtie, path of bowtie should be included in $PATH
+    python bs_seeker2-build.py -f genome.fa --aligner=bowtie
 
-        python bs_seeker2-build.py -f genome.fa --aligner=bowtie2 -p ~/install/bowtie2-2.0.0-beta7/ -r
+    # Build genome index for RRBS with default parameters specifying the path for bowtie2
+    python bs_seeker2-build.py -f genome.fa --aligner=bowtie2 -p ~/install/bowtie2-2.0.0-beta7/ -r
 
-* Build genome index for RRBS library using bowite2, with fragment lengths ranging [40bp, 400bp]
+    # Build genome index for RRBS library using bowite2, with fragment lengths ranging [40bp, 400bp]
+    python bs_seeker2-build.py -f genome.fa -r -l 40 -u 400 --aligner=bowtie2
 
-        python bs_seeker2-build.py -f genome.fa -r -l 40 -u 400 --aligner=bowtie2
+    # Build genome index for RRBS library for double-enzyme :
+    # MspI (C-CGG) & ApeKI (G-CWGC, where W=A|T, see [IUPAC code](http://www.bioinformatics.org/sms/iupac.html))
+    python bs_seeker2-build.py -f genome.fa -r -c C-CGG,G-CWGC --aligner=bowtie
 
-* Build genome index for RRBS library for double-enzyme : MspI (C-CGG) & ApeKI (G-CWGC, where W=A|T, see [IUPAC code](http://www.bioinformatics.org/sms/iupac.html))
+```
 
-        python bs_seeker2-build.py -f genome.fa -r -c C-CGG,G-CWGC --aligner=bowtie
 
-####Tips:
+* Tips:
 
-- Index built for BS-Seeker2 is different from the index for BS-Seeker 1.
+> Index built for BS-Seeker2 is different from the index for BS-Seeker 1.
 For RRBS, you need to specify "-r" in the parameters. Also, you need to specify LOW_BOUND and UP_BOUND for the range of fragment lengths according your protocol.
 
-- The fragment length is different from read length. Fragments refers to the DNA fragments which you get by size-selection step (i.e. gel-cut oor AMPure beads). Lengths of fragments are supposed to be in a range, such as [50bp,250bp].
+> The fragment length is different from read length. Fragments refers to the DNA fragments which you get by size-selection step (i.e. gel-cut oor AMPure beads). Lengths of fragments are supposed to be in a range, such as [50bp,250bp].
 
-- The indexes for RRBS and WGBS are different. Also, indexes for RRBS are specific for fragment length parameters (LOW_BOUND and UP_BOUND).
-
-
+> The indexes for RRBS and WGBS are different. Also, indexes for RRBS are specific for fragment length parameters (LOW_BOUND and UP_BOUND).
 
 
-(2) bs_seeker2-align.py
-------------
+
+
+## 4.3 bs_seeker2-align.py
 
 Module to map reads on 3-letter converted genome.
 
-####Usage :
+* Usage :
 
 
 	$ bs_seeker2-align.py -h
@@ -274,46 +308,41 @@ Module to map reads on 3-letter converted genome.
 
 
 
-####Examples :
+* Examples :
 
-* WGBS library ; alignment mode, bowtie ; map to WGBS index
+```bash
 
-        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa
+    # WGBS library ; alignment mode, bowtie ; map to WGBS index
+    python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa
 
-* WGBS library ; alignment mode, bowtie2-local ; map to WGBS index
+    # WGBS library ; alignment mode, bowtie2-local ; map to WGBS index
+    python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa
 
-        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa
+    # WGBS library ; alignment mode, bowtie2-end-to-end ; map to WGBS index
+    python bs_seeker2-align.py -i WGBS.fa -m 3 --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa --bt2--end-to-end
 
-* WGBS library ; alignment mode, bowtie2-end-to-end ; map to WGBS index
+    # RRBS library ; alignment mode, bowtie ; map to RR index
+    python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -r -a adapter.txt
 
-        python bs_seeker2-align.py -i WGBS.fa -m 3 --aligner=bowtie2 -o WGBS.bam -f bam -g genome.fa --bt2--end-to-end
+    # RRBS library ; alignment mode, bowtie ; map to WG index
+    python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt
 
-* RRBS library ; alignment mode, bowtie ; map to RR index
+    # RRBS library ; alignment mode, bowtie2-end-to-end ; map to WG index
+    python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt --bt2--end-to-end
 
-        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -r -a adapter.txt
+    # Align from qseq format for RRBS with bowtie, specifying lengths of fragments ranging [40bp, 400bp]
+    python bs_seeker2-align.py -i RRBS.qseq --aligner=bowtie -o RRBS.bam -f bam -g genome.fa -r --low=40 --up=400 -a adapter.txt
 
-* RRBS library ; alignment mode, bowtie ; map to WG index
-
-        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt
-
-* RRBS library ; alignment mode, bowtie2-end-to-end ; map to WG index
-
-        python bs_seeker2-align.py -i RRBS.fa --aligner=bowtie -o RRBS.bam -g genome.fa -a adapter.txt --bt2--end-to-end
-
-* Align from qseq format for RRBS with bowtie, specifying lengths of fragments ranging [40bp, 400bp]
-
-        python bs_seeker2-align.py -i RRBS.qseq --aligner=bowtie -o RRBS.bam -f bam -g genome.fa -r --low=40 --up=400 -a adapter.txt
-
-The parameters '--low' and '--up' should be the same with corresponding parameters when building the genome index
-
-* WGBS library ; alignment mode, bowtie ; map to WGBS index; use 8 threads for alignment
-
-        python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa --bt-p 4
-
-BS-Seeker2 will run TWO bowtie instances in parallel.
+    # The parameters '--low' and '--up' should be the same with corresponding parameters when building the genome index
+    # WGBS library ; alignment mode, bowtie ; map to WGBS index; use 8 threads for alignment
+    # BS-Seeker2 will run TWO bowtie instances in parallel.
+    python bs_seeker2-align.py -i WGBS.fa --aligner=bowtie -o WGBS.bam -f bam -g genome.fa --bt-p 4
 
 
-####Input file:
+```
+
+
+* Input file:
 
 - Adapter.txt (example for single-end WGBS / RRBS) :
 
@@ -325,7 +354,7 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
             <adapter for mate 2>
 
 
-####Output format:
+* Output format:
 
 - SAM format
 
@@ -379,7 +408,7 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
         (10) my_region_end, tag only for RRBS, end position of mapped fragment
 
 
-####Tips:
+* Tips:
 
 - Removing adapter is recommended.
 
@@ -398,13 +427,15 @@ BS-Seeker2 will run TWO bowtie instances in parallel.
     As the 'local alignment', the bad sequenced bases are usually trimmed, and would not be considered by the parameter "-m".
     It is suggested to user fewer mismatches for the 'local alignment' mode.
 
-(3) bs_seeker2-call_methylation.py
-------------
+
+
+## 4.4 bs_seeker2-call_methylation.py
+
 
 
 This module calls methylation levels from the mapping result.
 
-####Usage:
+* Usage:
 
 
 	$ bs_seeker2-call_methylation.py -h
@@ -447,28 +478,27 @@ This module calls methylation levels from the mapping result.
       -v, --version         show version of BS-Seeker2
 
 
-####Example :
+* Example :
 
--For WGBS (whole genome bisulfite sequencing):
+```bash
 
-        python bs_seeker2-call_methylation.py -i WGBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_bowtie/
+    # For WGBS (whole genome bisulfite sequencing):
+    python bs_seeker2-call_methylation.py -i WGBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_bowtie/
 
--For RRBS:
+    # For RRBS:
+    python bs_seeker2-call_methylation.py -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_40_400_bowtie2/
 
-        python bs_seeker2-call_methylation.py -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_40_400_bowtie2/
+    # For RRBS and removed un-converted reads (with tag XS=1):
+    python bs_seeker2-call_methylation.py -x -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_75_280_bowtie2/
 
--For RRBS and removed un-converted reads (with tag XS=1):
+    # For RRBS and only show sites covered by at least 10 reads in WIG file:
+    python bs_seeker2-call_methylation.py -r 10 -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_75_280_bowtie2/
+    # The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 
-        python bs_seeker2-call_methylation.py -x -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_75_280_bowtie2/
-
--For RRBS and only show sites covered by at least 10 reads in WIG file:
-
-        python bs_seeker2-call_methylation.py -r 10 -i RRBS.bam -o output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_rrbs_75_280_bowtie2/
+```
 
 
-The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
-
-####Output files:
+* Output files:
 
 - wig file
 
@@ -510,11 +540,12 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 
     Sample:
 
-        chr1	T	3009410	--	--	0	10	0	0	0	0	0	0	0	0	na
-        chr1	C	3009411	CHH	CC	0	10	0	0	0	0	0	0	0	0	0.0
-        chr1	C	3009412	CHG	CC	0	10	0	0	0	0	0	0	0	0	0.0
-        chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.83
-
+```
+chr1	T	3009410	--	--	0	10	0	0	0	0	0	0	0	0	na
+chr1	C	3009411	CHH	CC	0	10	0	0	0	0	0	0	0	0	0.0
+chr1	C	3009412	CHG	CC	0	10	0	0	0	0	0	0	0	0	0.0
+chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.83
+```
 
     Format descriptions:
 
@@ -543,21 +574,19 @@ The folder “genome.fa\_rrbs\_40\_500\_bowtie2” is built  in the first step
 
 
 
-Contact Information
-============
+# 5 Contact Information
+
 
 If you still have questions on BS-Seeker 2, or you find bugs when using BS-Seeker 2, or you have suggestions, please write email to [Weilong Guo](guoweilong@gmail.com).
 
 
 
-Questions & Answers
-============
+# 6 Questions and Answers
 
 
+## (1) Performance
 
-### (1) Performance
-
-#### QA1.1
+### QA1.1
 
 Q: "It takes me days to do the alignment for one lane" ... (Speed-up your alignment)
 
@@ -572,13 +601,13 @@ A: Yes, alignment is a time-consuming work, especially because the sequencing de
 
         Ex: samtools merge out.bam in1.bam in2.bam in3.bam
 
-#### QA1.2
+### QA1.2
 
 Q: "I would run lots of BS-Seeker2 at the same time on cluster (multiple nodes), how could I reduce the disk load?"
 
 A: For bowtie/bowtie2, you can specify the parameter "--bt--mm"/"--bt2--mm" to use the memory-mapped I/O.
 
-####QA1.3
+### QA1.3
 
 Q: "How could I specify more threads/CPU"?
 
@@ -587,7 +616,7 @@ un-directional library), and each process would run with 2 threads. User can cha
 threads using parameter "--bt-p"/"--bt2-p". For example, "--bt-p 4" will require 8 CPUs in total.
 
 
-#### QA1.4
+### QA1.4
 
 Q: "I check my storage using "df –Th". and /tmp storage using 100%. Why these happening?"
 
@@ -599,9 +628,9 @@ improperly.
 
 
 
-### (2)  Input/Output formats
+## (2)  Input/Output formats
 
-#### QA2.1
+### QA2.1
 
 Q: Is the read sequence in BAM/SAM file is the same as my original one?
 
@@ -610,7 +639,7 @@ A: NO. They are different for several reasons.
     i. For RRBS, some reads are short because of trimming of the adapters
     ii. For read mapping on Crick (-) strand, the reads are in fact the complementary of the original sequence, opposite both in nucleotides and direction
 
-#### QA2.2
+### QA2.2
 
 Q: In CGmap files, why some lines shown "--" but not a motif (CG/CHG/CHH), for example:
 
@@ -620,13 +649,13 @@ Q: In CGmap files, why some lines shown "--" but not a motif (CG/CHG/CHH), for e
 A: In this example, the site 4303713 is "N" in genome, thus we could not decide the explict pattern.
 
 
-#### QA2.3
+### QA2.3
 
 Q: Can BS Seeker 2 accept gzipped INPUT files?
 
 A: From v2.0.5, BS-Seeker2 is able to support input file in gzipped format, with file name end in ".gz".
 
-#### QA2.4
+### QA2.4
 
 Q: Each of my CGmap files has between 1,000 and 2,000 positions at which the nucleotide is given without a motif, but
 instead just "--" for example:
@@ -637,7 +666,7 @@ instead just "--" for example:
 A: That's because chr1:4303713 on reference genome is 'N'. BS-Seeker2 can not tell it as "CHG" or "CHH".
 
 
-#### QA2.5
+### QA2.5
 
 Q: When using bs_seeker2-call_methylation.py, can I only generate CGmap files, without generating other formats?
 
@@ -666,9 +695,9 @@ See folowing examples.
 		python bs_seeker2-call_methylation.py -i WGBS.bam --output=output --db <BSseeker2_path>/bs_utils/reference_genomes/genome.fa_bowtie/
 
 
-### (3) "Pysam" package related problem
+## (3) "Pysam" package related problem
 
-#### QA3.1
+### QA3.1
 
 Q: I'm normal account user for Linux(Cluster). I can't install "pysam". I get following error massages:
 
@@ -718,7 +747,7 @@ A: You can ask the administrator of your cluster to install pysam. If you don't 
         unzip BSSeeker2.zip
         cd BSseeker2-master/
 
-#### QA3.2
+### QA3.2
 
 Q: I came up with the errors
 
@@ -733,7 +762,7 @@ Q: I came up with the errors
 
 A: Your pysam seems out of date. I would use pysam version 0.6.x.
 
-#### QA3.3
+### QA3.3
 
 Q: I came up with the following error:
 
@@ -747,7 +776,7 @@ Q: I came up with the following error:
 A: It is very likely that your input file is in a wrong format.
 
 
-#### QA3.4
+### QA3.4
 
 Q: When running bs_seeker2-call_methylation.py with -x option, an error occurred as following:
 
@@ -762,7 +791,7 @@ error when using pysam v0.7.4. We haven't test other pysam versions, and are ver
 it works on other versions.
 
 
-#### QA3.5
+### QA3.5
 
 Q: What's my pysam version?
 
@@ -772,7 +801,7 @@ A: Open python interpreter, and enter the following commands:
         >>pysam.__version__
 
 
-#### QA3.6
+### QA3.6
 
 Q: I tried  bs_seeker2-call_methylation.py, found the read depth in CGmap file is always lower than 8000,
 where the reads shall be much higher. (Thanks Xuning Wang for figuring this problem and solve it)
@@ -782,9 +811,9 @@ for "bs_seeker2-call_methylation.py". User could specify higher number of covera
 time for processing.
 
 
-### (4) Configuration of BS-Seeker2
+## (4) Configuration of BS-Seeker2
 
-#### QA4.1
+### QA4.1
 
 Q: Can I add the path of BS-Seeker2's *.py to the $PATH, so I can call
 BS-Seeker2 from anywhere?
@@ -815,7 +844,7 @@ Then you can use BS-Seeker2 globally by typing:
 
 
 
-#### QA4.2
+### QA4.2
 
 Q: I used the following command:
 
@@ -839,9 +868,9 @@ However, I receive the following error:
 A: This error message indicate that you haven't install bowtie2, or you haven't made bowtie2 been included in $PATH.
 
 
-### (5) Unique alignment
+## (5) Unique alignment
 
-#### QA5.1
+### QA5.1
 
 Q: If I want to only keep alignments that map uniquely, is this an argument I should supply directly
 to Bowtie2 (via BS Seeker 2's command line option), or is this an option that's available in
@@ -851,9 +880,9 @@ A: BS-Seeker2 reports unique alignment by default already. If you want to know h
 could have multiple hits, run BS-Seeker2 with parameter "--multiple-hit".
 
 
-### (6) Paired-end sequencing alignment
+## (6) Paired-end sequencing alignment
 
-#### QA6.1
+### QA6.1
 
 Q: What should I do if the two mates have overlaps? Ex: fragment length=150bp, two mates are in length of 100bp
 
@@ -861,7 +890,7 @@ A: I suggest a pre-step for merging two overlapped reads into one. Such tools in
 [SeqPrep](https://github.com/jstjohn/SeqPrep), [Stitch](https://github.com/audy/stitch), etc.
 
 
-#### QA6.2
+### QA6.2
 
 Q: Any recommendation for mapping paired-end BS-seq data?
 
@@ -884,7 +913,7 @@ For PBAT library, you can run following commands:
         bs_seeker2-call_methylation.py -i merge.bam --rm-overlap ... # call the methylation levels
          
 
-#### QA6.3
+### QA6.3
 
 Q: If the two mates in paired-end library have overlaps, will BS-Seeker2 remove the overlapped regions?
 
@@ -897,9 +926,9 @@ A: You can specify the parameter "--rm-overlap" when running "bs_seeker2-call_me
    When specifying the parameter "--rm-overlap", the nucleotides within the overlapped regions will only be counted once.
 
 
-### (7) Adapter related issue
+## (7) Adapter related issue
 
-#### QA7.1
+### QA7.1
 
 Q: What's the algorithm to remove the adapter?
 
@@ -943,7 +972,7 @@ A: BS-Seeker2 has built-in algorithm for removing the adapter, which is develope
     In our algorithm, the "CG" in "--CCG" (upper strand) was trimmed, in order to get accurate methylation level.
 
 
-#### QA7.2
+### QA7.2
 
 Q: For RRBS library, the methylation levels of C at 5'-CCGG-3' sites are biased. Do BS-Seeker2 provides function for avoiding such bias?
 
@@ -956,4 +985,15 @@ A: From the version v2.0.7 or later, BS-Seeker2 provide parameter "--rm-CCGG" in
          3'-cgCNNNN.....NNNNGGC-5'
     Thus, the status of artificial cytosine will cause the bias.
     The parameter "--rm-CCGG" will remove all the "5'-CCGG-3'" sites in the outputs.
+
+
+## (8) Others
+
+### QA8.1
+
+Q: I run bs_seeker2-align.py with bowtie, but the process seems will not finish.
+
+A: Certain version of bowtie will not work well in BS-Seeker2. As we known, bowtie v1.2 linux will cause such problem,
+and newer version of bowtie will be suggested, such as bowtie v1.2.1.1.
+We welcome you report your case to us, and we will update them here.
 
