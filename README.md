@@ -26,20 +26,20 @@ BS-Seeker2
 3. [System requirements](#3-system-requirements)
 4. [Module descriptions](#4-module-descriptions)
 
-	* 4.1 [FilterReads.py](#4.1-filterReads.py)
-	* 4.2 [bs_seeker2-build.py](#4.2-bs_seeker2-build.py)
-	* 4.3 [bs_seeker2-align.py](#4.3-bs_seeker2-align.py)
-	* 4.4 [bs_seeker2-call_methylation.py](#4.4-bs_seeker2-call_methylation.py)
+	* 4.1 [FilterReads.py](#41-filterReadspy)
+	* 4.2 [bs_seeker2-build.py](#42-bs_seeker2-buildpy)
+	* 4.3 [bs_seeker2-align.py](#43-bs_seeker2-alignpy)
+	* 4.4 [bs_seeker2-call_methylation.py](#44-bs_seeker2-call_methylationpy)
 	
 5. [Contact Information](#5-contact-information)
 6. [Questions and Answers](#6-questions-and-answers)
 
 	* (1) [Performance](#1-performance)
-	* (2) [Input/Output formats](#2-input-output-formats)
+	* (2) [Input/Output formats](#2--inputoutput-formats)
 	* (3) ["Pysam" package related problem](#3-pysam-package-related-problem)
 	* (4) [Configuration of BS-Seeker2](#4-configuration-of-bs-seeker2)
 	* (5) [Unique alignment](#5-unique-alignment)
-	* (6) [Paired-end sequencing alignment](#6-paired-end-sequencing)
+	* (6) [Paired-end sequencing alignment](#6-paired-end-sequencing-alignment)
 	* (7) [Adapter related issue](#7-adapter-related-issue)
 	* (8) [Others](#8-others)
 
@@ -626,6 +626,28 @@ enough, try to replace <your_path> by another folder with enough space. Also don
 the files be saved in your /tmp folders, which was failed to be deleted as the previous process exit
 improperly.
 
+### QA1.5
+
+Q: Could I speed up the calling methylation step in BS-Seeker2?
+
+A: Two ways to consider.
+First, you can try to split the BAM file by chromosomes, and then calling the methylation for each chromosome. By running
+in parallel, you speed up the step of calling-methylation.
+
+```bash
+CHR=chr1
+samtools view sort.bam $CHR -h | samtools view -Sb - > ${CHR}.bam
+bs_seeker2-call_methylation.py -i ${CHR}.bam -d ${index_position} --sorted -o $CHR --rm-CCGG --rm-overlap
+```
+
+Second way, [**CGmapTools**](https://cgmaptools.github.io) is a downstream analysis package containing 40 functions for
+DNA methylation analysis. In **CGmapTools**, it provided C-version calling methylation function, which should be faster
+than the one implemented in BS-Seeker2.
+
+```bash
+cgmaptools bam2cgmap -h
+```
+
 
 
 ## (2)  Input/Output formats
@@ -789,7 +811,8 @@ Q: When running bs_seeker2-call_methylation.py with -x option, an error occurred
 A: This error is related with pysam version. Testing using pysam v0.6.x would not have such error. People reports such
 error when using pysam v0.7.4. We haven't test other pysam versions, and are very glad if you could tell us whether
 it works on other versions.
-
+**Update** : In version 2.1.2 and later, BS-Seeker2 consided the problem with pysam version. If you still face similar
+error even after you update to 2.1.2, you are welcomed to send feedbacks to us.
 
 ### QA3.5
 
@@ -809,6 +832,8 @@ where the reads shall be much higher. (Thanks Xuning Wang for figuring this prob
 A: It is related by with parameter in pileup function parsing to "pysam". In the v2.1.3 and later, option "-D" is added
 for "bs_seeker2-call_methylation.py". User could specify higher number of coverage limitation, in trade of costing more
 time for processing.
+
+
 
 
 ## (4) Configuration of BS-Seeker2
