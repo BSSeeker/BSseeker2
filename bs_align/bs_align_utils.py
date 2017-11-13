@@ -153,8 +153,8 @@ def methy_seq(read, genome):
     m_seq = []
     xx = "-"
     for i in xrange(len(read)):
-        if genome[i] == '-':
-            continue
+        if i>=len(genome) or genome[i] == '-':
+            xx = "-"
         elif read[i] != 'C' and read[i] != 'T':
             xx = "-"
         elif read[i] == "T" and genome[i] == "C": #(unmethylated):
@@ -171,12 +171,11 @@ def methy_seq(read, genome):
             #
         elif read[i] == "C" and genome[i] == "C": #(methylated):
             nn1 = next_nuc(genome, i, 1)
-
             if nn1 == "G":
                 xx = "X"
             elif nn1 in H :
                 nn2 = next_nuc(genome, i, 2)
-                2#
+                #
                 if nn2 == "G":
                     xx = "Y"
                 elif nn2 in H:
