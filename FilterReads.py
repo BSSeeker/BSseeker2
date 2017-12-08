@@ -15,6 +15,7 @@ def FilterFastq (infile, outfile) :
             INFILE = gzip.open(infile, 'rb')
         else :
             INFILE = open(infile, 'r')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
@@ -26,6 +27,7 @@ def FilterFastq (infile, outfile) :
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
+    #
     Dict = {}
     count = 0
     total = 0
@@ -33,12 +35,13 @@ def FilterFastq (infile, outfile) :
         line1 = INFILE.readline()
         if not line1 :
             break
+        #
         line1 = line1
         line2 = INFILE.readline()
         line3 = INFILE.readline()
         line4 = INFILE.readline()
         total += 1
- #       print line2
+ #      print line2
         if ( line2 in Dict ) :
             Dict[line2] += 1
         else :
@@ -48,12 +51,14 @@ def FilterFastq (infile, outfile) :
             OUTFILE.write(line3)
             OUTFILE.write(line4)
             count += 1
+        #
+    #
     INFILE.close()
     OUTFILE.close()
     print "Count of total raw reads: ", total
     print "Count of reads left: ", count
     print "Percentage of kept reads: %.2f" % (count * 100.0 /total), "%"
-
+#
 
 # ===============================
 #
@@ -65,6 +70,7 @@ def FilterSequence (infile, outfile) :
             INFILE = gzip.open(infile, 'rb')
         else :
             INFILE = open(infile, 'r')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
@@ -73,9 +79,11 @@ def FilterSequence (infile, outfile) :
             OUTFILE = gzip.open(outfile, 'wb')
         else :
             OUTFILE = open(outfile, 'w')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
+    #
     Dict = {}
     count = 0
     total = 0
@@ -88,11 +96,15 @@ def FilterSequence (infile, outfile) :
             Dict[line] = 1
             count += 1
             OUTFILE.write(line + "\n")
+        #
+    #
     INFILE.close()
     OUTFILE.close()
     print "Count of total raw reads: ", total
     print "Count of reads left: ", count
     print "Percentage of kept reads: %.2f" % (count * 100.0 /total), "%"
+#
+
 
 # ===============================
 # SN603   WA047   6       1101    41.40   99.10   0       1       .GGGA.......TTAG..............       @SZ__@@@@@@@RR__@@@@@@@@@@@@@@       0
@@ -102,23 +114,27 @@ def FilterQseq (infile, outfile, keepquality) :
         print "User specified '-k' and read quality will not be considered"
     else :
         print "Reads with PF=0 will be filtered"
-
+    #
     try:
         if infile.endswith(".gz") :
             INFILE = gzip.open(infile, 'rb')
         else :
             INFILE = open(infile, 'r')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
+    #
     try:
         if outfile.endswith(".gz") :
             OUTFILE = gzip.open(outfile, 'wb')
         else :
             OUTFILE = open(outfile, 'w')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
+    #
     Dict = {}
     count = 0
     total = 0
@@ -132,13 +148,15 @@ def FilterQseq (infile, outfile, keepquality) :
                 Dict[tokens[8]] = 1
                 count += 1
                 OUTFILE.write(line)
-
+            #
+        #
+    #
     INFILE.close()
     OUTFILE.close()
     print "Count of total raw reads: ", total
     print "Count of reads left: ", count
     print "Percentage of kept reads: %.2f" % (count * 100.0 /total), "%"
-
+#
 
 # ===============================
 #
@@ -149,17 +167,21 @@ def FilterFasta (infile, outfile) :
             INFILE = gzip.open(infile, 'rb')
         else :
             INFILE = open(infile, 'r')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
+    #
     try:
         if outfile.endswith(".gz") :
             OUTFILE = gzip.open(outfile, 'wb')
         else :
             OUTFILE = open(outfile, 'w')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", outfile;
         exit(-1)
+    #
     Dict = {}
     count = 0
     total = 0
@@ -177,10 +199,13 @@ def FilterFasta (infile, outfile) :
                     count += 1
                     OUTFILE.write(">" + name + "\n")
                     OUTFILE.write(read + "\n")
+                #
             name = line[1:]
             read = ""
         else :
             read = read + line
+        #
+    #
     if (name != "") :
         if ( read in Dict ) :
             Dict[read] += 1
@@ -189,10 +214,12 @@ def FilterFasta (infile, outfile) :
             count += 1
             OUTFILE.write(">" + name + "\n")
             OUTFILE.write(read + "\n")
+        #
+    #
     print "Count of total raw reads: ", total
     print "Count of reads left: ", count
     print "Percentage of kept reads: %.2f" % (count * 100.0 /total), "%"
-
+#
 
 
 # ==============================
@@ -204,9 +231,11 @@ def FilterReads (infile, outfile, keepquality):
             INFILE = gzip.open(infile, 'rb')
         else :
             INFILE = open(infile, 'r')
+        #
     except IOError:
         print "\n[Error]:\n\t File cannot be open: ", infile;
         exit(-1)
+    #
     i = 0
     # Count the numbers of barcodes in first 10000 lines
     line = INFILE.readline()
@@ -222,9 +251,9 @@ def FilterReads (infile, outfile, keepquality):
     elif line[0]==">" :
         input_format = "fasta"
     INFILE.close()
-
+    #
     print "Input file format detected: ", input_format
-
+    #
     if input_format == "FastQ" :
         FilterFastq(infile, outfile)
     elif input_format == "sequence" :
@@ -233,31 +262,38 @@ def FilterReads (infile, outfile, keepquality):
         FilterQseq(infile, outfile, keepquality)
     elif input_format == "fasta" :
         FilterFasta(infile, outfile)
-
+    #
+#
 
 from optparse import OptionParser
 
 # ===========================================
 def main():
     usage = "Usage: %prog -i <input> -o <output> [-k]\n" \
-            "Author : Guo, Weilong; guoweilong@gmail.com; 2012-11-10\n" \
-            "Last Update: 2014-06-18\n" \
-            "Description: Unique reads for qseq/fastq/fasta/sequencce,\n" \
-            "       and filter low quality reads in qseq file."
+            "Author : Guo, Weilong; guoweilong@gmail.com\n" \
+            "Start from: 2012-11-10; Last Update: 2017-12-08\n" \
+            "Description: Unique reads for qseq/fastq/fasta/sequence.\n" \
+            "       Low quality reads in qseq file can be filtered.\n" \
+            "Warning: This function is reserved for WGBS, but not for RRBS. \n" \
+            "   For WGBS, user can also try \'samtools rmdup\' to get unique reads using BAM files. \n" \
+            "   For RRBS, it is suggested not to get unique reads, as the starting ends of reads\n" \
+            " are more likely to be same for the reads from one C-CCG~~~C-CGG fragment."
+    #
     parser = OptionParser(usage)
     parser.add_option("-i", dest="infile", 
                   help="Name of the input qseq/fastq/fasta/sequence file", metavar="FILE")
     parser.add_option("-o", dest="outfile",
                   help="Name of the output file", metavar="FILE")
     parser.add_option("-k", dest="keepquality", default = False, action = "store_true",
-                  help="Would not filter low quality reads if specified")
+                  help="Would not filter low quality reads if specified, only applied for qseq format")
     (options, args) = parser.parse_args()
-    
+    #
     if (options.infile is None) or (options.outfile is None) :
         parser.print_help()
         exit(-1)
+    #
     FilterReads(options.infile, options.outfile, options.keepquality)
-
+#
 
 # ===========================================
 if __name__ == "__main__":

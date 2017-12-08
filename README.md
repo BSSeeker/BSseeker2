@@ -95,23 +95,33 @@ BS-Seeker2
 
 ## 4.1 FilterReads.py
 
-Optional and independent module.
+Optional and independent module. **Not necessary.**
 Some reads would be extremely amplified during the PCR. This script helps you get unique reads before doing the mapping.
 You can decide whether or not to filter reads before doing the mapping.
 
 * Usage :
 
-	$ python FilterReads.py
-	Usage: FilterReads.py -i <input> -o <output> [-k]
-	Author : Guo, Weilong; 2012-11-10
-	Unique reads for qseq/fastq/fasta/sequencce, and filter
-	low quality file in qseq file.
+```bash
 
-	Options:
-	  -h, --help  show this help message and exit
-	  -i FILE     Name of the input qseq/fastq/fasta/sequence file
-	  -o FILE     Name of the output file
-	  -k          Would not filter low quality reads if specified
+	$ python FilterReads.py
+    Usage: FilterReads.py -i <input> -o <output> [-k]
+    Author : Guo, Weilong; guoweilong@gmail.com
+    Start from: 2012-11-10; Last Update: 2017-12-08
+    Description: Unique reads for qseq/fastq/fasta/sequence.
+       Low quality reads in qseq file can be filtered.
+    Warning: This function is reserved for WGBS, but not for RRBS.
+    For WGBS, user can also try 'samtools rmdup' to get unique reads using BAM files.
+    For RRBS, it is suggested not to get unique reads, as the starting ends of reads
+    are more likely to be same for the reads from one C-CCG~~~C-CGG fragment.
+
+    Options:
+    -h, --help  show this help message and exit
+    -i FILE     Name of the input qseq/fastq/fasta/sequence file
+    -o FILE     Name of the output file
+    -k          Would not filter low quality reads if specified, only applied
+              for qseq format
+
+```
 
 
 * Tip :
@@ -127,6 +137,7 @@ Module to build the index for BS-Seeker2.
 * Usage :
 
 
+```bash
 
     $ python bs_seeker2-build.py -h
     
@@ -163,7 +174,7 @@ Module to build the index for BS-Seeker2.
                             Cut sites of restriction enzyme. Ex: MspI(C-CGG),
                             Mael:(C-TAG), double-enzyme MspI&Mael:(C-CGG,C-TAG).
                             [Default: C-CGG]
-
+```
 
 * Example
 
@@ -204,7 +215,7 @@ Module to map reads on 3-letter converted genome.
 
 * Usage :
 
-
+```bash
 	$ bs_seeker2-align.py -h
     Usage: bs_seeker2-align.py {-i <single> | -1 <mate1> -2 <mate2>} -g <genome.fa> [options]
 
@@ -305,7 +316,7 @@ Module to map reads on 3-letter converted genome.
         --bt-p 4 will increase the number of threads for bowtie to 4, --bt--
         tryhard will instruct bowtie to try as hard as possible to find valid
         alignments when they exist, and so on.
-
+```
 
 
 * Examples :
@@ -360,8 +371,9 @@ Module to map reads on 3-letter converted genome.
 
     Sample:
 
+    ```
         10918   0       chr1    133859922       255     100M    *       0       0       TGGTTGTTTTTGTTATAGTTTTTTGTTGTAGAGTTTTTTTTGGAAAGTTGTGTTTATTTTTTTTTTTGTTTGGGTTTTGTTTGAAAGGGGTGGATGAGTT        *       XO:Z:+FW        XS:i:0  NM:i:3  XM:Z:x--yx-zzzy--y--y--zz-zyx-yx-y--------z------------x--------z--zzz----y----y--x-zyx--------y--------z   XG:Z:-C_CGGCCGCCCCTGCTGCAGCCTCCCGCCGCAGAGTTTTCTTTGGAAAGTTGCGTTTATTTCTTCCCTTGTCTGGGCTGCGCCCGAAAGGGGCAGATGAGTC_AC
-
+    ```
 
     Format descriptions:
 
@@ -388,11 +400,12 @@ Module to map reads on 3-letter converted genome.
 
     Sample:
 
+    ```
         read10	 1	+FW	chr1+0000169137	TC_CGGGGGTTATATGAGTGTGACGGCTGTAGCGTTAGGTGACGATGTCATCTCCGCGTTCCAAGCGTTATGTGCGCACTGAGGGACACATCCACGTTCCCGG_GG	CGGGGGTTATATGAGTGTGATGGTTGTAGCGTTAGGTGATGATGTTATTTTTGCGTTTTAAGCGTTATGTGCGTATTGAGGGATATATTTACGTTTTTGA	X-------------------x--y-----X---------x-----z--z-yx-X---zz---X--------X-z-y-------z-z--zz-X---zyx--	0	77	169135	169235
         read102	 1	+FW	chr1+0000169137	TC_CGGGGGTTATATGAGTGTGACGGCTGTAGCGTTAGGTGACGATGTCATCTCCGCGTTCCAAGCGTTATGTGCGCACTGAGGGACACATCCACGTTCCCGG_GG	CGGGGGTTATATGAGTGTGATGGTTGTAGCGTTAGGTGATGATGTTATTTTTGCGTTTTAAGCGTTATGTGCGTATTGAGGGATATATTTACGTTTTTGA	X-------------------x--y-----X---------x-----z--z-yx-X---zz---X--------X-z-y-------z-z--zz-X---zyx--	0	77	169135	169235
         read104	 0	+FW	chr1+0000325341	-C_CGGCAAACACCACGCCCCGCGATATGGCAGGATTCATGCCGACTAATGGAAAACACACCAGATGCTGGAAAGAGATAAAGGAGAGCGTTACTGCAATACT_GT	CGGTAAATATTACGTTTCGCGATATGGTAGGATTTATGTCGATTAATGGAAAATATATCAGATGTTGGAAAGAGATAAAGGAGAGCGTTATTGTAATATT	X--z---z-zz-X-zzyX-X-------y------z---yX--z----------z-z-zY-----y--------------------X----y--z----y-	0	154	325339	325509
         read105	 0	+FW	chr1+0000238994	-C_CGGCCACACAGTGAAAGGCTGGGCTGTGAGAGCTTCGGTGGAAACCAGGCCTTCACCACTTCTTCTCCCTTCAAGCCACACACAGCTGTTGCAAGTTCCG_G-	CGGTTACATAGTGAAAGGTTGGGTTGTGAGAGTTTTGGTGGAAATTAGGTTTTTATTATTTTTTTTTTTTTTAAGTTATATATAGTTGTTGTAAGTTTCG	X--zz-Z-y---------y----y--------z--x--------zy---zz--z-zz-z--z--z-zzz--z---zz-z-z-y--y-----z-----yX-	0	118	238992	239093
-
+    ```
 
     Format descriptions:
 
@@ -431,12 +444,11 @@ Module to map reads on 3-letter converted genome.
 
 ## 4.4 bs_seeker2-call_methylation.py
 
-
-
 This module calls methylation levels from the mapping result.
 
 * Usage:
 
+```bash
 
 	$ bs_seeker2-call_methylation.py -h
     Usage: bs_seeker2-call_methylation.py [options]
@@ -476,6 +488,7 @@ This module calls methylation levels from the mapping result.
                             The least number of reads covering one site to be
                             shown in wig file [Default: 1]
       -v, --version         show version of BS-Seeker2
+```
 
 
 * Example :
@@ -504,36 +517,39 @@ This module calls methylation levels from the mapping result.
 
     Sample:
 
+    ```
         variableStep chrom=chr1
         3000419	0.000000
         3000423	-0.2
         3000440	0.000000
         3000588	0.5
         3000593	-0.000000
+    ```
 
-
-        Format descriptions:
-        WIG file format. Negative value for 2nd column indicate a Cytosine on minus strand.
+> Format descriptions: \
+> WIG file format. Negative value for 2nd column indicate a Cytosine on minus strand.
 
 
 - CGmap file
 
     Sample:
 
+    ```
         chr1	G	3000851	CHH	CC	0.1	1	10
         chr1	C	3001624	CHG	CA	0.0	0	9
         chr1	C	3001631	CG	CG	1.0	5	5
+    ```
 
     Format descriptions:
 
-        (1) chromosome
-        (2) nucleotide on Watson (+) strand
-        (3) position
-        (4) context (CG/CHG/CHH)
-        (5) dinucleotide-context (CA/CC/CG/CT)
-        (6) methylation-level = #_of_C / (#_of_C + #_of_T).
-        (7) #_of_C (methylated C, the count of reads showing C here)
-        (8) = #_of_C + #_of_T (all Cytosines, the count of reads showing C or T here)
+>   (1) chromosome \
+>   (2) nucleotide on Watson (+) strand \
+>   (3) position \
+>   (4) context (CG/CHG/CHH) \
+>   (5) dinucleotide-context (CA/CC/CG/CT) \
+>   (6) methylation-level = #_of_C / (#_of_C + #_of_T)  \
+>   (7) #_of_C (methylated C, the count of reads showing C here)  \
+>   (8) = #_of_C + #_of_T (all Cytosines, the count of reads showing C or T here)
 
 
 - ATCGmap file
@@ -549,6 +565,7 @@ chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.83
 
     Format descriptions:
 
+```
         (1) chromosome
         (2) nucleotide on Watson (+) strand
         (3) position
@@ -571,7 +588,7 @@ chr1	C	3009413	CG	CG	0	10	50	0	0	0	0	0	0	0	0.83
 
         (16) methylation_level = #C/(#C+#T) = C8/(C7+C8) for Watson strand, =C14/(C11+C14) for Crick strand;
         "nan" means none reads support C/T at this position.
-
+```
 
 
 # 5 Contact Information
