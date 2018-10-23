@@ -23,7 +23,7 @@ def reverse_compl_seq(strseq):
 
 def show_version() :
     print ""
-    print "     BS-Seeker2 v2.1.5 - Dec. 21, 2017"
+    print "     BS-Seeker2 v2.1.7 - Oct. 23, 2018"
     print ""
 
 
@@ -272,7 +272,7 @@ def read_fasta(fasta_file):
         print "[Error] Cannot find fasta file : %s !" % fasta_file
         exit(-1)
     sanitize = re.compile(r'[^ACTGN]')
-    sanitize_seq_id = re.compile(r'[^A-Za-z0-9]')
+    sanitize_seq_id = re.compile(r'[^A-Za-z0-9.]')
 
     chrom_seq = []
     chrom_id = None
