@@ -1039,3 +1039,34 @@ A: Certain version of bowtie will not work well in BS-Seeker2. As we known, bowt
 and newer version of bowtie will be suggested, such as bowtie v1.2.1.1.
 We welcome you report your case to us, and we will update them here.
 
+### QA8.2
+
+Q: The reference fasta file I used contains tens of thousands of scaffolds, could I use BS-Seeker2 for alignment?
+
+A: For BS-Seeker2, it creates one file for each chromosome/contig when building the index. Thus if your 
+genome contains lots of scaffolds, then there would be too much files in one folder on disk. And also 
+largely reduce the efficiency for mapping the BS-seq reads.
+Here, we provide two programs for solving the prolbem.
+
+**Note** : run "**__install.sh__**" to compile the cpp files into executable programs
+
+* (1st step):  "**__ThreadFasta__**" : this program can help you to **threading** tens of thousands of short scaffolds into  
+large pseudo-chromosomes. Additionally, the program will generate "dictionary files" (end with ".dict) for 
+converting the position between new "pseudo-chromosome" and "raw scaffolds"
+
+```
+ThreadFasta -i scaffold.fa -c S -g 50 -o genome_thread.fa -d genome_thread.dict &
+```
+
+* (2nd step): Then you can use the threaded fasta to build index, and then do the -align and -call_methylation step.
+
+```
+bs_seeker2-build.py -f genome_thread.fa
+```
+
+* (3rd step): "**__ChangeCoordinate__**" : utilizing the dictionary file (generated in the 1st step), this program
+help you convert the coordinate of pseudo-chromosome in CGmap/ATCGmap file into coordinates of original chromosome.
+
+```
+zcat input.CGmap.gz | ChangeCoordinate  -I genome_thread.dict -c 1 -p 3 | gzip > output.CGmap.gz
+```

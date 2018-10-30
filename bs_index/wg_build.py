@@ -45,8 +45,11 @@ def wg_build(fasta_file, build_command, ref_path, aligner):
 
     # start bowtie-build for all converted genomes and wait for the processes to finish
 
-    run_in_parallel([(build_command % { 'fname' : fname }, fname+'.log') for fname in to_bowtie])
-
+    #run_in_parallel([(build_command % { 'fname' : fname }, fname+'.log') for fname in to_bowtie])
+    # --------------- revised on 2018-01-30
+    for fname in to_bowtie :
+        run_in_parallel([(build_command % { 'fname' : fname }, fname+'.log')])
+    # ---------------
     # delete fasta files of converted genomes
     if aligner != "rmap" :
         delete_files(f+'.fa' for f in to_bowtie)

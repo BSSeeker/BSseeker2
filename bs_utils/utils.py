@@ -23,7 +23,7 @@ def reverse_compl_seq(strseq):
 
 def show_version() :
     print ""
-    print "     BS-Seeker2 v2.1.7 - Oct. 23, 2018"
+    print "     BS-Seeker2 v2.1.8 - Oct. 30, 2018"
     print ""
 
 
